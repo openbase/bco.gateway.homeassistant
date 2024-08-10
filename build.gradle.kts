@@ -1,9 +1,12 @@
 plugins {
+    application
     kotlin("jvm") version "2.0.0"
 }
 
 group = "org.openbase"
 version = "1.0-SNAPSHOT"
+description = "BaseCubeOne Homeassistant Device Manager"
+
 val bcoVersion: String by project
 val jakartaVersion: String by project
 val jerseyVersion: String by project
@@ -39,6 +42,19 @@ repositories {
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
     jvmToolchain(21)
+}
+
+application {
+    mainClass.set("org.openbase.bco.device.hass.HassDeviceManagerLauncher")
+}
+
+application.applicationName = "bco-device-hass"
+
+distributions {
+    main {
+        distributionBaseName.set("bco-device-hass")
+    }
 }

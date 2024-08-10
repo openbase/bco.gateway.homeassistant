@@ -1,27 +1,27 @@
 package org.example
 
 import io.ktor.client.*
-import io.ktor.client.plugins.websocket.*
-import io.ktor.http.*
-import io.ktor.websocket.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.java.*
+import io.ktor.client.request.*
 import kotlinx.coroutines.runBlocking
-import java.util.*
 
 fun main() {
-    val client = HttpClient {
-        install(WebSockets)
-    }
-    runBlocking {
-        client.webSocket(method = HttpMethod.Get, host = "127.0.0.1", port = 8080, path = "/echo") {
-            while(true) {
-                val othersMessage = incoming.receive() as? Frame.Text
-                println(othersMessage?.readText())
-                val myMessage = Scanner(System.`in`).next()
-                if(myMessage != null) {
-                    send(myMessage)
-                }
-            }
+    val client = HttpClient(Java) {
+        engine {
+            pipelining = true
+            protocolVersion = java.net.http.HttpClient.Version.HTTP_2
         }
     }
-    client.close()
+
+     runBlocking {
+         val response = client.get("http://scummbar:8123/api/config") {
+            bearerAuth("")
+            headers {
+                append("Content-Type", "application/json")
+            }
+        }
+
+        println(response.body<String>())
+    }
 }

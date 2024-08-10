@@ -4,14 +4,18 @@ plugins {
 
 group = "org.openbase"
 version = "1.0-SNAPSHOT"
+val ktorVersion: String by project
+val logbackVersion: String by project
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("io.ktor:ktor-client-websockets:2.3.12")
     implementation("org.openbase:bco.dal.control:3.2-SNAPSHOT")
+    implementation("io.ktor:ktor-client-websockets:$ktorVersion")
+    implementation("io.ktor:ktor-client-java:$ktorVersion")
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
     testImplementation(kotlin("test"))
 }
 

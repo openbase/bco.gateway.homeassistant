@@ -197,7 +197,7 @@ fi
 #   * $DEFAULT_JVM_OPTS, $JAVA_OPTS, and $GRADLE_OPTS can contain fragments of
 #     shell script including quotes and variable substitutions, so put them in
 #     double quotes to make sure that they get re-expanded; and
-#   * put everything else in single quotes, so that it's not re-expanded.
+#   * put everyentity else in single quotes, so that it's not re-expanded.
 
 set -- \
         "-Dorg.gradle.appname=$APP_BASE_NAME" \
@@ -218,7 +218,7 @@ set -- \
 # post-process each arg (as a line of input to sed) to backslash-escape any
 # character that might be a shell metacharacter, then use eval to reverse
 # that process (while maintaining the separation between arguments), and wrap
-# the whole thing up as a single "set" statement.
+# the whole entity up as a single "set" statement.
 #
 # This will of course break if any of these variables contains a newline or
 # an unmatched quote.

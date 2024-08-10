@@ -3,16 +3,22 @@ package org.example.websocket
 import io.ktor.client.*
 import io.ktor.client.engine.java.*
 import io.ktor.client.plugins.websocket.*
+import io.ktor.client.request.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
 import org.example.util.toRequest
 import org.slf4j.LoggerFactory
 import java.net.http.HttpClient
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Future
+import java.util.concurrent.locks.ReadWriteLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 
 class WebsocketClient {
-    private val token: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhY2M5MDdlNDg3MTg0YmMwOGQ1MzI3MGUyNGNiYmNmYSIsImlhdCI6MTcyMzI4OTEzMCwiZXhwIjoyMDM4NjQ5MTMwfQ.h94N7dFk9052oe6I5BsYJ3fVmBWoxTW3yXonhgwGhxU"
+    private val TOKEN: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhY2M5MDdlNDg3MTg0YmMwOGQ1MzI3MGUyNGNiYmNmYSIsImlhdCI6MTcyMzI4OTEzMCwiZXhwIjoyMDM4NjQ5MTMwfQ.h94N7dFk9052oe6I5BsYJ3fVmBWoxTW3yXonhgwGhxU"
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -26,17 +32,32 @@ class WebsocketClient {
 
     private val authRequest = mapOf(
         "type" to "auth",
-        "access_token" to token
+        "access_token" to TOKEN
     ).toRequest()
 
-    fun close() {
-        client.close()
+    init {
+        runBlocking {
+            initConnectionAndProcess()
+            request(mapOf("id" to 19, "type" to "ping").toRequest())
+        }
     }
 
-    suspend fun query(message: String): String? {
-        var result: String? = null
 
+    val requestLock = ReentrantReadWriteLock()
+    val requestStack = mutableListOf<Pair<String, CompletableFuture<String>>>()
+    val newRequestCondition = requestLock.writeLock().newCondition()
+
+    fun request(message: String): Future<String> =
+        CompletableFuture<String>().also {
+            requestLock.write {
+                requestStack.plus(message to it)
+                newRequestCondition.signalAll()
+            }
+        }
+
+    suspend fun initConnectionAndProcess() {
         client.webSocket(host = "scummbar", port = 8123, path = "/api/websocket") {
+
             logMessage((incoming.receive() as? Frame.Text)?.readText())
             send(authRequest)
             val auth = (incoming.receive() as? Frame.Text)?.readText() ?: ""
@@ -45,15 +66,29 @@ class WebsocketClient {
             } else {
                 error("Websocket authentication failed")
             }
-
-            send(message)
-            result = (incoming.receive() as? Frame.Text)?.readText()
-            logMessage(result)
+            this.processRequests()
         }
-        return result
     }
 
-    fun subscribe(message: String): Flow<String?> = flow {
+    private suspend fun DefaultWebSocketSession.processRequests() {
+        while (isActive && !Thread.currentThread().isInterrupted) {
+            requestLock.write {
+
+                if(requestStack.isEmpty()) {
+                    newRequestCondition.await()
+                }
+
+                requestStack.removeFirst().also { (message, future) ->
+                    send(message)
+                    future.complete((incoming.receive() as? Frame.Text)?.readText().also { logMessage(it) })
+                }
+            }
+        }
+    }
+
+    suspend fun subscribe(message: String): List<String?> {
+        val result: MutableList<String?> = emptyList<String?>().toMutableList()
+
         client.webSocket(host = "scummbar", port = 8123, path = "/api/websocket") {
             logMessage((incoming.receive() as? Frame.Text)?.readText())
             send(authRequest)
@@ -69,10 +104,12 @@ class WebsocketClient {
 
             while (true) {
                 val temp = (incoming.receive() as? Frame.Text)?.readText()
+                result.addLast(temp)
                 logMessage(temp)
-                emit(temp)
             }
         }
+
+        return result
     }
 
     private fun logMessage(message: String?) = runBlocking {

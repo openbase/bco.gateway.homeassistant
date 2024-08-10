@@ -4,21 +4,26 @@ plugins {
 
 group = "org.openbase"
 version = "1.0-SNAPSHOT"
+val bcoVersion: String by project
+val jakartaVersion: String by project
+val jerseyVersion: String by project
+val ktorVersion: String by project
+val logbackVersion: String by project
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("io.ktor:ktor-client-websockets:2.3.12")
-    implementation("org.openbase:bco.dal.control:3.2-SNAPSHOT")
-    implementation("jakarta.activation:jakarta.activation-api:2.1.3")
-
-    // https://mvnrepository.com/artifact/org.glassfish.jersey.core/jersey-client
-    implementation("org.glassfish.jersey.core:jersey-client:3.1.8")
-    implementation("org.glassfish.jersey.inject:jersey-hk2:3.1.8")
-    implementation("org.glassfish.jersey.media:jersey-media-sse:3.1.8")
-    implementation("org.glassfish.jersey.security:oauth2-client:3.1.8")
+    implementation("org.openbase:bco.dal.control:$bcoVersion")
+    implementation("jakarta.activation:jakarta.activation-api:$jakartaVersion")
+    implementation("org.glassfish.jersey.core:jersey-client:$jerseyVersion")
+    implementation("org.glassfish.jersey.inject:jersey-hk2:$jerseyVersion")
+    implementation("org.glassfish.jersey.media:jersey-media-sse:$jerseyVersion")
+    implementation("org.glassfish.jersey.security:oauth2-client:$jerseyVersion")
+    implementation("io.ktor:ktor-client-websockets:$ktorVersion")
+    implementation("io.ktor:ktor-client-java:$ktorVersion")
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
     testImplementation(kotlin("test"))
 }
 

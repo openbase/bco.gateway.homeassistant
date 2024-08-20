@@ -8,12 +8,12 @@ import org.springframework.boot.runApplication
 
 
 @SpringBootApplication
-class WebSocketClientApplication(
-    private val websocketService: WebsocketService,
-) {
+class WebSocketClientApplication {
+    @Autowired
+    private lateinit var websocketService: WebsocketService
+
     @PostConstruct
     fun init() {
-        println("Send message")
         websocketService.sendDynamicMessage("Hello World!")
     }
 }

@@ -1,6 +1,9 @@
 plugins {
     application
     kotlin("jvm") version "2.0.0"
+    kotlin("plugin.spring") version "1.9.24"
+    id("org.springframework.boot") version "3.1.0"
+    id("io.spring.dependency-management") version "1.1.0"
 }
 
 group = "org.openbase"
@@ -24,9 +27,22 @@ dependencies {
     implementation("org.glassfish.jersey.inject:jersey-hk2:$jerseyVersion")
     implementation("org.glassfish.jersey.media:jersey-media-sse:$jerseyVersion")
     implementation("org.glassfish.jersey.security:oauth2-client:$jerseyVersion")
-    implementation("io.ktor:ktor-client-websockets:$ktorVersion")
-    implementation("io.ktor:ktor-client-java:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
+    implementation("org.webjars:webjars-locator-core")
+
+    // Spring Boot starter for web applications, includes Spring MVC and embedded Tomcat
+    implementation("org.springframework.boot:spring-boot-starter-web")
+
+    // Spring Boot starter for WebSocket support
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+
+    // Kotlin dependencies
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+
+    // Spring Boot starter for testing
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(module = "mockito-core")
+    }
     testImplementation(kotlin("test"))
 }
 

@@ -181,7 +181,7 @@ abstract class HassConnection : Shutdownable {
 
         TODO("leandro")
 
-//        // activate websocket source if not already done
+//        // activate org.openbase.bco.device.hass.communication.websocket source if not already done
 //        if (websocketSource != null) {
 //            LOGGER.warn("WEBSOCKET already initialized!")
 //            return
@@ -269,7 +269,7 @@ abstract class HassConnection : Shutdownable {
             ?.takeIf { !it.isDone }
             ?.cancel(false)
 
-        // close websocket
+        // close org.openbase.bco.device.hass.communication.websocket
         TODO("leandro")
 //        websocketSource
 //            ?.close()
@@ -431,7 +431,7 @@ abstract class HassConnection : Shutdownable {
         // stop rest service
         restClient.close()
 
-        // stop websocket service
+        // stop org.openbase.bco.device.hass.communication.websocket service
         topicObservableMapLock.withLock {
             topicObservableMap.values.forEach { jsonObjectObservable ->
                 jsonObjectObservable.shutdown()

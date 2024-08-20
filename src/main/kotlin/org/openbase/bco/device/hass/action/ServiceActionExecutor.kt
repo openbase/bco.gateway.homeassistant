@@ -8,7 +8,6 @@ import org.openbase.bco.dal.lib.action.ActionDescriptionProcessor
 import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.dal.lib.layer.unit.UnitControllerRegistry
 import org.openbase.bco.device.hass.communication.HassConnection
-import org.openbase.bco.device.hass.manager.entity.HassEntityProcessor
 import org.openbase.bco.device.hass.manager.service.ServiceTypeServiceActionMapping
 import org.openbase.bco.device.hass.manager.transformer.ServiceStateServiceActionTransformerPool
 import org.openbase.bco.registry.remote.Registries
@@ -85,39 +84,44 @@ class ServiceActionExecutor(unitControllerRegistry: UnitControllerRegistry<UnitC
      */
     @JvmOverloads
     @Throws(CouldNotPerformException::class)
-    fun applyStateUpdate(entityId: String, stateType: String, state: String, systemSync: Boolean = false) {
+    fun applyStateUpdate(entityId: String?, stateType: String?, state: String?, systemSync: Boolean = false) {
         // filter empty events
+
+        if (entityId == null || entityId.isEmpty()) {
+            throw NotAvailableException("entityId")
+        }
+
+        if (stateType == null || stateType.isEmpty()) {
+            throw NotAvailableException("stateType")
+        }
 
         if (state == null || state.equals(EMPTY_COMMAND_STRING, ignoreCase = true)) {
             return
         }
+        
+        // todo: implement correct mapping
+        val unitAlias = entityId
+        val serviceType = ServiceTemplate.ServiceType.valueOf(stateType)
 
-        val metaData: HassEntityProcessor.HassEntityIdMetaData
-        try {
-            metaData = HassEntityProcessor.getMetaData(entityId)
-        } catch (ex: CouldNotPerformException) {
-            // skip update for non bco handled items
-            return
-        }
         try {
             // load controller
-            val controllerId = Registries.getUnitRegistry().getUnitConfigByAlias(metaData.alias).id
+            val unitId = Registries.getUnitRegistry().getUnitConfigByAlias(unitAlias).id
 
             // filter all events that are not handled by this instance.
-            if (!unitControllerRegistry.contains(controllerId)) {
+            if (!unitControllerRegistry.contains(unitId)) {
                 return
             }
 
-            val unitController = unitControllerRegistry[controllerId]
+            val unitController = unitControllerRegistry[unitId]
 
-            var serviceStateBuilder = getServiceData(stateType, state, metaData.getServiceType()!!).toBuilder()
+            var serviceStateBuilder = getServiceData(stateType, state, serviceType).toBuilder()
 
             // update the responsible action to show that it was triggered by hass and add other parameters
             // note that the responsible action is overwritten if it matches a requested state in the unit controller and thus was triggered by a different user through BCO
             serviceStateBuilder = if (systemSync) {
                 ActionDescriptionProcessor.generateAndSetResponsibleAction(
                     serviceStateBuilder,
-                    metaData.getServiceType(),
+                    serviceType,
                     unitController,
                     Timeout.INFINITY_TIMEOUT,
                     TimeUnit.MINUTES,
@@ -130,7 +134,7 @@ class ServiceActionExecutor(unitControllerRegistry: UnitControllerRegistry<UnitC
             } else {
                 ActionDescriptionProcessor.generateAndSetResponsibleAction(
                     serviceStateBuilder,
-                    metaData.getServiceType(),
+                    serviceType,
                     unitController,
                     30,
                     TimeUnit.MINUTES,
@@ -143,15 +147,15 @@ class ServiceActionExecutor(unitControllerRegistry: UnitControllerRegistry<UnitC
             }
 
             LOGGER.info("Apply ItemUpdate[$entityId=$state].")
-            unitController.applyDataUpdate(serviceStateBuilder, metaData.getServiceType())
+            unitController.applyDataUpdate(serviceStateBuilder, serviceType)
         } catch (ex: InvalidStateException) {
             LOGGER.debug(
-                ("Ignore state update [" + state + "] for service[" + metaData.getServiceType()).toString() + "]",
+                ("Ignore state update [" + state + "] for service[" + serviceType).toString() + "]",
                 ex
             )
         } catch (ex: CouldNotPerformException) {
             LOGGER.warn(
-                ("Ignore state update [" + state + "] for service[" + metaData.getServiceType()).toString() + "]",
+                ("Ignore state update [" + state + "] for service[" + serviceType).toString() + "]",
                 ex
             )
         }

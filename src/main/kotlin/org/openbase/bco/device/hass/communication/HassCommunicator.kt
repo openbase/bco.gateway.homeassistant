@@ -5,7 +5,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
 import jakarta.ws.rs.core.MediaType
-import org.example.org.openbase.bco.device.hass.manager.dto.HassEntityDto
+import org.openbase.bco.device.hass.manager.dto.HassEntityDto
 import org.example.org.openbase.bco.device.hass.manager.dto.ServiceAction
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InitializationException
@@ -29,13 +29,13 @@ class HassCommunicator private constructor() : HassConnection() {
 
     @Throws(CouldNotPerformException::class)
     fun registerEntities(entityList: List<HassEntityDto>?): List<HassEntityDto> {
-        return jsonElementToTypedList(JsonParser.parseString(putJson(ITEMS_TARGET, entityList)), HassEntityDto::class.java)
+        return jsonElementToTypedList(JsonParser.parseString(putJson(STATES_OF_ENTITIES_TARGET, entityList)), HassEntityDto::class.java)
     }
 
     @Throws(CouldNotPerformException::class)
     fun updateEntity(entity: HassEntityDto): HassEntityDto {
         return jsonToClass(
-            JsonParser.parseString(putJson(ITEMS_TARGET + SEPARATOR + entity.entityId, entity)),
+            JsonParser.parseString(putJson(STATES_OF_ENTITIES_TARGET + SEPARATOR + entity.entityId, entity)),
             HassEntityDto::class.java
         )
     }
@@ -46,18 +46,18 @@ class HassCommunicator private constructor() : HassConnection() {
     @Throws(CouldNotPerformException::class)
     fun deleteEntity(entityId: String): HassEntityDto {
         LOGGER.warn("Delete item {}", entityId)
-        return jsonToClass(JsonParser.parseString(delete(ITEMS_TARGET + SEPARATOR + entityId)), HassEntityDto::class.java)
+        return jsonToClass(JsonParser.parseString(delete(STATES_OF_ENTITIES_TARGET + SEPARATOR + entityId)), HassEntityDto::class.java)
     }
 
     @get:Throws(CouldNotPerformException::class)
     val entities: List<HassEntityDto>
-        get() = jsonElementToTypedList(JsonParser.parseString(get(ITEMS_TARGET)), HassEntityDto::class.java)
+        get() = jsonElementToTypedList(JsonParser.parseString(get(STATES_OF_ENTITIES_TARGET)), HassEntityDto::class.java)
 
     @Throws(NotAvailableException::class)
     fun getEntity(entityId: String): HassEntityDto =
         try {
             jsonToClass(
-                JsonParser.parseString(get(ITEMS_TARGET + SEPARATOR + entityId)),
+                JsonParser.parseString(get(STATES_OF_ENTITIES_TARGET + SEPARATOR + entityId)),
                 HassEntityDto::class.java
             )
         } catch (ex: CouldNotPerformException) {
@@ -80,7 +80,7 @@ class HassCommunicator private constructor() : HassConnection() {
 
     @Throws(CouldNotPerformException::class)
     fun postServiceAction(entityId: String, serviceAction: String?) {
-        post(ITEMS_TARGET + SEPARATOR + entityId, serviceAction!!, MediaType.TEXT_PLAIN_TYPE)
+        post(STATES_OF_ENTITIES_TARGET + SEPARATOR + entityId, serviceAction!!, MediaType.TEXT_PLAIN_TYPE)
     }
 
 //    // ==========================================================================================================================================
@@ -214,11 +214,16 @@ class HassCommunicator private constructor() : HassConnection() {
 
     @Throws(CouldNotPerformException::class)
     override fun testConnection() {
-        get(INBOX_TARGET, true)
+        get(API_HEALTH, true)
+    }
+
+    fun turnOn() {
+//        post()
     }
 
     companion object {
-        const val ITEMS_TARGET: String = "items"
+        const val API_HEALTH: String = "/"
+        const val STATES_OF_ENTITIES_TARGET: String = "/states"
         const val LINKS_TARGET: String = "links"
         const val ENTITYS_TARGET: String = "entitys"
         const val INBOX_TARGET: String = "inbox"

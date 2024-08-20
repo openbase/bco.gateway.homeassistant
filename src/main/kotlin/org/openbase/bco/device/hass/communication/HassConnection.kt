@@ -8,9 +8,11 @@ import jakarta.ws.rs.client.Entity
 import jakarta.ws.rs.client.WebTarget
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.UriBuilder
 import org.example.org.openbase.bco.device.homeassistant.jp.JPHassHost
 import org.example.org.openbase.bco.device.homeassistant.jp.JpHassPort
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport
+import org.openbase.bco.device.hass.communication.websocket.HassWebsocketConnection
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.jps.core.JPService
 import org.openbase.jps.exception.JPNotAvailableException
@@ -28,6 +30,7 @@ import org.openbase.type.domotic.unit.gateway.GatewayClassType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
+import java.net.URI
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -42,7 +45,7 @@ abstract class HassConnection : Shutdownable {
 
     private var restClient: Client
     private var restTarget: WebTarget
-//    private var sseSource: SseEventSource? = null
+    private var webSocketConnection: HassWebsocketConnection = HassWebsocketConnection()
 
     var isShutdownInitiated: Boolean = false
         private set
@@ -76,8 +79,10 @@ abstract class HassConnection : Shutdownable {
                 LOGGER.warn("Could not retrieve Hass token from gateway config!", ex)
             }
 
-            val hassUri = "${JPService.getValue(JPHassHost::class.java)}:\"${JPService.getValue(JpHassPort::class.java)}"
-            this.restTarget = restClient.target(hassUri + SEPARATOR + REST_ENDPOINT)
+            val hassUri = UriBuilder.fromUri("http://${JPService.getValue(JPHassHost::class.java)}")
+                .port(JPService.getValue(JpHassPort::class.java))
+                .path(REST_ENDPOINT)
+            this.restTarget = restClient.target(hassUri)
             this.setConnectState(ConnectionStateType.ConnectionState.State.CONNECTING)
         } catch (ex: JPNotAvailableException) {
             throw InstantiationException(this, ex)
@@ -151,7 +156,7 @@ abstract class HassConnection : Shutdownable {
 
                 ConnectionStateType.ConnectionState.State.CONNECTED -> {
                     LOGGER.info("Connection to Hass established.")
-                    initWebsocket()
+                    webSocketConnection.activate()
                 }
 
                 ConnectionStateType.ConnectionState.State.RECONNECTING -> {
@@ -177,11 +182,9 @@ abstract class HassConnection : Shutdownable {
         }
     }
 
-    private fun initWebsocket() {
+//    private fun initWebsocket() {
 
-        TODO("leandro")
-
-//        // activate org.openbase.bco.device.hass.communication.websocket source if not already done
+//        webSocketConnection.HassWebsocketConnection
 //        if (websocketSource != null) {
 //            LOGGER.warn("WEBSOCKET already initialized!")
 //            return
@@ -228,7 +231,7 @@ abstract class HassConnection : Shutdownable {
 //        }
 //
 //        websocketSource?.register(evenConsumer, errorHandler, reconnectHandler)
-    }
+//    }
 
     private fun checkConnectionState() {
         connectionStateLock.withLock {
@@ -269,11 +272,8 @@ abstract class HassConnection : Shutdownable {
             ?.takeIf { !it.isDone }
             ?.cancel(false)
 
-        // close org.openbase.bco.device.hass.communication.websocket
-        TODO("leandro")
-//        websocketSource
-//            ?.close()
-//            ?.also { websocketSource = null }
+
+        webSocketConnection.deactivate()
     }
 
     @Throws(CouldNotPerformException::class)
@@ -455,11 +455,11 @@ abstract class HassConnection : Shutdownable {
 
     companion object {
 
-        private const val HASS_GATEWAY_CLASS_LABEL = "Hass"
+        private const val HASS_GATEWAY_CLASS_LABEL = "Home Assistant"
         private const val META_CONFIG_TOKEN_KEY = "TOKEN"
 
         const val SEPARATOR: String = "/"
-        const val REST_ENDPOINT: String = "rest"
+        const val REST_ENDPOINT: String = "api"
 
         const val APPROVE_TARGET: String = "approve"
         const val EVENTS_TARGET: String = "events"

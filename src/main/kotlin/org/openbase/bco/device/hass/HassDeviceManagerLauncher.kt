@@ -7,6 +7,7 @@ import org.openbase.bco.authentication.lib.jp.JPCredentialsDirectory
 import org.openbase.bco.device.hass.manager.HassDeviceManager
 import org.openbase.jps.core.JPService
 import org.openbase.jps.preset.JPDebugMode
+import org.openbase.jps.preset.JPLogLevel
 import org.openbase.jul.communication.jp.JPComHost
 import org.openbase.jul.communication.jp.JPComPort
 import org.openbase.jul.pattern.launch.AbstractLauncher
@@ -41,6 +42,7 @@ class HassDeviceManagerLauncher : AbstractLauncher<HassDeviceManager>(
         JPService.registerProperty(JpHassPort::class.java)
         JPService.registerProperty(JPHassHost::class.java)
         JPService.registerProperty(JPDebugMode::class.java)
+        JPService.registerProperty(JPLogLevel::class.java)
         JPService.registerProperty(JPCredentialsDirectory::class.java)
         JPService.registerProperty(JPComHost::class.java)
         JPService.registerProperty(JPComPort::class.java)

@@ -78,11 +78,6 @@ object HassEntityProcessor {
                 StringProcessor.transformUpperCaseToPascalCase(serviceType.name)
     }
 
-    @Throws(CouldNotPerformException::class)
-    fun getMetaData(entityId: String): HassEntityIdMetaData {
-        return HassEntityIdMetaData(entityId)
-    }
-
     @Throws(NotAvailableException::class)
     fun getEntityType(serviceType: ServiceTemplate.ServiceType): String {
         return when (serviceType) {
@@ -96,46 +91,6 @@ object HassEntityProcessor {
             ServiceTemplate.ServiceType.BRIGHTNESS_STATE_SERVICE -> HASS_DIMMER_TYPE
             ServiceTemplate.ServiceType.GLOBAL_POSITION_STATE_SERVICE -> HASS_LOCATION_TYPE
             else -> throw NotAvailableException("Hass entity type for service[" + serviceType.name + "]")
-        }
-    }
-
-    class HassEntityIdMetaData internal constructor(entityId: String) {
-        var alias: String? = null
-        private var serviceType: ServiceTemplate.ServiceType? = null
-
-        init {
-            try {
-                val nameSegment =
-                    entityId.split(ENTITY_SEGMENT_DELIMITER.toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-
-                try {
-                    alias = nameSegment[0].replace(
-                        ENTITY_SUBSEGMENT_DELIMITER,
-                        UnitAliasGenerationConsistencyHandler.ALIAS_NUMBER_SEPARATOR
-                    )
-                } catch (ex: IndexOutOfBoundsException) {
-                    throw CouldNotPerformException("Could not extract alias from entity name!", ex)
-                } catch (ex: NullPointerException) {
-                    throw CouldNotPerformException("Could not extract alias from entity name!", ex)
-                }
-
-                try {
-                    serviceType =
-                        ServiceTemplate.ServiceType.valueOf(StringProcessor.transformToUpperCase(nameSegment[1]))
-                } catch (ex: IndexOutOfBoundsException) {
-                    throw CouldNotPerformException("Could not extract service type from entity name!", ex)
-                } catch (ex: IllegalArgumentException) {
-                    throw CouldNotPerformException("Could not extract service type from entity name!", ex)
-                } catch (ex: NullPointerException) {
-                    throw CouldNotPerformException("Could not extract service type from entity name!", ex)
-                }
-            } catch (ex: CouldNotPerformException) {
-                throw CouldNotPerformException("Could not extract meta data out of entity name[$entityId]", ex)
-            }
-        }
-
-        fun getServiceType(): ServiceTemplate.ServiceType? {
-            return serviceType
         }
     }
 }

@@ -26,6 +26,8 @@ import org.openbase.bco.dal.control.layer.unit.device.DeviceManagerImpl
 import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.registry.remote.Registries
+import org.openbase.bco.registry.remote.login.BCOLogin
+import org.openbase.jps.core.JPService
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.ExceptionProcessor.isCausedBySystemShutdown
 import org.openbase.jul.exception.printer.ExceptionPrinter
@@ -123,6 +125,12 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
     override fun activate() {
         unitControllerRegistry.addObserver(synchronizationObserver)
         super.activate()
+
+        LOGGER.info("Connect to bco...")
+        Registries.waitUntilReady()
+        LOGGER.info("Login to bco...")
+        BCOLogin.getSession().loginBCOUser()
+
 //        HassCommunicator.instance.addWEBSOCKETObserver(serviceActionExecutor, ENTITY_STATE_TOPIC_FILTER)
         unitChangeSynchronizationFilter.trigger()
     }

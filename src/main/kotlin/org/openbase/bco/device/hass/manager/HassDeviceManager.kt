@@ -72,29 +72,34 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     return
                 }
 
-                try {
-                    for (entity in HassCommunicator.instance.entities) {
-                        try {
-                            executor.applyStateUpdate(entity.entityId, entity.type, entity.state, true)
-                        } catch (ex: CouldNotPerformException) {
-                            ExceptionPrinter.printHistory(
-                                ((("Skip synchronization of item[name:" + entity.name + ", type:" + entity.type) + ", " + ", state:" + entity.state))+ "]",
-                                ex,
-                                LOGGER,
-                                LogLevel.WARN
-                            )
-                        }
-                    }
-                } catch (ex: CouldNotPerformException) {
-                    if (!isCausedBySystemShutdown(ex)) {
-                        ExceptionPrinter.printHistory(
-                            "Could not retrieve item states from hass!",
-                            ex,
-                            LOGGER,
-                            LogLevel.WARN
-                        )
-                    }
+                HassCommunicator.instance.getDevices().forEach {
+                    println("found device: $it")
                 }
+
+//
+//                try {
+//                    for (entity in HassCommunicator.instance.entities) {
+//                        try {
+//                            executor.applyStateUpdate(entity.entityId, entity.type, entity.state, true)
+//                        } catch (ex: CouldNotPerformException) {
+//                            ExceptionPrinter.printHistory(
+//                                ((("Skip synchronization of item[name:" + entity.name + ", type:" + entity.type) + ", " + ", state:" + entity.state))+ "]",
+//                                ex,
+//                                LOGGER,
+//                                LogLevel.WARN
+//                            )
+//                        }
+//                    }
+//                } catch (ex: CouldNotPerformException) {
+//                    if (!isCausedBySystemShutdown(ex)) {
+//                        ExceptionPrinter.printHistory(
+//                            "Could not retrieve item states from hass!",
+//                            ex,
+//                            LOGGER,
+//                            LogLevel.WARN
+//                        )
+//                    }
+//                }
             }
         }
         this.serviceActionExecutor = ServiceActionExecutor(unitControllerRegistry)

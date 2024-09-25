@@ -7,6 +7,8 @@ import com.google.gson.JsonSyntaxException
 import jakarta.ws.rs.core.MediaType
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
 import org.example.org.openbase.bco.device.hass.manager.dto.ServiceAction
+import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
+import org.openbase.bco.device.hass.utils.get
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InitializationException
 import org.openbase.jul.exception.NotAvailableException
@@ -14,6 +16,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.iface.Shutdownable
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.Duration
 
 class HassCommunicator private constructor() : HassConnection() {
 
@@ -178,6 +181,24 @@ class HassCommunicator private constructor() : HassConnection() {
 //    }
 
     // ==========================================================================================================================================
+    // Devices
+    // ==========================================================================================================================================
+
+    fun getDevices(): List<HassDeviceDto> =
+        JsonParser.parseString(
+            sendWSCommand(DEVICE_WS_REQUEST).get(Duration.ofSeconds(5))
+        )
+            .asJsonArray
+            .map { gson.fromJson(it, HassDeviceDto::class.java) }
+
+    fun getEntitiesByWs(): List<HassEntityDto> =
+        JsonParser.parseString(
+            sendWSCommand(ENTITIES_WS_REQUEST).get(Duration.ofSeconds(5))
+        )
+            .asJsonArray
+            .map { gson.fromJson(it, HassEntityDto::class.java) }
+
+    // ==========================================================================================================================================
     // UTIL
     // ==========================================================================================================================================
     @Throws(CouldNotPerformException::class)
@@ -217,15 +238,12 @@ class HassCommunicator private constructor() : HassConnection() {
         get(API_HEALTH, true)
     }
 
-    fun turnOn() {
-//        post()
-    }
-
     companion object {
         const val API_HEALTH: String = "/"
         const val STATES_OF_ENTITIES_TARGET: String = "/states"
         const val LINKS_TARGET: String = "links"
-        const val ENTITYS_TARGET: String = "entitys"
+        const val DEVICE_WS_REQUEST: String = "config/device_registry/list"
+        const val ENTITIES_WS_REQUEST: String = "config/entity_registry/list"
         const val INBOX_TARGET: String = "inbox"
         const val DISCOVERY_TARGET: String = "discovery"
         const val ADDONS_TARGET: String = "addons"

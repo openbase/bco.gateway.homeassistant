@@ -1,0 +1,14 @@
+package org.openbase.bco.device.hass.manager.dto
+
+import com.google.gson.annotations.SerializedName
+
+data class HassDeviceDto(
+    val id: String,
+    val name: String,
+    @SerializedName("area_id")
+    val areaId: String,
+    val model: String,
+    val manufacturer: String,
+    val labels: List<String>,
+    val entryType: String? = null,
+)

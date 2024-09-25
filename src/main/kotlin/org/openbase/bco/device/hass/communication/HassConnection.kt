@@ -31,6 +31,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
 import java.net.URI
+import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -421,6 +422,8 @@ abstract class HassConnection : Shutdownable {
             )
         }
     }
+
+    fun sendWSCommand(message: String): Future<String?> = webSocketConnection.sendCommand(message)
 
     override fun shutdown() {
         // prepare shutdown

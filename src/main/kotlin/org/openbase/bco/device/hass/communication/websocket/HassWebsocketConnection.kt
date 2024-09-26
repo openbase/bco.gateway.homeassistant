@@ -7,16 +7,14 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 import org.example.org.openbase.bco.device.homeassistant.jp.JPHassHost
-import org.example.org.openbase.bco.device.homeassistant.jp.JpHassPort
+import org.openbase.bco.device.hass.jp.JpHassPort
 import org.example.util.toRequest
 import org.openbase.bco.device.hass.communication.websocket.command.ResultCommand
 import org.openbase.bco.device.hass.utils.JsonUtils
-import org.openbase.bco.device.hass.utils.get
 import org.openbase.jps.core.JPService
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.iface.Activatable
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState
-import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 import java.util.concurrent.locks.ReentrantReadWriteLock

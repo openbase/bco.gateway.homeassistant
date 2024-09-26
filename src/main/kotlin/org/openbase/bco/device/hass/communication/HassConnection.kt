@@ -10,7 +10,7 @@ import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
 import org.example.org.openbase.bco.device.homeassistant.jp.JPHassHost
-import org.example.org.openbase.bco.device.homeassistant.jp.JpHassPort
+import org.openbase.bco.device.hass.jp.JpHassPort
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport
 import org.openbase.bco.device.hass.communication.websocket.HassWebsocketConnection
 import org.openbase.bco.registry.remote.Registries
@@ -30,7 +30,6 @@ import org.openbase.type.domotic.unit.gateway.GatewayClassType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
-import java.net.URI
 import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ScheduledFuture

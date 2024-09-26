@@ -6,7 +6,7 @@ import okhttp3.Request
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
-import org.example.org.openbase.bco.device.homeassistant.jp.JPHassHost
+import org.openbase.bco.device.hass.jp.JPHassHost
 import org.openbase.bco.device.hass.jp.JpHassPort
 import org.example.util.toRequest
 import org.openbase.bco.device.hass.communication.TokenProvider

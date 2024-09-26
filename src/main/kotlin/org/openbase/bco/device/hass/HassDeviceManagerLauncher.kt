@@ -1,6 +1,6 @@
 package org.openbase.bco.device.hass
 
-import org.example.org.openbase.bco.device.homeassistant.jp.JPHassHost
+import org.openbase.bco.device.hass.jp.JPHassHost
 import org.openbase.bco.device.hass.jp.JpHassPort
 import org.openbase.bco.authentication.lib.BCO
 import org.openbase.bco.authentication.lib.jp.JPCredentialsDirectory

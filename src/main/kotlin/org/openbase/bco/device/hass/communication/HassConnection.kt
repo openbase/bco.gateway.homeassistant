@@ -30,7 +30,6 @@ import org.openbase.type.domotic.unit.gateway.GatewayClassType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
-import java.net.URI
 import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ScheduledFuture
@@ -38,7 +37,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-abstract class HassConnection : Shutdownable {
+abstract class HassConnection : Shutdownable, TokenProvider {
     private val topicObservableMapLock = ReentrantLock()
     private val connectionStateLock = ReentrantLock()
     private val connectionStateCondition = connectionStateLock.newCondition()
@@ -46,7 +45,7 @@ abstract class HassConnection : Shutdownable {
 
     private var restClient: Client
     private var restTarget: WebTarget
-    private var webSocketConnection: HassWebsocketConnection = HassWebsocketConnection()
+    private var webSocketConnection: HassWebsocketConnection = HassWebsocketConnection(this)
 
     var isShutdownInitiated: Boolean = false
         private set
@@ -58,6 +57,14 @@ abstract class HassConnection : Shutdownable {
     var hassConnectionState: ConnectionStateType.ConnectionState.State =
         ConnectionStateType.ConnectionState.State.DISCONNECTED
         protected set
+
+    final override val token: String
+        get() = findHassGatewayClass()?.let { hassGatewayClass ->
+            Registries.getUnitRegistry()
+                .getUnitConfigsByUnitType(UnitType.GATEWAY)
+                .find { it.gatewayConfig.gatewayClassId == hassGatewayClass.id }
+                ?.let { MetaConfigProcessor.getValue(it.metaConfig, META_CONFIG_TOKEN_KEY) }
+        }?: error("Home Assistant token missing!")
 
     init {
         try {
@@ -448,13 +455,7 @@ abstract class HassConnection : Shutdownable {
     private fun findHassGatewayClass(): GatewayClassType.GatewayClass? =
         Registries.getClassRegistry().gatewayClasses.find { contains(it.label, HASS_GATEWAY_CLASS_LABEL) }
 
-    private val token: String?
-        get() = findHassGatewayClass()?.let { hassGatewayClass ->
-            Registries.getUnitRegistry()
-                .getUnitConfigsByUnitType(UnitType.GATEWAY)
-                .find { it.gatewayConfig.gatewayClassId == hassGatewayClass.id }
-                ?.let { MetaConfigProcessor.getValue(it.metaConfig, META_CONFIG_TOKEN_KEY) }
-        }
+
 
     companion object {
 

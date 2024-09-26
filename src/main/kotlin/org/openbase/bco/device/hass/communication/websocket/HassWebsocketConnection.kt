@@ -9,6 +9,7 @@ import okio.ByteString
 import org.example.org.openbase.bco.device.homeassistant.jp.JPHassHost
 import org.example.org.openbase.bco.device.homeassistant.jp.JpHassPort
 import org.example.util.toRequest
+import org.openbase.bco.device.hass.communication.TokenProvider
 import org.openbase.bco.device.hass.communication.websocket.command.ResultCommand
 import org.openbase.bco.device.hass.utils.JsonUtils
 import org.openbase.bco.device.hass.utils.get
@@ -22,7 +23,9 @@ import java.util.concurrent.Future
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.write
 
-class HassWebsocketConnection : Activatable {
+class HassWebsocketConnection(
+    private val tokenProvider: TokenProvider
+) : Activatable {
 
     @Volatile
     private var commandCounter: Long = 0
@@ -102,9 +105,7 @@ class HassWebsocketConnection : Activatable {
             when (jsonResult.asJsonObject.getAsJsonPrimitive("type").asString) {
                 "auth_required" -> {
                     println("Authentication required.")
-                    val token =
-                        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzODAwZTZiZGNlMDk0NTU4ODAxNWY2YmFhNmZmMjgwYyIsImlhdCI6MTcyNDE3ODE1OSwiZXhwIjoyMDM5NTM4MTU5fQ.dPtFSBneq8xP9pHgdHdICmdif3XoAbY5RfpN_68d850"
-                    webSocket.send(mapOf("type" to "auth", "access_token" to token).toRequest())
+                    webSocket.send(mapOf("type" to "auth", "access_token" to tokenProvider.token).toRequest())
                     return
                 }
                 "auth_ok" -> {

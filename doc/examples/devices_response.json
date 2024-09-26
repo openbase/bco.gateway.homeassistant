@@ -1,0 +1,715 @@
+{
+  "id": 3,
+  "type": "result",
+  "success": true,
+  "result": [
+    {
+      "area_id": null,
+      "configuration_url": null,
+      "config_entries": [
+        "01J4XQM1G8W3TMGG58M90B4AMC"
+      ],
+      "connections": [],
+      "created_at": 1723279738.378236,
+      "disabled_by": null,
+      "entry_type": "service",
+      "hw_version": null,
+      "id": "ff4252a757753e73b79f90f034a7dbf5",
+      "identifiers": [
+        [
+          "sun",
+          "01J4XQM1G8W3TMGG58M90B4AMC"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": null,
+      "model": null,
+      "model_id": null,
+      "modified_at": 1723279738.378265,
+      "name_by_user": null,
+      "name": "Sun",
+      "primary_config_entry": "01J4XQM1G8W3TMGG58M90B4AMC",
+      "serial_number": null,
+      "sw_version": null,
+      "via_device_id": null
+    },
+    {
+      "area_id": null,
+      "configuration_url": "https://www.met.no/en",
+      "config_entries": [
+        "01J5RFRF88JC17N1C0FW2738EX"
+      ],
+      "connections": [],
+      "created_at": 1724177464.978161,
+      "disabled_by": null,
+      "entry_type": "service",
+      "hw_version": null,
+      "id": "383f7682f445d8a1f6af36b116270046",
+      "identifiers": [
+        [
+          "met",
+          "01J5RFRF88JC17N1C0FW2738EX"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Met.no",
+      "model": "Forecast",
+      "model_id": null,
+      "modified_at": 1724177464.978197,
+      "name_by_user": null,
+      "name": "Forecast",
+      "primary_config_entry": "01J5RFRF88JC17N1C0FW2738EX",
+      "serial_number": null,
+      "sw_version": null,
+      "via_device_id": null
+    },
+    {
+      "area_id": "leandro",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:06:78:78:2b"
+        ]
+      ],
+      "created_at": 1724177687.877899,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "1682c94369a20c329ec36fd3b49f7dfa",
+      "identifiers": [
+        [
+          "hue",
+          "05cb944a-c4dd-4104-a4dc-0c8963ed3e0e"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue color lamp (LCA001)",
+      "model_id": null,
+      "modified_at": 1724779449.937604,
+      "name_by_user": null,
+      "name": "Deckenlampe 1",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "1.116.5",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": "essbereich",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:0c:0c:df:24"
+        ]
+      ],
+      "created_at": 1724177687.878204,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "5b779c11361a96990aac304dc0cfa3a8",
+      "identifiers": [
+        [
+          "hue",
+          "0c0c0a6b-d64b-4a94-84b0-178b6efc35ab"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue color lamp (LCA006)",
+      "model_id": null,
+      "modified_at": 1724779449.937781,
+      "name_by_user": null,
+      "name": "Hue color lamp 2",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "1.116.5",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": "flur",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:0d:5d:d1:48"
+        ]
+      ],
+      "created_at": 1724177687.878313,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "ab75e4ba7f89723953b13a3d9fc0d927",
+      "identifiers": [
+        [
+          "hue",
+          "25326aa0-8421-4968-a610-9f6404dc1439"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue white candle (LWE007)",
+      "model_id": null,
+      "modified_at": 1724779449.937864,
+      "name_by_user": null,
+      "name": "Deckenlampe Flur 1",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "1.116.5",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": "essbereich",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:0c:0c:1f:f4"
+        ]
+      ],
+      "created_at": 1724177687.878393,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "26e1a3ce1d9dc41b05b80ec771c59ca6",
+      "identifiers": [
+        [
+          "hue",
+          "30dbb274-a9e4-42cb-afa3-3785230b2598"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue color lamp (LCA006)",
+      "model_id": null,
+      "modified_at": 1724779449.937937,
+      "name_by_user": null,
+      "name": "Deckenlampe 1 (links)",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "1.116.5",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": null,
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:0c:d6:17:43"
+        ]
+      ],
+      "created_at": 1724177687.878445,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "d056ad523b9d20bca9196b1c5340e392",
+      "identifiers": [
+        [
+          "hue",
+          "421d1a34-e987-423a-94b0-1234c4138df8"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue motion sensor (SML003)",
+      "model_id": null,
+      "modified_at": 1724779449.937997,
+      "name_by_user": null,
+      "name": "Eingangsbereich Bewegungsmelder",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "2.53.6",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": "flur",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:0d:5d:d5:fd"
+        ]
+      ],
+      "created_at": 1724177687.878486,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "b90e228d746fb987a17bbd1558ecf186",
+      "identifiers": [
+        [
+          "hue",
+          "48e59806-4625-4e78-b087-845512ce9943"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue white candle (LWE007)",
+      "model_id": null,
+      "modified_at": 1724779449.938059,
+      "name_by_user": null,
+      "name": "Deckenlampe Flur 2",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "1.116.5",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": "leandro",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:0b:ac:b8:88"
+        ]
+      ],
+      "created_at": 1724177687.878523,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "76b1ab7496914eb30471297f276b5652",
+      "identifiers": [
+        [
+          "hue",
+          "5a8d90e7-a812-4e46-bcd6-7d4edaf61f93"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue color lamp (LCA006)",
+      "model_id": null,
+      "modified_at": 1724779449.938113,
+      "name_by_user": null,
+      "name": "Deckenlampe 3",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "1.116.5",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": "eingangsbereich",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:0b:ac:9b:39"
+        ]
+      ],
+      "created_at": 1724177687.87856,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "3f61702ae36046c00abd1d1be4856e0e",
+      "identifiers": [
+        [
+          "hue",
+          "5cdaa5ed-ff53-44ed-975a-c7078d97c220"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue color lamp (LCA006)",
+      "model_id": null,
+      "modified_at": 1724779449.938181,
+      "name_by_user": null,
+      "name": "Eingang Deckenlampe 2",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "1.116.5",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": null,
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:0c:d6:18:c0"
+        ]
+      ],
+      "created_at": 1724177687.878624,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "10242d0c44c0bcce7a3092592aac1951",
+      "identifiers": [
+        [
+          "hue",
+          "64789c4a-c13b-4aba-8ff1-56ec4dac429a"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue motion sensor (SML003)",
+      "model_id": null,
+      "modified_at": 1724779449.938234,
+      "name_by_user": null,
+      "name": "Flur Bewegungsmelder 1",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "2.53.6",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": null,
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:06:a6:ee:3b"
+        ]
+      ],
+      "created_at": 1724177687.878661,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "497880410e64fe3c03786c8b09fbb068",
+      "identifiers": [
+        [
+          "hue",
+          "64bdcb7b-fe59-4508-874e-ff305151b3ac"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue dimmer switch (RWL021)",
+      "model_id": null,
+      "modified_at": 1724779449.938289,
+      "name_by_user": null,
+      "name": "Lichtschalter Leandro",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "1.1.28573",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": "eingangsbereich",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:0b:a6:c0:0f"
+        ]
+      ],
+      "created_at": 1724177687.878699,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "7d10ee5647dec42f5ecd7db35da2ada6",
+      "identifiers": [
+        [
+          "hue",
+          "6c96ce82-f1c0-491d-8d63-7384db589dc1"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue color lamp (LCA006)",
+      "model_id": null,
+      "modified_at": 1724779449.938343,
+      "name_by_user": null,
+      "name": "Eingang Deckenlampe 1",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "1.116.5",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": "essbereich",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:0c:0b:79:f5"
+        ]
+      ],
+      "created_at": 1724177687.878737,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "de3cec181798712466024e985832a8a6",
+      "identifiers": [
+        [
+          "hue",
+          "74e2fef1-ab2b-4071-92de-5e624d4f19f6"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue color lamp (LCA006)",
+      "model_id": null,
+      "modified_at": 1724779449.938394,
+      "name_by_user": null,
+      "name": "Deckenlampe 3 (mitte)",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "1.116.5",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": "leandro",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:06:4c:d6:67"
+        ]
+      ],
+      "created_at": 1724177687.878782,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "0f8aa2a74ec69822aa08d459dcfe4903",
+      "identifiers": [
+        [
+          "hue",
+          "97ad4174-c045-414c-ae68-2ee9b60a43e9"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Hue color lamp (LCA001)",
+      "model_id": null,
+      "modified_at": 1724779449.938443,
+      "name_by_user": null,
+      "name": "Deckenlampe 2",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "1.116.5",
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": null,
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [
+        [
+          "mac",
+          "00:17:88:01:05:20:90:60"
+        ],
+        [
+          "mac",
+          "ec:b5:fa:20:90:60"
+        ]
+      ],
+      "created_at": 1724177687.878824,
+      "disabled_by": null,
+      "entry_type": null,
+      "hw_version": null,
+      "id": "c82fe105bd88e067bc9bbcabbd1231b2",
+      "identifiers": [
+        [
+          "hue",
+          "ecb5fafffe209060"
+        ],
+        [
+          "hue",
+          "a9c4905d-505b-4552-a4b7-92604ca85289"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "BSB002",
+      "model_id": null,
+      "modified_at": 1724779452.469301,
+      "name_by_user": null,
+      "name": "Hue Bridge",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": "1.66.1966060010",
+      "via_device_id": null
+    },
+    {
+      "area_id": "leandro",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [],
+      "created_at": 1724177687.878865,
+      "disabled_by": null,
+      "entry_type": "service",
+      "hw_version": null,
+      "id": "85b8384a8a5686c0ccaf4c9ebd8055d4",
+      "identifiers": [
+        [
+          "hue",
+          "1d43f49c-5db9-435c-b549-4d4df566e4e3"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Room",
+      "model_id": null,
+      "modified_at": 1724177687.878874,
+      "name_by_user": null,
+      "name": "Leandro",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": null,
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": "essbereich",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [],
+      "created_at": 1724177687.878903,
+      "disabled_by": null,
+      "entry_type": "service",
+      "hw_version": null,
+      "id": "093d712fe20aaf984ef6a0e281fc6eca",
+      "identifiers": [
+        [
+          "hue",
+          "29169648-bfee-4d69-8d4e-ed07f32926d4"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Room",
+      "model_id": null,
+      "modified_at": 1724177687.878911,
+      "name_by_user": null,
+      "name": "Essbereich",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": null,
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": "flur",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [],
+      "created_at": 1724177687.878936,
+      "disabled_by": null,
+      "entry_type": "service",
+      "hw_version": null,
+      "id": "b1b68ed44729241c044452dd02490e50",
+      "identifiers": [
+        [
+          "hue",
+          "2ec35a23-59e7-45d6-8999-507da4920c7b"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Room",
+      "model_id": null,
+      "modified_at": 1724177687.878944,
+      "name_by_user": null,
+      "name": "Flur",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": null,
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": "eingangsbereich",
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [],
+      "created_at": 1724177687.87897,
+      "disabled_by": null,
+      "entry_type": "service",
+      "hw_version": null,
+      "id": "9b232d55fe9dd27d83decf49ee187096",
+      "identifiers": [
+        [
+          "hue",
+          "f3cab13a-8bb8-416a-9079-21214ab7ab96"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Room",
+      "model_id": null,
+      "modified_at": 1724177687.878977,
+      "name_by_user": null,
+      "name": "Eingangsbereich",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": null,
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    },
+    {
+      "area_id": null,
+      "configuration_url": null,
+      "config_entries": [
+        "01J5RFZ8ZE76D0PA0G28CXS7G5"
+      ],
+      "connections": [],
+      "created_at": 1724177687.879008,
+      "disabled_by": null,
+      "entry_type": "service",
+      "hw_version": null,
+      "id": "1c854ddddf6ee441f9ae2ab7ce846516",
+      "identifiers": [
+        [
+          "hue",
+          "cd4047ab-f199-425f-9902-027c6025838e"
+        ]
+      ],
+      "labels": [],
+      "manufacturer": "Signify Netherlands B.V.",
+      "model": "Zone",
+      "model_id": null,
+      "modified_at": 1724177687.879016,
+      "name_by_user": null,
+      "name": "Hallway",
+      "primary_config_entry": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "serial_number": null,
+      "sw_version": null,
+      "via_device_id": "c82fe105bd88e067bc9bbcabbd1231b2"
+    }
+  ]
+}

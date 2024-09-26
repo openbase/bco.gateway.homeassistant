@@ -25,6 +25,7 @@ import org.example.org.openbase.bco.device.hass.manager.unit.HassGatewayControll
 import org.openbase.bco.dal.control.layer.unit.device.DeviceManagerImpl
 import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.device.hass.communication.HassCommunicator
+import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
 import org.openbase.jps.core.JPService
@@ -32,13 +33,18 @@ import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.ExceptionProcessor.isCausedBySystemShutdown
 import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
+import org.openbase.jul.extension.type.processing.LabelProcessor
 import org.openbase.jul.iface.Launchable
 import org.openbase.jul.iface.VoidInitializable
 import org.openbase.jul.pattern.Observer
 import org.openbase.jul.pattern.provider.DataProvider
+import org.openbase.jul.processing.StringProcessor
+import org.openbase.jul.processing.VariableProvider
 import org.openbase.jul.schedule.RecurrenceEventFilter
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
+import org.openbase.type.domotic.unit.UnitTemplateType
 import org.openbase.type.domotic.unit.device.DeviceClassType.DeviceClass
+import org.openbase.type.domotic.unit.device.DeviceConfigType.DeviceConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -72,9 +78,42 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     return
                 }
 
-                HassCommunicator.instance.getDevices().forEach {
-                    println("found device: $it")
+
+                val deviceClasses = Registries.getClassRegistry(true).deviceClasses
+
+
+
+                val deviceClassMapping: List<Pair<HassDeviceDto, DeviceClass>> = HassCommunicator.instance.getDevices()
+                    .map { hassDevice -> hassDevice to deviceClasses
+                        .find { deviceClass ->
+                            deviceClass.productNumber
+                                .split(",")
+                                .map(String::trim)
+                        .contains(hassDevice.model) } }
+                    .filter { (_, deviceClass) -> deviceClass != null }
+                    .map { (hassDevice, deviceClass) -> hassDevice to deviceClass!! }
+                    .onEach { (hassDevice, deviceClass) -> println("found compatible device: $hassDevice served by ${LabelProcessor.getBestMatch(deviceClass.label)}") }
+
+                HassCommunicator.instance.entities.forEach { entity ->
+                    deviceClassMapping
+                        .find { (hassDevice, _) -> hassDevice.id == entity.deviceId }
+                        ?.let { (hassDevice, deviceClass) ->
+
+                            UnitConfig.newBuilder()
+                                .also { it.deviceConfigBuilder
+                                    .setDeviceClassId(deviceClass.id)
+                                }
+                                .setLabel(LabelProcessor.generateLabelBuilder(hassDevice.name))
+                                .setUnitType(UnitTemplateType.UnitTemplate.UnitType.DEVICE)
+                                .build()
+                        }
+
+                        // TODO: Synchronize Location vs. Areas
+                        // TODO: Implement Service Mapping BCO -> HASS (COLORABLE LIGHT)
+                        // TODO: Implement Service Mapping HASS -> BCO (COLORABLE LIGHT)
+
                 }
+
 
 //
 //                try {

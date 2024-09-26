@@ -1,0 +1,2279 @@
+{
+  "id": 4,
+  "type": "result",
+  "success": true,
+  "result": [
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J4XQM1G8W3TMGG58M90B4AMC",
+      "created_at": 1723279738.378371,
+      "device_id": "ff4252a757753e73b79f90f034a7dbf5",
+      "disabled_by": null,
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.sun_next_dawn",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "32ac7dd1bd63af838adb25a2600385da",
+      "labels": [],
+      "modified_at": 1723279738.435885,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Next dawn",
+      "platform": "sun",
+      "translation_key": "next_dawn",
+      "unique_id": "01J4XQM1G8W3TMGG58M90B4AMC-next_dawn"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J4XQM1G8W3TMGG58M90B4AMC",
+      "created_at": 1723279738.378706,
+      "device_id": "ff4252a757753e73b79f90f034a7dbf5",
+      "disabled_by": null,
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.sun_next_dusk",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "ae22707dd523a531b338828d4dfe8e88",
+      "labels": [],
+      "modified_at": 1723279738.436041,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Next dusk",
+      "platform": "sun",
+      "translation_key": "next_dusk",
+      "unique_id": "01J4XQM1G8W3TMGG58M90B4AMC-next_dusk"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J4XQM1G8W3TMGG58M90B4AMC",
+      "created_at": 1723279738.378919,
+      "device_id": "ff4252a757753e73b79f90f034a7dbf5",
+      "disabled_by": null,
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.sun_next_midnight",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "0acad67e059f0f7144ca6799a0d15cdc",
+      "labels": [],
+      "modified_at": 1723279738.436104,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Next midnight",
+      "platform": "sun",
+      "translation_key": "next_midnight",
+      "unique_id": "01J4XQM1G8W3TMGG58M90B4AMC-next_midnight"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J4XQM1G8W3TMGG58M90B4AMC",
+      "created_at": 1723279738.37912,
+      "device_id": "ff4252a757753e73b79f90f034a7dbf5",
+      "disabled_by": null,
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.sun_next_noon",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "81ab9e3c1d95d06c693957da466faaab",
+      "labels": [],
+      "modified_at": 1723279738.436152,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Next noon",
+      "platform": "sun",
+      "translation_key": "next_noon",
+      "unique_id": "01J4XQM1G8W3TMGG58M90B4AMC-next_noon"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J4XQM1G8W3TMGG58M90B4AMC",
+      "created_at": 1723279738.379445,
+      "device_id": "ff4252a757753e73b79f90f034a7dbf5",
+      "disabled_by": null,
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.sun_next_rising",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "84a197e90328692b826abb3c8429480d",
+      "labels": [],
+      "modified_at": 1723279738.436194,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Next rising",
+      "platform": "sun",
+      "translation_key": "next_rising",
+      "unique_id": "01J4XQM1G8W3TMGG58M90B4AMC-next_rising"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J4XQM1G8W3TMGG58M90B4AMC",
+      "created_at": 1723279738.379658,
+      "device_id": "ff4252a757753e73b79f90f034a7dbf5",
+      "disabled_by": null,
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.sun_next_setting",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "371b1a126ae8004e5c6f2c784b7745ef",
+      "labels": [],
+      "modified_at": 1723279738.436232,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Next setting",
+      "platform": "sun",
+      "translation_key": "next_setting",
+      "unique_id": "01J4XQM1G8W3TMGG58M90B4AMC-next_setting"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J4XQM1G8W3TMGG58M90B4AMC",
+      "created_at": 1723279738.379827,
+      "device_id": "ff4252a757753e73b79f90f034a7dbf5",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.sun_solar_elevation",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "f1ed2fdd4b64c9dd2d69c866f87fecdd",
+      "labels": [],
+      "modified_at": 1723279738.379874,
+      "name": null,
+      "options": {},
+      "original_name": "Solar elevation",
+      "platform": "sun",
+      "translation_key": "solar_elevation",
+      "unique_id": "01J4XQM1G8W3TMGG58M90B4AMC-solar_elevation"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J4XQM1G8W3TMGG58M90B4AMC",
+      "created_at": 1723279738.379961,
+      "device_id": "ff4252a757753e73b79f90f034a7dbf5",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.sun_solar_azimuth",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "ff5f582cb854a211a4a6aad9551ec829",
+      "labels": [],
+      "modified_at": 1723279738.37999,
+      "name": null,
+      "options": {},
+      "original_name": "Solar azimuth",
+      "platform": "sun",
+      "translation_key": "solar_azimuth",
+      "unique_id": "01J4XQM1G8W3TMGG58M90B4AMC-solar_azimuth"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J4XQM1G8W3TMGG58M90B4AMC",
+      "created_at": 1723279738.380056,
+      "device_id": "ff4252a757753e73b79f90f034a7dbf5",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.sun_solar_rising",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "2c7657c53d7bb014f26c684c7c3ce1e7",
+      "labels": [],
+      "modified_at": 1723279738.380106,
+      "name": null,
+      "options": {},
+      "original_name": "Solar rising",
+      "platform": "sun",
+      "translation_key": "solar_rising",
+      "unique_id": "01J4XQM1G8W3TMGG58M90B4AMC-solar_rising"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": null,
+      "created_at": 1724177444.026431,
+      "device_id": null,
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "person.admin",
+      "has_entity_name": false,
+      "hidden_by": null,
+      "icon": null,
+      "id": "7181b27d331e2812ac1e742e29a2f47e",
+      "labels": [],
+      "modified_at": 1724177444.026797,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "admin",
+      "platform": "person",
+      "translation_key": null,
+      "unique_id": "admin"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFRF4T5JFB7QZEZ8WYMRRP",
+      "created_at": 1724177464.572204,
+      "device_id": null,
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "todo.shopping_list",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "9efcbf8b597f086822ba35b426a2692e",
+      "labels": [],
+      "modified_at": 1724177464.572378,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Shopping List",
+      "platform": "shopping_list",
+      "translation_key": "shopping_list",
+      "unique_id": "01J5RFRF4T5JFB7QZEZ8WYMRRP"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFRF55YCMH0C3VQKXVGTAJ",
+      "created_at": 1724177464.592565,
+      "device_id": null,
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "tts.google_en_com",
+      "has_entity_name": false,
+      "hidden_by": null,
+      "icon": null,
+      "id": "251270faf749c4c5a057358a74912946",
+      "labels": [],
+      "modified_at": 1724177464.592781,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Google en com",
+      "platform": "google_translate",
+      "translation_key": null,
+      "unique_id": "01J5RFRF55YCMH0C3VQKXVGTAJ"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFRF88JC17N1C0FW2738EX",
+      "created_at": 1724177464.978351,
+      "device_id": "383f7682f445d8a1f6af36b116270046",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "weather.forecast_home",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "7bb16841ac9d6e46512dfccbb0f936a3",
+      "labels": [],
+      "modified_at": 1724177464.978642,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Home",
+      "platform": "met",
+      "translation_key": null,
+      "unique_id": "home"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.89934,
+      "device_id": "d056ad523b9d20bca9196b1c5340e392",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "binary_sensor.eingangsbereich_bewegungsmelder_motion",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "c2f2547d36bb1f437ddb02de395aabb3",
+      "labels": [],
+      "modified_at": 1724177687.899684,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Motion",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "1d869fb9-b20d-44e5-837d-ba8c360e7a6f"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.89992,
+      "device_id": "10242d0c44c0bcce7a3092592aac1951",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "binary_sensor.flur_bewegungsmelder_1_motion",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "742e5878646d85b3ee8a9e3e3438ded2",
+      "labels": [],
+      "modified_at": 1724177687.90013,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Motion",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "f47db7c7-08f5-44bc-852b-6296064e32a1"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.900994,
+      "device_id": "497880410e64fe3c03786c8b09fbb068",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "event.lichtschalter_leandro_button_3",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "cb9b1f07d7dd186359ff4d2babfd4c0a",
+      "labels": [],
+      "modified_at": 1724177687.9013,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Button 3",
+      "platform": "hue",
+      "translation_key": "button",
+      "unique_id": "1fda5f7b-ab4d-40c4-9170-fb040a4c58eb"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.901615,
+      "device_id": "497880410e64fe3c03786c8b09fbb068",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "event.lichtschalter_leandro_button_4",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "4b3ec744d0ec8901f87e967fccd11eec",
+      "labels": [],
+      "modified_at": 1724177687.901848,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Button 4",
+      "platform": "hue",
+      "translation_key": "button",
+      "unique_id": "223bdafd-43a0-4011-9768-da557983443b"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.90215,
+      "device_id": "497880410e64fe3c03786c8b09fbb068",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "event.lichtschalter_leandro_button_2",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "9fe2636b2615a6809a348f762eb0ce92",
+      "labels": [],
+      "modified_at": 1724177687.902596,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Button 2",
+      "platform": "hue",
+      "translation_key": "button",
+      "unique_id": "5fb1c9d5-1e42-4a38-b137-1abcdecf7894"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.902968,
+      "device_id": "497880410e64fe3c03786c8b09fbb068",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "event.lichtschalter_leandro_button_1",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "fd85e7a5b5fdd8df9e29b8ef8d36de75",
+      "labels": [],
+      "modified_at": 1724177687.903244,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Button 1",
+      "platform": "hue",
+      "translation_key": "button",
+      "unique_id": "d7ec895f-1f16-430b-9027-b7f8d61f4e85"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.906206,
+      "device_id": "5b779c11361a96990aac304dc0cfa3a8",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.hue_color_lamp_2",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "c2d2f1d51f8329bcb53c98ac59a45c7b",
+      "labels": [],
+      "modified_at": 1724177687.906481,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "276c4ec1-6364-4041-9b34-319064c173a7"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.906661,
+      "device_id": "1682c94369a20c329ec36fd3b49f7dfa",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.deckenlampe_1",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "cbbd6a2e5b5f570c931c093d4a628e8b",
+      "labels": [],
+      "modified_at": 1724177687.906803,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "2d7947b9-4d16-46aa-84b3-2b6cd242ecc7"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.906916,
+      "device_id": "26e1a3ce1d9dc41b05b80ec771c59ca6",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.deckenlampe_1_links",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "e3a0db4ddcdb8be241ccf9ff3ae11d97",
+      "labels": [],
+      "modified_at": 1724177687.907044,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "7630f3a8-c4ee-4876-90c1-2f1e6c917d98"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.907261,
+      "device_id": "de3cec181798712466024e985832a8a6",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.deckenlampe_3_mitte",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "825d80df2c44cb7d489ee26a6e47cd54",
+      "labels": [],
+      "modified_at": 1724177687.907408,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "8120a2d5-caa1-4fd5-b1b5-d1dfed1b9164"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.907543,
+      "device_id": "b90e228d746fb987a17bbd1558ecf186",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.deckenlampe_flur_2",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "230a5854f2b47c513b636f27d6b87aad",
+      "labels": [],
+      "modified_at": 1724177687.907645,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "b47c8afe-d800-4d0e-9b90-d7fffff89038"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.907747,
+      "device_id": "ab75e4ba7f89723953b13a3d9fc0d927",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.deckenlampe_flur_1",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "1043b14ce33dd7da37f68aba7fa1246d",
+      "labels": [],
+      "modified_at": 1724177687.907855,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "ca84565b-bcd8-4bcf-ab68-634441132205"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.907947,
+      "device_id": "3f61702ae36046c00abd1d1be4856e0e",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.eingang_deckenlampe_2",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "e01a5dbbf17e95ea58195df98b4be8a1",
+      "labels": [],
+      "modified_at": 1724177687.908042,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "d2459234-bdc0-4464-bc18-b5f941f4e548"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.908142,
+      "device_id": "7d10ee5647dec42f5ecd7db35da2ada6",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.eingang_deckenlampe_1",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "9ad4e4bdefd11144a83457cdc6c69e61",
+      "labels": [],
+      "modified_at": 1724177687.908239,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "f3fc0fcd-f9d1-48a8-9a44-30e0218d0d37"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.908367,
+      "device_id": "0f8aa2a74ec69822aa08d459dcfe4903",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.deckenlampe_2",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "3ec60c338bf786ce73f095453a393539",
+      "labels": [],
+      "modified_at": 1724177687.908464,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "f51521c3-d02a-4089-bcd7-8e38f7fcc6c3"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.908564,
+      "device_id": "76b1ab7496914eb30471297f276b5652",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.deckenlampe_3",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "e1fce59d94a974085e6791341f601a12",
+      "labels": [],
+      "modified_at": 1724177687.908663,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "f9aac600-a23a-4e9d-99be-0d4f5237ffd8"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.908931,
+      "device_id": "85b8384a8a5686c0ccaf4c9ebd8055d4",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.leandro",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "882dbf5356e3c7fb50b3f026da194a38",
+      "labels": [],
+      "modified_at": 1724177687.909158,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "2ab597d3-1185-4061-aba2-113bef2388c7"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.909412,
+      "device_id": "9b232d55fe9dd27d83decf49ee187096",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.eingangsbereich",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "880756f1fead26119845b144c080e559",
+      "labels": [],
+      "modified_at": 1724177687.909587,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "3e2bcec7-ee24-48ec-867f-0a0d2b74ae89"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.909792,
+      "device_id": "093d712fe20aaf984ef6a0e281fc6eca",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.essbereich",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "8f2a6cd40bf133f2c3329b2703ad900b",
+      "labels": [],
+      "modified_at": 1724177687.909969,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "6531c05c-5598-49a4-bb15-1b9b9f618255"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.910298,
+      "device_id": "9b232d55fe9dd27d83decf49ee187096",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.eingangsbereich_nachtlicht",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "0f8d55d62bf69956aaa329c57ce52c4c",
+      "labels": [],
+      "modified_at": 1724177687.910475,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Nachtlicht",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "1a16f5bb-ee7c-462c-9a13-027e9ab6dc83"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.910616,
+      "device_id": "b1b68ed44729241c044452dd02490e50",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.flur_lesen",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "8de147bbb3318b506d303210b5f12fe6",
+      "labels": [],
+      "modified_at": 1724177687.910729,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Lesen",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "1fc94a19-78aa-41ba-a8e3-886b017f291e"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.910882,
+      "device_id": "9b232d55fe9dd27d83decf49ee187096",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.eingangsbereich_hell",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "b164815415d6aa7c70f19b30770221cf",
+      "labels": [],
+      "modified_at": 1724177687.913285,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Hell",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "2da005b1-41d7-439c-b21d-1fc15fb70977"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.913513,
+      "device_id": "9b232d55fe9dd27d83decf49ee187096",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.eingangsbereich_gedimmt",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "2f09e95578dc246ebd3aa2cbd7a720a9",
+      "labels": [],
+      "modified_at": 1724177687.913658,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Gedimmt",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "2e6e281b-657a-4a6b-b5ac-dcd799299405"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.913827,
+      "device_id": "85b8384a8a5686c0ccaf4c9ebd8055d4",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.leandro_soho",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "432fa4840c8dae8709f4e1de514ad729",
+      "labels": [],
+      "modified_at": 1724177687.913971,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Soho",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "376b2ebc-276f-4140-91ac-f777195b8fff"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.914119,
+      "device_id": "b1b68ed44729241c044452dd02490e50",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.flur_dimmed",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "461d537c1bf35f5fa7bb1ac19a5e9008",
+      "labels": [],
+      "modified_at": 1724177687.914233,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Dimmed",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "3c4f7b74-214b-406d-a87d-e1e2f6ff3210"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.914377,
+      "device_id": "85b8384a8a5686c0ccaf4c9ebd8055d4",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.leandro_entspannen",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "a9402c3d66c68bb836579c5f556c03f6",
+      "labels": [],
+      "modified_at": 1724177687.914488,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Entspannen",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "40a721d9-78a6-45e9-85e1-2bbe2eddc92f"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.914608,
+      "device_id": "093d712fe20aaf984ef6a0e281fc6eca",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.essbereich_hell",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "773e39082f563112e3722eb697c9f62d",
+      "labels": [],
+      "modified_at": 1724177687.914718,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Hell",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "4639b7f8-8914-4c0f-9b29-c3e522fc7e8e"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.914848,
+      "device_id": "b1b68ed44729241c044452dd02490e50",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.flur_konzentrieren",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "0d7fbfceb6ff624fae18c08ecb2b1fd1",
+      "labels": [],
+      "modified_at": 1724177687.915043,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Konzentrieren",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "4b75ee6e-f29c-40f1-ae5a-4bc9c59086d9"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.915196,
+      "device_id": "9b232d55fe9dd27d83decf49ee187096",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.eingangsbereich_energie_tanken",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "9eec9c53ab088aba27b0124143ae87d7",
+      "labels": [],
+      "modified_at": 1724177687.915338,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Energie tanken",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "4cac7871-a521-4559-9b0a-dd0be082d51d"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.915478,
+      "device_id": "9b232d55fe9dd27d83decf49ee187096",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.eingangsbereich_lesen",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "841de47468ce3f3e3909dce3fdc60766",
+      "labels": [],
+      "modified_at": 1724177687.91558,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Lesen",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "58ff1d18-1502-4d33-a0f3-638f83826d67"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.915697,
+      "device_id": "b1b68ed44729241c044452dd02490e50",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.flur_bright",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "87a0afbafdf474fe189202227eae3a56",
+      "labels": [],
+      "modified_at": 1724177687.915806,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Bright",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "697d99e8-e7cd-4682-9d35-45bcd74acbff"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.915924,
+      "device_id": "85b8384a8a5686c0ccaf4c9ebd8055d4",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.leandro_read",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "21170cb29335e14b739b6d17a948e2b4",
+      "labels": [],
+      "modified_at": 1724177687.916014,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Read",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "6f2d519b-cc1d-4fb6-8d9f-bdc69b1a0a75"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.916127,
+      "device_id": "9b232d55fe9dd27d83decf49ee187096",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.eingangsbereich_ruhephase",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "41974f547bf8200e4d20b7b410367dd7",
+      "labels": [],
+      "modified_at": 1724177687.916216,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Ruhephase",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "7b7bdd55-1268-438d-bb83-e53ebb16c121"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.916401,
+      "device_id": "b1b68ed44729241c044452dd02490e50",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.flur_nachtlicht",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "6b11eb8be98e6a945af26e204a299b8b",
+      "labels": [],
+      "modified_at": 1724177687.916552,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Nachtlicht",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "9317d2d7-b62b-4f2c-8b48-2d40ec42a146"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.916681,
+      "device_id": "85b8384a8a5686c0ccaf4c9ebd8055d4",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.leandro_hell",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "a75443e330f8185d1bc4c0dd3d5a3934",
+      "labels": [],
+      "modified_at": 1724177687.91679,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Hell",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "a61b45d5-e659-4122-b376-461765e01359"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.916898,
+      "device_id": "b1b68ed44729241c044452dd02490e50",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.flur_entspannen",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "c526456e46876920599437731f5faea1",
+      "labels": [],
+      "modified_at": 1724177687.916979,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Entspannen",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "ada70167-7ef9-4c31-becf-66a9156bf043"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.917079,
+      "device_id": "85b8384a8a5686c0ccaf4c9ebd8055d4",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.leandro_crystalline",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "4c5cb23b38bf3e6f8810aa7b2ce1b4aa",
+      "labels": [],
+      "modified_at": 1724177687.91716,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Crystalline",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "ca1d52e0-eb00-43c0-8322-fa93eb6bfb6d"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.917257,
+      "device_id": "9b232d55fe9dd27d83decf49ee187096",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.eingangsbereich_entspannen",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "57ad2fead4a5841fc081b8cdd3e57e37",
+      "labels": [],
+      "modified_at": 1724177687.917357,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Entspannen",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "d1a98fe5-3703-498c-bbc0-ff2afcafea38"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.917474,
+      "device_id": "85b8384a8a5686c0ccaf4c9ebd8055d4",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.leandro_nightlight",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "959b2a1a86cff9f3e624d7684edc21bd",
+      "labels": [],
+      "modified_at": 1724177687.917551,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Nightlight",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "d8353668-43ac-42be-af40-26de0425fe82"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.917643,
+      "device_id": "9b232d55fe9dd27d83decf49ee187096",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.eingangsbereich_konzentrieren",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "806db4ac086568e89f7ae019f55574d0",
+      "labels": [],
+      "modified_at": 1724177687.91778,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Konzentrieren",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "e78b1dbb-f178-4286-84d9-b1709b07f8ad"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.917899,
+      "device_id": "b1b68ed44729241c044452dd02490e50",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.flur_ruhephase",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "f8a1bda6c49e9e96ac5f8f4900031b38",
+      "labels": [],
+      "modified_at": 1724177687.917992,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Ruhephase",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "ee1626b3-9932-4d24-ad6d-657db8b073ca"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.918097,
+      "device_id": "093d712fe20aaf984ef6a0e281fc6eca",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.essbereich_lesen",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "c971fa9ea0e631340f5fba12c44291e5",
+      "labels": [],
+      "modified_at": 1724177687.918178,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Lesen",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "ef20b6f4-9f72-4c92-8d80-a329edd8b194"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.918285,
+      "device_id": "b1b68ed44729241c044452dd02490e50",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.flur_energie_tanken",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "28af18670335c04da3b8cb1f7b966e0a",
+      "labels": [],
+      "modified_at": 1724177687.918385,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Energie tanken",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "f4584614-9585-4495-aae1-578a1cf85d90"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.91852,
+      "device_id": "b1b68ed44729241c044452dd02490e50",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.flur_naturliches_licht",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "87cb7efbdb730a06b4e8e99bfd02bf3b",
+      "labels": [],
+      "modified_at": 1724177687.918638,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Natürliches Licht",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "2b34306e-a3d0-4d94-b57e-abd8bb71a611"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.91879,
+      "device_id": "9b232d55fe9dd27d83decf49ee187096",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "scene.eingangsbereich_naturliches_licht",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "abe5764c5242c390f45e89dc59b7f84f",
+      "labels": [],
+      "modified_at": 1724177687.918963,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Natürliches Licht",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "9e685e60-9235-41cc-9246-c259e7dda36d"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.919614,
+      "device_id": "10242d0c44c0bcce7a3092592aac1951",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "sensor.flur_bewegungsmelder_1_temperature",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "72da72120912dae353743fd64a08d32f",
+      "labels": [],
+      "modified_at": 1724177687.919838,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Temperature",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "62bda9ac-86ac-486b-bae1-c36e525b27d0"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.919991,
+      "device_id": "d056ad523b9d20bca9196b1c5340e392",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "sensor.eingangsbereich_bewegungsmelder_temperature",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "cba6e92abeb81ab5f53d55eaf424758c",
+      "labels": [],
+      "modified_at": 1724177687.920125,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": "Temperature",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "a3981418-2859-4351-ae08-0429da8c6c43"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.92038,
+      "device_id": "10242d0c44c0bcce7a3092592aac1951",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "sensor.flur_bewegungsmelder_1_illuminance",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "a0c8d1a885f10f4f56ece75c814b541a",
+      "labels": [],
+      "modified_at": 1724177687.920571,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Illuminance",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "9f120a20-8bc4-4ef8-ac84-0bbfe0ab88df"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.920678,
+      "device_id": "d056ad523b9d20bca9196b1c5340e392",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "sensor.eingangsbereich_bewegungsmelder_illuminance",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "24fc6a07417f329d18d83c2eced7950e",
+      "labels": [],
+      "modified_at": 1724177687.920794,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Illuminance",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "ef0b6a48-57fa-4c64-9271-e658eb25ad7f"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.920971,
+      "device_id": "497880410e64fe3c03786c8b09fbb068",
+      "disabled_by": null,
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.lichtschalter_leandro_battery",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "dff4047203d980d5c05a0fb536dc5752",
+      "labels": [],
+      "modified_at": 1724177687.921215,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Battery",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "3c6d3124-3e5c-47e1-9d6c-63bcb2174bbe"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.921375,
+      "device_id": "d056ad523b9d20bca9196b1c5340e392",
+      "disabled_by": null,
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.eingangsbereich_bewegungsmelder_battery",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "24a1e061cd25cf4c636278862f630cfb",
+      "labels": [],
+      "modified_at": 1724177687.921501,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Battery",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "49fe95ad-ef00-4108-abdd-bc6453842cd9"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.921605,
+      "device_id": "10242d0c44c0bcce7a3092592aac1951",
+      "disabled_by": null,
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.flur_bewegungsmelder_1_battery",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "3f292b8e2bc3328c2122b5ee9928cca6",
+      "labels": [],
+      "modified_at": 1724177687.921707,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Battery",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "8fbb241e-d57b-4ff9-82b1-5b80b88b2b5c"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.921947,
+      "device_id": "76b1ab7496914eb30471297f276b5652",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.deckenlampe_3_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "2d613c4b2e2054ae80bbcc70a0e1c292",
+      "labels": [],
+      "modified_at": 1724177687.921974,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "1b41b5a4-5b6e-4125-87e3-16614f8052b0"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922052,
+      "device_id": "d056ad523b9d20bca9196b1c5340e392",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.eingangsbereich_bewegungsmelder_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "141a9b9b07167360228c62b790322812",
+      "labels": [],
+      "modified_at": 1724177687.922073,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "22701b54-acc9-4652-8eb3-c179b8454c42"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922131,
+      "device_id": "26e1a3ce1d9dc41b05b80ec771c59ca6",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.deckenlampe_1_links_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "07855073e8de5a8ad0ba0f6beb40a2df",
+      "labels": [],
+      "modified_at": 1724177687.922149,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "45958bed-82c5-4782-8d03-8efef7c77a78"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922202,
+      "device_id": "b90e228d746fb987a17bbd1558ecf186",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.deckenlampe_flur_2_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "b169b6f518e0755cc1d6a3cf472bc6b5",
+      "labels": [],
+      "modified_at": 1724177687.92222,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "616f844f-2bab-4c76-8cdc-284c18d55560"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922282,
+      "device_id": "497880410e64fe3c03786c8b09fbb068",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.lichtschalter_leandro_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "7ebac4cc779157cf66160f1ac6550e71",
+      "labels": [],
+      "modified_at": 1724177687.922315,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "749a72c4-dd76-4d68-8be6-6531dc5b2bb2"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922375,
+      "device_id": "c82fe105bd88e067bc9bbcabbd1231b2",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.hue_bridge_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "6a32cd072c6bc29d74890a7bc657eced",
+      "labels": [],
+      "modified_at": 1724177687.922392,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "78b8b377-9ece-408a-b92e-73ca6e1ef377"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922452,
+      "device_id": "ab75e4ba7f89723953b13a3d9fc0d927",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.deckenlampe_flur_1_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "0372a72b9ff40e3384ee8b49bb277007",
+      "labels": [],
+      "modified_at": 1724177687.922468,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "829e29b0-3789-443a-b41a-864df2437a93"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922519,
+      "device_id": "10242d0c44c0bcce7a3092592aac1951",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.flur_bewegungsmelder_1_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "93a22d10e6d2013573f67e1ca2d800bc",
+      "labels": [],
+      "modified_at": 1724177687.922535,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "8dde30ce-b147-4bcd-ae3f-33caa25d85f6"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922583,
+      "device_id": "0f8aa2a74ec69822aa08d459dcfe4903",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.deckenlampe_2_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "863975c5d2c89f5d2e01a0e6fea8b9b8",
+      "labels": [],
+      "modified_at": 1724177687.922597,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "9442b73b-9b90-4e46-9ab8-acb70100ea2d"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922648,
+      "device_id": "de3cec181798712466024e985832a8a6",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.deckenlampe_3_mitte_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "a3c304e37ebf013f27308c2fa4a9d595",
+      "labels": [],
+      "modified_at": 1724177687.922664,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "b0f64d53-a1b3-422c-a45b-8b66f2568d53"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922717,
+      "device_id": "7d10ee5647dec42f5ecd7db35da2ada6",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.eingang_deckenlampe_1_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "a54cbb4e7354c941cc6274d8ed795ba7",
+      "labels": [],
+      "modified_at": 1724177687.922736,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "be151ff0-8211-4a84-8768-7774ed38b1af"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922792,
+      "device_id": "5b779c11361a96990aac304dc0cfa3a8",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.hue_color_lamp_2_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "77625a89bf35ed1376c8f56c346e8bcb",
+      "labels": [],
+      "modified_at": 1724177687.92281,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "c43b5b5e-1f39-45a3-b5cb-8e5f43283f01"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922862,
+      "device_id": "1682c94369a20c329ec36fd3b49f7dfa",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.deckenlampe_1_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "59f24a96f8a476f463a11a3771b5b960",
+      "labels": [],
+      "modified_at": 1724177687.922876,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "f58e9d18-26ec-4d3a-bd15-d2f7a09e5d2b"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.922927,
+      "device_id": "3f61702ae36046c00abd1d1be4856e0e",
+      "disabled_by": "integration",
+      "entity_category": "diagnostic",
+      "entity_id": "sensor.eingang_deckenlampe_2_zigbee_connectivity",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "dcfea2c90d75f0ec91372ee391924e28",
+      "labels": [],
+      "modified_at": 1724177687.922942,
+      "name": null,
+      "options": {},
+      "original_name": "Zigbee connectivity",
+      "platform": "hue",
+      "translation_key": "zigbee_connectivity",
+      "unique_id": "f8750949-f592-450e-9881-3ee0d6ba07eb"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.923478,
+      "device_id": "d056ad523b9d20bca9196b1c5340e392",
+      "disabled_by": null,
+      "entity_category": "config",
+      "entity_id": "switch.eingangsbereich_bewegungsmelder_motion_sensor_enabled",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "f102e15bf15df6e1525d16083ce60477",
+      "labels": [],
+      "modified_at": 1724177687.923609,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Motion sensor enabled",
+      "platform": "hue",
+      "translation_key": "motion_sensor_enabled",
+      "unique_id": "1d869fb9-b20d-44e5-837d-ba8c360e7a6f"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.923754,
+      "device_id": "10242d0c44c0bcce7a3092592aac1951",
+      "disabled_by": null,
+      "entity_category": "config",
+      "entity_id": "switch.flur_bewegungsmelder_1_motion_sensor_enabled",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "633e11501070dee9640078cf7b52953e",
+      "labels": [],
+      "modified_at": 1724177687.924634,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Motion sensor enabled",
+      "platform": "hue",
+      "translation_key": "motion_sensor_enabled",
+      "unique_id": "f47db7c7-08f5-44bc-852b-6296064e32a1"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.924797,
+      "device_id": "10242d0c44c0bcce7a3092592aac1951",
+      "disabled_by": null,
+      "entity_category": "config",
+      "entity_id": "switch.flur_bewegungsmelder_1_light_sensor_enabled",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "1f7c6433ac2dd502d3f58670ffc28faf",
+      "labels": [],
+      "modified_at": 1724177687.924904,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Light sensor enabled",
+      "platform": "hue",
+      "translation_key": "light_sensor_enabled",
+      "unique_id": "9f120a20-8bc4-4ef8-ac84-0bbfe0ab88df"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.925112,
+      "device_id": "d056ad523b9d20bca9196b1c5340e392",
+      "disabled_by": null,
+      "entity_category": "config",
+      "entity_id": "switch.eingangsbereich_bewegungsmelder_light_sensor_enabled",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "37c837bd6bb6eff8ae08b05b34b07617",
+      "labels": [],
+      "modified_at": 1724177687.925209,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Light sensor enabled",
+      "platform": "hue",
+      "translation_key": "light_sensor_enabled",
+      "unique_id": "ef0b6a48-57fa-4c64-9271-e658eb25ad7f"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.92535,
+      "device_id": "c82fe105bd88e067bc9bbcabbd1231b2",
+      "disabled_by": null,
+      "entity_category": "config",
+      "entity_id": "switch.automation_flur_bewegungsmelder_1",
+      "has_entity_name": false,
+      "hidden_by": null,
+      "icon": null,
+      "id": "6345ed158e3fedce1106e1bb06f198ba",
+      "labels": [],
+      "modified_at": 1724177687.925446,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Automation: Flur Bewegungsmelder 1",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "46f3bf6c-d762-431b-8ff1-b6800c767a49"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.925549,
+      "device_id": "c82fe105bd88e067bc9bbcabbd1231b2",
+      "disabled_by": null,
+      "entity_category": "config",
+      "entity_id": "switch.automation_timer",
+      "has_entity_name": false,
+      "hidden_by": null,
+      "icon": null,
+      "id": "ad851ab5231f96a7e32c61bcc186a54c",
+      "labels": [],
+      "modified_at": 1724177687.925621,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Automation: Timer",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "5e9f0aba-fe19-4af5-abff-9ab8f5d1f23f"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.925713,
+      "device_id": "c82fe105bd88e067bc9bbcabbd1231b2",
+      "disabled_by": null,
+      "entity_category": "config",
+      "entity_id": "switch.automation_naturlich_aufwachen",
+      "has_entity_name": false,
+      "hidden_by": null,
+      "icon": null,
+      "id": "4ce771154c7b3767ec7c9f33a1df3f4f",
+      "labels": [],
+      "modified_at": 1724177687.925797,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Automation: Natürlich Aufwachen",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "6838ad72-09d9-45ab-98d1-6c05d7b193ca"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.925896,
+      "device_id": "c82fe105bd88e067bc9bbcabbd1231b2",
+      "disabled_by": null,
+      "entity_category": "config",
+      "entity_id": "switch.automation_lichtschalter_leandro",
+      "has_entity_name": false,
+      "hidden_by": null,
+      "icon": null,
+      "id": "dc133c3072851690b31fc00898264ba0",
+      "labels": [],
+      "modified_at": 1724177687.925965,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Automation: Lichtschalter Leandro",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "7ea56b9f-bf92-47d9-8327-a7efc3ed0810"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177687.926051,
+      "device_id": "c82fe105bd88e067bc9bbcabbd1231b2",
+      "disabled_by": null,
+      "entity_category": "config",
+      "entity_id": "switch.automation_eingangsbereich_bewegungsmelder",
+      "has_entity_name": false,
+      "hidden_by": null,
+      "icon": null,
+      "id": "377f2015b6e8461b54849018dd24aa61",
+      "labels": [],
+      "modified_at": 1724177687.926116,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": false
+        }
+      },
+      "original_name": "Automation: Eingangsbereich Bewegungsmelder",
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "8578f893-4e2c-429a-a4a3-0c10fa2a0d5e"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177690.41996,
+      "device_id": "1c854ddddf6ee441f9ae2ab7ce846516",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.hallway",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "0aaf3234575ea3964e9f1e4e08054e42",
+      "labels": [],
+      "modified_at": 1724177690.421355,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "8a53e86f-5d0c-4b47-a409-a6d3ede900a6"
+    },
+    {
+      "area_id": null,
+      "categories": {},
+      "config_entry_id": "01J5RFZ8ZE76D0PA0G28CXS7G5",
+      "created_at": 1724177690.422795,
+      "device_id": "b1b68ed44729241c044452dd02490e50",
+      "disabled_by": null,
+      "entity_category": null,
+      "entity_id": "light.flur",
+      "has_entity_name": true,
+      "hidden_by": null,
+      "icon": null,
+      "id": "6bfb6c4a9129713ed16c68e5a6546a45",
+      "labels": [],
+      "modified_at": 1724177690.423666,
+      "name": null,
+      "options": {
+        "conversation": {
+          "should_expose": true
+        }
+      },
+      "original_name": null,
+      "platform": "hue",
+      "translation_key": null,
+      "unique_id": "fd944ec0-ef4f-4af9-94de-216b8d7f67d2"
+    }
+  ]
+}

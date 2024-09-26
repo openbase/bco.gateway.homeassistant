@@ -10,7 +10,7 @@ import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
 import org.example.org.openbase.bco.device.homeassistant.jp.JPHassHost
-import org.example.org.openbase.bco.device.homeassistant.jp.JpHassPort
+import org.openbase.bco.device.hass.jp.JpHassPort
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport
 import org.openbase.bco.device.hass.communication.websocket.HassWebsocketConnection
 import org.openbase.bco.registry.remote.Registries

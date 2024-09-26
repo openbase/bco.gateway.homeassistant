@@ -1,4 +1,4 @@
-package org.example.org.openbase.bco.device.homeassistant.jp
+package org.openbase.bco.device.hass.jp
 
 import org.openbase.jps.core.AbstractJavaProperty
 

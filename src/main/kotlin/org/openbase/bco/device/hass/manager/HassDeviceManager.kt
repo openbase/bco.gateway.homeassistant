@@ -28,25 +28,23 @@ import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
-import org.openbase.jps.core.JPService
 import org.openbase.jul.exception.CouldNotPerformException
-import org.openbase.jul.exception.ExceptionProcessor.isCausedBySystemShutdown
 import org.openbase.jul.exception.printer.ExceptionPrinter
-import org.openbase.jul.exception.printer.LogLevel
+import org.openbase.jul.extension.protobuf.ProtoBufBuilderProcessor.mergeFromWithoutRepeatedFields
 import org.openbase.jul.extension.type.processing.LabelProcessor
+import org.openbase.jul.extension.type.processing.MetaConfigProcessor
 import org.openbase.jul.iface.Launchable
 import org.openbase.jul.iface.VoidInitializable
 import org.openbase.jul.pattern.Observer
 import org.openbase.jul.pattern.provider.DataProvider
-import org.openbase.jul.processing.StringProcessor
-import org.openbase.jul.processing.VariableProvider
 import org.openbase.jul.schedule.RecurrenceEventFilter
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
-import org.openbase.type.domotic.unit.UnitTemplateType
 import org.openbase.type.domotic.unit.device.DeviceClassType.DeviceClass
-import org.openbase.type.domotic.unit.device.DeviceConfigType.DeviceConfig
+import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig.LocationType
+import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), false),
     Launchable<Void>, VoidInitializable {
@@ -78,12 +76,8 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     return
                 }
 
-
                 val deviceClasses = Registries.getClassRegistry(true).deviceClasses
-
-
-
-                val deviceClassMapping: List<Pair<HassDeviceDto, DeviceClass>> = HassCommunicator.instance.getDevices()
+                val deviceClassMapping: Map<String, Pair<HassDeviceDto, DeviceClass>> = HassCommunicator.instance.getDevices()
                     .map { hassDevice -> hassDevice to deviceClasses
                         .find { deviceClass ->
                             deviceClass.productNumber
@@ -93,26 +87,97 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     .filter { (_, deviceClass) -> deviceClass != null }
                     .map { (hassDevice, deviceClass) -> hassDevice to deviceClass!! }
                     .onEach { (hassDevice, deviceClass) -> println("found compatible device: $hassDevice served by ${LabelProcessor.getBestMatch(deviceClass.label)}") }
+                    .associateBy { (hassDevice, _) -> hassDevice.id }
 
-                HassCommunicator.instance.entities.forEach { entity ->
-                    deviceClassMapping
-                        .find { (hassDevice, _) -> hassDevice.id == entity.deviceId }
-                        ?.let { (hassDevice, deviceClass) ->
+                // ======= SYNC FlOORS ========
 
-                            UnitConfig.newBuilder()
-                                .also { it.deviceConfigBuilder
-                                    .setDeviceClassId(deviceClass.id)
+                val ALIAS_KEY_HASS_FLOOR_ID = "HASS_FLOOR_ID"
+
+                val floorIdToZones = Registries.getUnitRegistry()
+                    .getUnitConfigsByUnitType(UnitType.LOCATION)
+                    .filter { it.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_FLOOR_ID} }
+                    .associateBy { MetaConfigProcessor.getValue(it.metaConfig, ALIAS_KEY_HASS_FLOOR_ID) }
+
+                HassCommunicator.instance.getFloors()
+                    .map { floor ->
+                        UnitConfig.newBuilder()
+                            .setUnitType(UnitType.LOCATION)
+                            .apply {
+                                locationConfigBuilder
+                                    .setLocationType(LocationType.ZONE)
+                            }
+                            .setLabel(LabelProcessor.generateLabelBuilder(floor.name))
+                            .apply { MetaConfigProcessor.setValue(metaConfigBuilder, ALIAS_KEY_HASS_FLOOR_ID, floor.id) }
+                            .build()
+                    }.map { zoneConfig ->
+                        floorIdToZones[MetaConfigProcessor.getValue(zoneConfig.metaConfig, ALIAS_KEY_HASS_FLOOR_ID)]?.let { existingZoneConfig ->
+                            existingZoneConfig.toBuilder().mergeFrom(zoneConfig).build().let {
+                                Registries.getUnitRegistry().updateUnitConfig(it).get(30, TimeUnit.SECONDS)
+                            }
+                        } ?: Registries.getUnitRegistry().registerUnitConfig(zoneConfig).get(30, TimeUnit.SECONDS)
+                    }
+
+                // ======= SYNC AREAS ========
+                val ALIAS_KEY_HASS_AREA_ID = "HASS_AREA_ID"
+                val areaIdToTiles = Registries.getUnitRegistry()
+                    .getUnitConfigsByUnitType(UnitType.LOCATION)
+                    .filter { it.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_AREA_ID} }
+                    .associateBy { MetaConfigProcessor.getValue(it.metaConfig, ALIAS_KEY_HASS_AREA_ID) }
+
+                HassCommunicator.instance.getAreas()
+                    .map { area ->
+                        UnitConfig.newBuilder()
+                            .setUnitType(UnitType.LOCATION)
+                            .apply {
+                                locationConfigBuilder
+                                    .setLocationType(LocationType.TILE)
+                            }
+                            .setLabel(LabelProcessor.generateLabelBuilder(area.name))
+                            .apply { MetaConfigProcessor.setValue(metaConfigBuilder, ALIAS_KEY_HASS_AREA_ID, area.id) }
+                            .build()
+                    }.map { tileConfig ->
+                        areaIdToTiles[MetaConfigProcessor.getValue(tileConfig.metaConfig, ALIAS_KEY_HASS_AREA_ID)]?.let { existingTileConfig ->
+                            existingTileConfig.toBuilder().mergeFromWithoutRepeatedFields(tileConfig).build().let {
+                                Registries.getUnitRegistry().updateUnitConfig(it).get(30, TimeUnit.SECONDS)
+                            }
+                        } ?: Registries.getUnitRegistry().registerUnitConfig(tileConfig).get(30, TimeUnit.SECONDS)
+                    }
+
+                // ======= SYNC DEVICES ========
+
+                val ALIAS_KEY_HASS_DEVICE_ID = "HASS_DEVICE_ID"
+                val deviceIdToDevices = Registries.getUnitRegistry()
+                    .getUnitConfigsByUnitType(UnitType.DEVICE)
+                    .filter { it.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_DEVICE_ID} }
+                    .associateBy { MetaConfigProcessor.getValue(it.metaConfig, ALIAS_KEY_HASS_DEVICE_ID) }
+
+                HassCommunicator.instance.getDevices()
+                    .filter { device -> deviceClassMapping[device.id] != null }
+                    .map { device ->
+                        UnitConfig.newBuilder()
+                            .setUnitType(UnitType.DEVICE)
+                            .apply {
+                                deviceClassMapping[device.id]!!.let { (_, deviceClass) ->
+                                    deviceConfigBuilder
+                                        .setDeviceClassId(deviceClass.id)
                                 }
-                                .setLabel(LabelProcessor.generateLabelBuilder(hassDevice.name))
-                                .setUnitType(UnitTemplateType.UnitTemplate.UnitType.DEVICE)
-                                .build()
-                        }
+                            }
+                            .setLabel(LabelProcessor.generateLabelBuilder(device.name))
+                            .apply { MetaConfigProcessor.setValue(metaConfigBuilder, ALIAS_KEY_HASS_DEVICE_ID, device.id) }
+                            .build()
+                    }.map { deviceConfig ->
+                        deviceIdToDevices[MetaConfigProcessor.getValue(deviceConfig.metaConfig, ALIAS_KEY_HASS_DEVICE_ID)]?.let { existingDeviceConfig ->
+                            existingDeviceConfig.toBuilder().mergeFromWithoutRepeatedFields(deviceConfig).build().let {
+                                Registries.getUnitRegistry().updateUnitConfig(it).get(30, TimeUnit.SECONDS)
+                            }
+                        } ?: Registries.getUnitRegistry().registerUnitConfig(deviceConfig).get(30, TimeUnit.SECONDS)
+                    }
 
-                        // TODO: Synchronize Location vs. Areas
-                        // TODO: Implement Service Mapping BCO -> HASS (COLORABLE LIGHT)
-                        // TODO: Implement Service Mapping HASS -> BCO (COLORABLE LIGHT)
 
-                }
+                // TODO: Location and Device initial sync draft is ready, however we have issues with repeated field that are not merged correctly.
+                // TODO: Implement Service Mapping BCO -> HASS (COLORABLE LIGHT)
+                // TODO: Implement Service Mapping HASS -> BCO (COLORABLE LIGHT)
+
 
 
 //

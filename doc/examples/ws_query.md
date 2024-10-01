@@ -1,19 +1,45 @@
-{
-"type": "auth",
-"access_token": "xxx"
-}
+# Websocket Communication
 
-{
-"id": 1,
-"type": "get_states"
-}
+## Connection config
 
-{
-"id": 2,
-"type": "get_services"
-}
+`ws://$HOST:8123/api/websocket`
 
+## Authenticate
+``` json
 {
-"id": 3,
-"type": "config/device_registry/list"
+    "type": "auth",
+    "access_token": "xxx"
 }
+```
+
+## Request States
+``` json
+{
+    "id": 1,
+    "type": "get_states"
+}
+```
+
+## Request Services
+``` json
+{
+    "id": 2,
+    "type": "get_services"
+}
+```
+
+## Request Devices
+``` json
+{
+    "id": 3,
+    "type": "config/device_registry/list"
+}
+```
+
+## Request Areas
+``` json
+{
+    "id": 4,
+    "type": "config/area_registry/list"
+}
+```

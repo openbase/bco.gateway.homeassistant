@@ -1,0 +1,152 @@
+{
+  "id": 3,
+  "type": "result",
+  "success": true,
+  "result": [
+    {
+      "aliases": [],
+      "area_id": "kuche",
+      "floor_id": null,
+      "icon": null,
+      "labels": [],
+      "name": "Küche",
+      "picture": null,
+      "created_at": 1723284139.978521,
+      "modified_at": 1723284139.978527
+    },
+    {
+      "aliases": [],
+      "area_id": "wohnzimmer",
+      "floor_id": null,
+      "icon": null,
+      "labels": [],
+      "name": "Wohnzimmer",
+      "picture": null,
+      "created_at": 1723284247.332914,
+      "modified_at": 1723284247.33292
+    },
+    {
+      "aliases": [],
+      "area_id": "schlafzimmer",
+      "floor_id": null,
+      "icon": null,
+      "labels": [],
+      "name": "Schlafzimmer",
+      "picture": null,
+      "created_at": 1723284247.333089,
+      "modified_at": 1723284247.333091
+    },
+    {
+      "aliases": [],
+      "area_id": "flur",
+      "floor_id": "erdgeschoss",
+      "icon": null,
+      "labels": [
+        "was_ist_ein_label"
+      ],
+      "name": "Flur",
+      "picture": null,
+      "created_at": 1723284728.406694,
+      "modified_at": 1727806310.855074
+    },
+    {
+      "aliases": [],
+      "area_id": "wintergarten",
+      "floor_id": null,
+      "icon": null,
+      "labels": [],
+      "name": "Wintergarten",
+      "picture": null,
+      "created_at": 1723284728.407051,
+      "modified_at": 1723284728.407053
+    },
+    {
+      "aliases": [],
+      "area_id": "badezimmer",
+      "floor_id": "erdgeschoss",
+      "icon": null,
+      "labels": [],
+      "name": "Badezimmer",
+      "picture": null,
+      "created_at": 1723284728.40886,
+      "modified_at": 1727806180.727722
+    },
+    {
+      "aliases": [],
+      "area_id": "buro",
+      "floor_id": null,
+      "icon": null,
+      "labels": [],
+      "name": "Büro",
+      "picture": null,
+      "created_at": 1723284728.409924,
+      "modified_at": 1723284728.409925
+    },
+    {
+      "aliases": [],
+      "area_id": "wandschrank",
+      "floor_id": null,
+      "icon": null,
+      "labels": [],
+      "name": "Wandschrank",
+      "picture": null,
+      "created_at": 1723284728.415599,
+      "modified_at": 1723284728.415601
+    },
+    {
+      "aliases": [],
+      "area_id": "treppenhaus",
+      "floor_id": null,
+      "icon": null,
+      "labels": [],
+      "name": "Treppenhaus",
+      "picture": null,
+      "created_at": 1723284728.421301,
+      "modified_at": 1723284728.421303
+    },
+    {
+      "aliases": [],
+      "area_id": "keller",
+      "floor_id": null,
+      "icon": null,
+      "labels": [],
+      "name": "Keller",
+      "picture": null,
+      "created_at": 1723284751.387398,
+      "modified_at": 1723284751.387403
+    },
+    {
+      "aliases": [],
+      "area_id": "garten",
+      "floor_id": null,
+      "icon": null,
+      "labels": [],
+      "name": "Garten",
+      "picture": null,
+      "created_at": 1723284751.389086,
+      "modified_at": 1723284751.389091
+    },
+    {
+      "aliases": [],
+      "area_id": "sauna",
+      "floor_id": null,
+      "icon": null,
+      "labels": [],
+      "name": "Sauna",
+      "picture": null,
+      "created_at": 1723284751.400376,
+      "modified_at": 1723284751.400381
+    },
+    {
+      "aliases": [],
+      "area_id": "vorgarten",
+      "floor_id": null,
+      "icon": null,
+      "labels": [],
+      "name": "Vorgarten",
+      "picture": null,
+      "created_at": 1723284751.401174,
+      "modified_at": 1723284751.401179
+    }
+  ]
+}

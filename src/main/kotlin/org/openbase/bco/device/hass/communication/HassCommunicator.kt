@@ -8,6 +8,8 @@ import jakarta.ws.rs.core.MediaType
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
 import org.example.org.openbase.bco.device.hass.manager.dto.ServiceAction
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
+import org.openbase.bco.device.hass.manager.dto.HassAreaDto
+import org.openbase.bco.device.hass.manager.dto.HassFloorDto
 import org.openbase.bco.device.hass.utils.get
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InitializationException
@@ -199,6 +201,26 @@ class HassCommunicator private constructor() : HassConnection() {
             .map { gson.fromJson(it, HassEntityDto::class.java) }
 
     // ==========================================================================================================================================
+    // Areas
+    // ==========================================================================================================================================
+    fun getAreas(): List<HassAreaDto> =
+        JsonParser.parseString(
+            sendWSCommand(AREA_WS_REQUEST).get(Duration.ofSeconds(5))
+        )
+            .asJsonArray
+            .map { gson.fromJson(it, HassAreaDto::class.java) }
+
+    // ==========================================================================================================================================
+    // Floors
+    // ==========================================================================================================================================
+    fun getFloors(): List<HassFloorDto> =
+        JsonParser.parseString(
+            sendWSCommand(FLOOR_WS_REQUEST).get(Duration.ofSeconds(5))
+        )
+            .asJsonArray
+            .map { gson.fromJson(it, HassFloorDto::class.java) }
+
+    // ==========================================================================================================================================
     // UTIL
     // ==========================================================================================================================================
     @Throws(CouldNotPerformException::class)
@@ -243,6 +265,8 @@ class HassCommunicator private constructor() : HassConnection() {
         const val STATES_OF_ENTITIES_TARGET: String = "/states"
         const val LINKS_TARGET: String = "links"
         const val DEVICE_WS_REQUEST: String = "config/device_registry/list"
+        const val AREA_WS_REQUEST: String = "config/area_registry/list"
+        const val FLOOR_WS_REQUEST: String = "config/floor_registry/list"
         const val ENTITIES_WS_REQUEST: String = "config/entity_registry/list"
         const val INBOX_TARGET: String = "inbox"
         const val DISCOVERY_TARGET: String = "discovery"

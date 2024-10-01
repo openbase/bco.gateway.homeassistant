@@ -60,7 +60,7 @@ class HassDeviceManagerLauncher : AbstractLauncher<HassDeviceManager>(
                 HassDeviceManagerLauncher::class.java,
                 args,
                 HassDeviceManagerLauncher::class.java,
-                // HassConfigSynchronizerLauncher.class,
+//                 HassConfigSynchronizerLauncher.class,
             )
         }
     }

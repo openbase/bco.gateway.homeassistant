@@ -116,7 +116,12 @@ class HassWebsocketConnection(
                 }
             }
 
-            val result = JsonUtils.gson.fromJson(jsonResult, ResultCommand::class.java)
+            val result = try {
+                 JsonUtils.gson.fromJson(jsonResult, ResultCommand::class.java)
+            } catch (ex: Exception) {
+                println("Could not process result: ${jsonResult}")
+                throw  ex
+            }
 
             requestMapLock.write {
                 if (result.success != false) {

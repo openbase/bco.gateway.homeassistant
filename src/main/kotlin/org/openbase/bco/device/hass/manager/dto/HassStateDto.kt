@@ -2,16 +2,14 @@ package org.openbase.bco.device.hass.manager.dto
 
 import com.google.gson.annotations.SerializedName
 
-data class HassEntityDto(
-    @SerializedName("unique_id")
-    val id: String,
+data class HassStateDto(
     @SerializedName("entity_id")
     val entityId: String,
-    @SerializedName("area_id")
-    val areaId: String,
-    val platform: String,
-    @SerializedName("device_id")
-    val deviceId: String,
+    @SerializedName("last_changed")
+    val lastChanged: String,
+    val state: String,
+    val attributes: Map<String, Any>,
+    val context: Map<String, String?>,
 ) {
     val type get() = entityId.split(".").first()
     val name get() = entityId.split(".").last()

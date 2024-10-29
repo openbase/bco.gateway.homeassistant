@@ -7,5 +7,5 @@ data class ResultCommand(
     val type: String,
     val success: Boolean?,
     val result: JsonElement,
-    val error: String?,
+    val error: JsonElement?,
 )

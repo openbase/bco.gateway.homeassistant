@@ -10,6 +10,7 @@ import org.example.org.openbase.bco.device.hass.manager.dto.ServiceAction
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassAreaDto
 import org.openbase.bco.device.hass.manager.dto.HassFloorDto
+import org.openbase.bco.device.hass.manager.dto.HassStateDto
 import org.openbase.bco.device.hass.utils.get
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InitializationException
@@ -34,13 +35,13 @@ class HassCommunicator private constructor() : HassConnection() {
 
     @Throws(CouldNotPerformException::class)
     fun registerEntities(entityList: List<HassEntityDto>?): List<HassEntityDto> {
-        return jsonElementToTypedList(JsonParser.parseString(putJson(STATES_OF_ENTITIES_TARGET, entityList)), HassEntityDto::class.java)
+        return jsonElementToTypedList(JsonParser.parseString(putJson(STATES_WS_REQUEST, entityList)), HassEntityDto::class.java)
     }
 
     @Throws(CouldNotPerformException::class)
     fun updateEntity(entity: HassEntityDto): HassEntityDto {
         return jsonToClass(
-            JsonParser.parseString(putJson(STATES_OF_ENTITIES_TARGET + SEPARATOR + entity.entityId, entity)),
+            JsonParser.parseString(putJson(STATES_WS_REQUEST + SEPARATOR + entity.entityId, entity)),
             HassEntityDto::class.java
         )
     }
@@ -51,18 +52,14 @@ class HassCommunicator private constructor() : HassConnection() {
     @Throws(CouldNotPerformException::class)
     fun deleteEntity(entityId: String): HassEntityDto {
         LOGGER.warn("Delete item {}", entityId)
-        return jsonToClass(JsonParser.parseString(delete(STATES_OF_ENTITIES_TARGET + SEPARATOR + entityId)), HassEntityDto::class.java)
+        return jsonToClass(JsonParser.parseString(delete(STATES_WS_REQUEST + SEPARATOR + entityId)), HassEntityDto::class.java)
     }
-
-    @get:Throws(CouldNotPerformException::class)
-    val entities: List<HassEntityDto>
-        get() = jsonElementToTypedList(JsonParser.parseString(get(STATES_OF_ENTITIES_TARGET)), HassEntityDto::class.java)
 
     @Throws(NotAvailableException::class)
     fun getEntity(entityId: String): HassEntityDto =
         try {
             jsonToClass(
-                JsonParser.parseString(get(STATES_OF_ENTITIES_TARGET + SEPARATOR + entityId)),
+                JsonParser.parseString(get(STATES_WS_REQUEST + SEPARATOR + entityId)),
                 HassEntityDto::class.java
             )
         } catch (ex: CouldNotPerformException) {
@@ -85,7 +82,7 @@ class HassCommunicator private constructor() : HassConnection() {
 
     @Throws(CouldNotPerformException::class)
     fun postServiceAction(entityId: String, serviceAction: String?) {
-        post(STATES_OF_ENTITIES_TARGET + SEPARATOR + entityId, serviceAction!!, MediaType.TEXT_PLAIN_TYPE)
+        post(STATES_WS_REQUEST + SEPARATOR + entityId, serviceAction!!, MediaType.TEXT_PLAIN_TYPE)
     }
 
 //    // ==========================================================================================================================================
@@ -193,12 +190,22 @@ class HassCommunicator private constructor() : HassConnection() {
             .asJsonArray
             .map { gson.fromJson(it, HassDeviceDto::class.java) }
 
-    fun getEntitiesByWs(): List<HassEntityDto> =
+    fun getEntities(): List<HassEntityDto> =
         JsonParser.parseString(
             sendWSCommand(ENTITIES_WS_REQUEST).get(Duration.ofSeconds(5))
         )
             .asJsonArray
             .map { gson.fromJson(it, HassEntityDto::class.java) }
+
+    // ==========================================================================================================================================
+    // States
+    // ==========================================================================================================================================
+    fun getStates(): List<HassStateDto> =
+        JsonParser.parseString(
+            sendWSCommand(STATES_WS_REQUEST).get(Duration.ofSeconds(5))
+        )
+            .asJsonArray
+            .map { gson.fromJson(it, HassStateDto::class.java) }
 
     // ==========================================================================================================================================
     // Areas
@@ -262,12 +269,12 @@ class HassCommunicator private constructor() : HassConnection() {
 
     companion object {
         const val API_HEALTH: String = "/"
-        const val STATES_OF_ENTITIES_TARGET: String = "/states"
-        const val LINKS_TARGET: String = "links"
+        const val STATES_WS_REQUEST: String = "get_states"
         const val DEVICE_WS_REQUEST: String = "config/device_registry/list"
         const val AREA_WS_REQUEST: String = "config/area_registry/list"
         const val FLOOR_WS_REQUEST: String = "config/floor_registry/list"
         const val ENTITIES_WS_REQUEST: String = "config/entity_registry/list"
+        const val LINKS_TARGET: String = "links"
         const val INBOX_TARGET: String = "inbox"
         const val DISCOVERY_TARGET: String = "discovery"
         const val ADDONS_TARGET: String = "addons"

@@ -43,3 +43,12 @@
     "type": "config/area_registry/list"
 }
 ```
+
+## Subscribe to state change
+```
+{
+  "id": 18,
+  "type": "subscribe_events",
+  "event_type": "state_changed"
+}
+```

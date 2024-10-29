@@ -26,10 +26,13 @@ import org.openbase.bco.dal.control.layer.unit.device.DeviceManagerImpl
 import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
+import org.openbase.bco.device.hass.manager.dto.HassEntityDto
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
 import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.jul.exception.ExceptionProcessor
 import org.openbase.jul.exception.printer.ExceptionPrinter
+import org.openbase.jul.exception.printer.LogLevel
 import org.openbase.jul.extension.protobuf.ProtoBufBuilderProcessor.mergeFromWithoutRepeatedFields
 import org.openbase.jul.extension.type.processing.LabelProcessor
 import org.openbase.jul.extension.type.processing.MetaConfigProcessor
@@ -48,6 +51,7 @@ import java.util.concurrent.TimeUnit
 
 class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), false),
     Launchable<Void>, VoidInitializable {
+
     private val serviceActionExecutor: ServiceActionExecutor
 
     /**
@@ -143,15 +147,16 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                         } ?: Registries.getUnitRegistry().registerUnitConfig(tileConfig).get(30, TimeUnit.SECONDS)
                     }
 
-                // ======= SYNC DEVICES ========
+                val deviceIdToEntity: Map<String, List<HassEntityDto>> = HassCommunicator.instance.getEntities()
+                    .groupBy { it.deviceId }
 
-                val ALIAS_KEY_HASS_DEVICE_ID = "HASS_DEVICE_ID"
+                // ======= SYNC DEVICES ========
                 val deviceIdToDevices = Registries.getUnitRegistry()
                     .getUnitConfigsByUnitType(UnitType.DEVICE)
                     .filter { it.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_DEVICE_ID} }
                     .associateBy { MetaConfigProcessor.getValue(it.metaConfig, ALIAS_KEY_HASS_DEVICE_ID) }
 
-                HassCommunicator.instance.getDevices()
+                val entities = HassCommunicator.instance.getDevices()
                     .filter { device -> deviceClassMapping[device.id] != null }
                     .map { device ->
                         UnitConfig.newBuilder()
@@ -171,39 +176,65 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                                 Registries.getUnitRegistry().updateUnitConfig(it).get(30, TimeUnit.SECONDS)
                             }
                         } ?: Registries.getUnitRegistry().registerUnitConfig(deviceConfig).get(30, TimeUnit.SECONDS)
+                    }.map { deviceConfig ->
+                        deviceConfig.deviceConfig.unitIdList.map { unitId ->
+                            val unit = Registries.getUnitRegistry().getUnitConfigById(unitId)
+                            val entityType = unit.unitType
+                                .let { Registries.getTemplateRegistry().getUnitTemplateByType(it) }
+                                .metaConfig.entryList.associate { it.key to it.value!! }[HASS_ENTITY_TYPE]
+
+                            deviceIdToEntity[MetaConfigProcessor.getValue(
+                                deviceConfig.metaConfig,
+                                ALIAS_KEY_HASS_DEVICE_ID
+                            )]
+                                ?.find { it.type == entityType }
+                                ?.let { entity ->
+                                    unit.toBuilder().apply {
+                                        addAlias(entity.entityId)
+                                        MetaConfigProcessor.setValue(metaConfigBuilder, ALIAS_KEY_HASS_ENTITY_ID, entity.entityId)
+                                    }.build()
+                                }
+                                ?.let { Registries.getUnitRegistry().updateUnitConfig(it).get(30, TimeUnit.SECONDS) }
+                        }
                     }
 
 
                 // TODO: Location and Device initial sync draft is ready, however we have issues with repeated field that are not merged correctly.
                 // TODO: Implement Service Mapping BCO -> HASS (COLORABLE LIGHT)
                 // TODO: Implement Service Mapping HASS -> BCO (COLORABLE LIGHT)
+                // TODO: Finish initial state mapping (there we have to map from the state type onto the service type by analysing the entire event)
 
 
+                // initial device synchronization
 
-//
-//                try {
-//                    for (entity in HassCommunicator.instance.entities) {
-//                        try {
-//                            executor.applyStateUpdate(entity.entityId, entity.type, entity.state, true)
-//                        } catch (ex: CouldNotPerformException) {
-//                            ExceptionPrinter.printHistory(
-//                                ((("Skip synchronization of item[name:" + entity.name + ", type:" + entity.type) + ", " + ", state:" + entity.state))+ "]",
-//                                ex,
-//                                LOGGER,
-//                                LogLevel.WARN
-//                            )
-//                        }
-//                    }
-//                } catch (ex: CouldNotPerformException) {
-//                    if (!isCausedBySystemShutdown(ex)) {
-//                        ExceptionPrinter.printHistory(
-//                            "Could not retrieve item states from hass!",
-//                            ex,
-//                            LOGGER,
-//                            LogLevel.WARN
-//                        )
-//                    }
-//                }
+                val supportedEntities = HassCommunicator.instance.getEntities()
+                    .filter { deviceIdToDevices.keys.contains(it.deviceId) }
+
+                try {
+                    HassCommunicator.instance.getStates()
+                        .filter { supportedEntities.map { it.entityId }.contains(it.entityId) }
+                        .forEach { state ->
+                            try {
+                                executor.applyStateUpdate(state.entityId, state.type, state.state, true)
+                            } catch (ex: CouldNotPerformException) {
+                                ExceptionPrinter.printHistory(
+                                    ((("Skip synchronization of item[name:" + state.name + ", type:" + state.type) + ", " + ", state:" + state.state))+ "]",
+                                    ex,
+                                    LOGGER,
+                                    LogLevel.WARN
+                                )
+                            }
+                        }
+                } catch (ex: CouldNotPerformException) {
+                    if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                        ExceptionPrinter.printHistory(
+                            "Could not retrieve item states from hass!",
+                            ex,
+                            LOGGER,
+                            LogLevel.WARN
+                        )
+                    }
+                }
             }
         }
         this.serviceActionExecutor = ServiceActionExecutor(unitControllerRegistry)
@@ -211,23 +242,11 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
             (Observer { observable: Any?, value: Any? -> unitChangeSynchronizationFilter.trigger() })
     }
 
+    override fun isGatewaySupported(config: UnitConfig?): Boolean {
+        return config?.gatewayConfig?.gatewayClassId == HASS_GATEWAY_CLASS_ID
+    }
     override fun isUnitSupported(config: UnitConfig): Boolean {
-        val deviceClass: DeviceClass
-        try {
-            try {
-                deviceClass = Registries.getClassRegistry(true).getDeviceClassById(config.deviceConfig.deviceClassId)
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-                return false
-            }
-        } catch (e: CouldNotPerformException) {
-            return false
-        }
-        if (deviceClass.bindingConfig.bindingId != "HASS") {
-            return false
-        }
-
-        return super.isUnitSupported(config)
+        return config.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_DEVICE_ID }
     }
 
     @Throws(CouldNotPerformException::class, InterruptedException::class)
@@ -253,6 +272,10 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
 
     companion object {
 //        const val ITEM_STATE_TOPIC_FILTER: String = "hass/items/(.+)/state"
+        const val ALIAS_KEY_HASS_DEVICE_ID = "HASS_DEVICE_ID"
+        const val HASS_GATEWAY_CLASS_ID = "96dd4c43-92de-48b6-ba16-f9bafefc3c44"
+        const val HASS_ENTITY_TYPE = "HASS_ENTITY_TYPE"
+        const val ALIAS_KEY_HASS_ENTITY_ID = "HASS_ENTITY_ID"
 
         private val LOGGER: Logger = LoggerFactory.getLogger(HassDeviceManager::class.java)
     }

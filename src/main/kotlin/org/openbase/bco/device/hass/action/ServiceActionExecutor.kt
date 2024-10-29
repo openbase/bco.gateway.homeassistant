@@ -25,6 +25,7 @@ import org.openbase.type.domotic.action.ActionInitiatorType.ActionInitiator
 import org.openbase.type.domotic.action.ActionInitiatorType.ActionInitiator.InitiatorType
 import org.openbase.type.domotic.action.ActionPriorityType.ActionPriority
 import org.openbase.type.domotic.service.ServiceTemplateType.ServiceTemplate
+import org.openbase.type.domotic.service.ServiceTemplateType.ServiceTemplate.ServiceType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
@@ -101,7 +102,10 @@ class ServiceActionExecutor(unitControllerRegistry: UnitControllerRegistry<UnitC
         
         // todo: implement correct mapping
         val unitAlias = entityId
-        val serviceType = ServiceTemplate.ServiceType.valueOf(stateType)
+        val serviceType = when(stateType) {
+            "light" -> ServiceType.COLOR_STATE_SERVICE
+            else -> ServiceType.UNKNOWN
+        }
 
         try {
             // load controller

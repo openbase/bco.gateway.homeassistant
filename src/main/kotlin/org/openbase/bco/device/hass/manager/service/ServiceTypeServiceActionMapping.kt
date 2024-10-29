@@ -148,7 +148,9 @@ object ServiceTypeServiceActionMapping {
 
     @Throws(CouldNotPerformException::class)
     fun lookupServiceActionClass(stateType: String): Class<out ServiceAction> {
-        TODO()
+        TODO("map update of state to action classes")
+        // is color value set then color
+        // is state off then power etc.
 //        return when (stateType.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]) {
 //            "Color" -> HSBType::class.java
 //            "Number" -> DecimalType::class.java

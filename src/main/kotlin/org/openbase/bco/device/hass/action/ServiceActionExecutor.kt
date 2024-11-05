@@ -7,10 +7,10 @@ import org.example.org.openbase.bco.device.hass.manager.dto.ServiceAction
 import org.openbase.bco.dal.lib.action.ActionDescriptionProcessor
 import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.dal.lib.layer.unit.UnitControllerRegistry
+import org.openbase.bco.dal.lib.state.States
 import org.openbase.bco.device.hass.communication.HassConnection
 import org.openbase.bco.device.hass.manager.service.ServiceTypeServiceActionMapping
 import org.openbase.bco.device.hass.manager.transformer.ServiceStateServiceActionTransformerPool
-import org.openbase.bco.registry.remote.Registries
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InvalidStateException
 import org.openbase.jul.exception.MultiException
@@ -24,15 +24,17 @@ import org.openbase.jul.schedule.Timeout
 import org.openbase.type.domotic.action.ActionInitiatorType.ActionInitiator
 import org.openbase.type.domotic.action.ActionInitiatorType.ActionInitiator.InitiatorType
 import org.openbase.type.domotic.action.ActionPriorityType.ActionPriority
-import org.openbase.type.domotic.service.ServiceTemplateType.ServiceTemplate
 import org.openbase.type.domotic.service.ServiceTemplateType.ServiceTemplate.ServiceType
+import org.openbase.type.domotic.state.PowerStateType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.TimeUnit
+import javax.swing.plaf.nimbus.State
 
 class ServiceActionExecutor(
     private val unitControllerRegistry: UnitControllerRegistry<UnitController<*, *>>,
+    private var entityIdToUnitId: () -> Map<String, String>,
 ) : Observer<Any?, JsonObject> {
     private val jsonParser: JsonParser = JsonParser()
 
@@ -73,7 +75,7 @@ class ServiceActionExecutor(
      * Else the update is handled as a human action.
      *
      * @param entityId   the item identifying the unit who's the state should be updated.
-     * @param stateType  defines the type class.
+     * @param entityType  defines the type class.
      * @param state      a string serializing the state to be set.
      * @param systemSync flag determining if the state update is the result of a system sync.
      * @throws CouldNotPerformException
@@ -81,45 +83,39 @@ class ServiceActionExecutor(
     @JvmOverloads
     @Throws(CouldNotPerformException::class)
     fun applyStateUpdate(
-        entityId: String?,
-        stateType: String?,
-        state: String?,
+        entityId: String,
+        entityType: String,
+        state: String,
         systemSync: Boolean = false,
     ) {
-        // filter empty events
-
-        if (entityId.isNullOrEmpty()) {
-            throw NotAvailableException("entityId")
-        }
-
-        if (stateType.isNullOrEmpty()) {
-            throw NotAvailableException("stateType")
-        }
-
-        if (state == null || state.equals(EMPTY_COMMAND_STRING, ignoreCase = true)) {
-            return
-        }
-
         // todo: implement correct mapping
-        val unitAlias = entityId
         val serviceType =
-            when (stateType) {
-                "light" -> ServiceType.COLOR_STATE_SERVICE
+            when (entityType) {
+                "light" -> ServiceType.POWER_STATE_SERVICE
                 else -> ServiceType.UNKNOWN
+            }
+
+        var serviceStateBuilder =
+            when (entityType) {
+                "light" -> {
+                    when(state) {
+                        "on" -> States.Power.ON
+                         else -> States.Power.OFF
+                    }.toBuilder()
+                }
+                else -> null
             }
 
         try {
             // load controller
-            val unitId = Registries.getUnitRegistry().getUnitConfigByAlias(unitAlias).id
+            val unitController = unitControllerRegistry.get(entityIdToUnitId.invoke()[entityId])
 
             // filter all events that are not handled by this instance.
-            if (!unitControllerRegistry.contains(unitId)) {
+            if (unitController == null || serviceStateBuilder == null) {
                 return
             }
 
-            val unitController = unitControllerRegistry[unitId]
-
-            var serviceStateBuilder = getServiceData(stateType, state, serviceType).toBuilder()
+//            var serviceStateBuilder = getServiceData(entityType, state, serviceType).toBuilder()
 
             // update the responsible action to show that it was triggered by hass and add other parameters
             // note that the responsible action is overwritten if it matches a requested state in the unit controller and thus was triggered by a different user through BCO
@@ -156,12 +152,12 @@ class ServiceActionExecutor(
             unitController.applyDataUpdate(serviceStateBuilder, serviceType)
         } catch (ex: InvalidStateException) {
             LOGGER.debug(
-                ("Ignore state update [" + state + "] for service[" + serviceType).toString() + "]",
+                "Ignore state update [$state] for service[$serviceType]",
                 ex,
             )
         } catch (ex: CouldNotPerformException) {
             LOGGER.warn(
-                ("Ignore state update [" + state + "] for service[" + serviceType).toString() + "]",
+                "Ignore state update [$state] for service[$serviceType]",
                 ex,
             )
         }
@@ -178,15 +174,15 @@ class ServiceActionExecutor(
 
         @Throws(CouldNotPerformException::class)
         fun getServiceData(
-            stateType: String,
+            entityType: String,
             commandString: String,
-            serviceType: ServiceTemplate.ServiceType,
+            serviceType: ServiceType,
         ): Message {
             try {
                 var command: ServiceAction? = null
                 var exceptionStack: ExceptionStack? = null
 
-                val commandClass: Class<out ServiceAction?> = ServiceTypeServiceActionMapping.lookupServiceActionClass(stateType)
+                val commandClass: Class<out ServiceAction?> = ServiceTypeServiceActionMapping.lookupServiceActionClass(serviceType)
                 try {
                     command =
                         commandClass

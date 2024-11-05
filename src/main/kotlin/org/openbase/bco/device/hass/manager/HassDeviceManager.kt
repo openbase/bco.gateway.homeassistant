@@ -80,6 +80,7 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     return
                 }
 
+                val notIdentifiedDevices = mutableListOf<HassDeviceDto>()
                 val deviceClasses = Registries.getClassRegistry(true).deviceClasses
                 val deviceClassMapping: Map<String, Pair<HassDeviceDto, DeviceClass>> = HassCommunicator.instance.getDevices()
                     .map { hassDevice -> hassDevice to deviceClasses
@@ -88,7 +89,7 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                                 .split(",")
                                 .map(String::trim)
                         .contains(hassDevice.model) } }
-                    .filter { (_, deviceClass) -> deviceClass != null }
+                    .filter { (hassDevice, deviceClass) -> (deviceClass != null).also { if(!it) { notIdentifiedDevices.add(hassDevice)} } }
                     .map { (hassDevice, deviceClass) -> hassDevice to deviceClass!! }
                     .onEach { (hassDevice, deviceClass) -> println("found compatible device: $hassDevice served by ${LabelProcessor.getBestMatch(deviceClass.label)}") }
                     .associateBy { (hassDevice, _) -> hassDevice.id }
@@ -235,6 +236,11 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                         )
                     }
                 }
+                notIdentifiedDevices
+                    .takeIf { it.isNotEmpty() }
+                    ?.also { println("The following devices are found but not yet compatible with bco:") }
+                    ?.distinct()
+                    ?.forEach { println("${it.name}: ${it.model}") }
             }
         }
         this.serviceActionExecutor = ServiceActionExecutor(unitControllerRegistry)

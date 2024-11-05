@@ -1,4 +1,4 @@
-package org.example.org.openbase.bco.device.hass.execution
+package org.openbase.bco.device.hass.action
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -31,13 +31,16 @@ import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.TimeUnit
 
-class ServiceActionExecutor(unitControllerRegistry: UnitControllerRegistry<UnitController<*,*>>) :
-    Observer<Any?, JsonObject> {
-    private val unitControllerRegistry: UnitControllerRegistry<UnitController<*, *>>
-    private val jsonParser: JsonParser
+class ServiceActionExecutor(
+    private val unitControllerRegistry: UnitControllerRegistry<UnitController<*, *>>,
+) : Observer<Any?, JsonObject> {
+    private val jsonParser: JsonParser = JsonParser()
 
-    override fun update(source: Any?, payload: JsonObject) {
-        //System.out.println("payload: " + payload.toString());
+    override fun update(
+        source: Any?,
+        payload: JsonObject,
+    ) {
+        // System.out.println("payload: " + payload.toString());
 
         // extract item name from topic
 
@@ -45,8 +48,7 @@ class ServiceActionExecutor(unitControllerRegistry: UnitControllerRegistry<UnitC
 
         // topic structure: hass/items/{entityId}/command
         val entityId: String =
-            topic.split(HassConnection.TOPIC_SEPARATOR.toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                .get(2)
+            topic.split(HassConnection.TOPIC_SEPARATOR.toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[2]
 
         // extract payload
         val payloadObject = jsonParser.parse(payload[PAYLOAD_KEY].asString).asJsonObject
@@ -60,7 +62,7 @@ class ServiceActionExecutor(unitControllerRegistry: UnitControllerRegistry<UnitC
                 "Could not apply state update[$state] for item[$entityId]",
                 ex,
                 LOGGER,
-                LogLevel.WARN
+                LogLevel.WARN,
             )
         }
     }
@@ -70,42 +72,41 @@ class ServiceActionExecutor(unitControllerRegistry: UnitControllerRegistry<UnitC
      * If the update is the result of a system sync it will be scheduled shortly so that the state is only applied.
      * Else the update is handled as a human action.
      *
-     * @param entityId   the item identifying the unit whose the state should be updated.
+     * @param entityId   the item identifying the unit who's the state should be updated.
      * @param stateType  defines the type class.
      * @param state      a string serializing the state to be set.
      * @param systemSync flag determining if the state update is the result of a system sync.
      * @throws CouldNotPerformException
      */
-    /**
-     * Call [.applyStateUpdate] with false.
-     *
-     * @param entityId  the item identifying the unit whose the state should be updated.
-     * @param stateType a string serializing the state to be set.
-     * @throws CouldNotPerformException if applying the state update fails.
-     */
     @JvmOverloads
     @Throws(CouldNotPerformException::class)
-    fun applyStateUpdate(entityId: String?, stateType: String?, state: String?, systemSync: Boolean = false) {
+    fun applyStateUpdate(
+        entityId: String?,
+        stateType: String?,
+        state: String?,
+        systemSync: Boolean = false,
+    ) {
         // filter empty events
 
-        if (entityId == null || entityId.isEmpty()) {
+        if (entityId.isNullOrEmpty()) {
             throw NotAvailableException("entityId")
         }
 
-        if (stateType == null || stateType.isEmpty()) {
+        if (stateType.isNullOrEmpty()) {
             throw NotAvailableException("stateType")
         }
 
         if (state == null || state.equals(EMPTY_COMMAND_STRING, ignoreCase = true)) {
             return
         }
-        
+
         // todo: implement correct mapping
         val unitAlias = entityId
-        val serviceType = when(stateType) {
-            "light" -> ServiceType.COLOR_STATE_SERVICE
-            else -> ServiceType.UNKNOWN
-        }
+        val serviceType =
+            when (stateType) {
+                "light" -> ServiceType.COLOR_STATE_SERVICE
+                else -> ServiceType.UNKNOWN
+            }
 
         try {
             // load controller
@@ -122,52 +123,48 @@ class ServiceActionExecutor(unitControllerRegistry: UnitControllerRegistry<UnitC
 
             // update the responsible action to show that it was triggered by hass and add other parameters
             // note that the responsible action is overwritten if it matches a requested state in the unit controller and thus was triggered by a different user through BCO
-            serviceStateBuilder = if (systemSync) {
-                ActionDescriptionProcessor.generateAndSetResponsibleAction(
-                    serviceStateBuilder,
-                    serviceType,
-                    unitController,
-                    Timeout.INFINITY_TIMEOUT,
-                    TimeUnit.MINUTES,
-                    false,
-                    false,
-                    false,
-                    ActionPriority.Priority.NO,
-                    ActionInitiator.newBuilder().setInitiatorType(InitiatorType.SYSTEM).build()
-                )
-            } else {
-                ActionDescriptionProcessor.generateAndSetResponsibleAction(
-                    serviceStateBuilder,
-                    serviceType,
-                    unitController,
-                    30,
-                    TimeUnit.MINUTES,
-                    false,
-                    false,
-                    true,
-                    ActionPriority.Priority.HIGH,
-                    ActionInitiator.newBuilder().setInitiatorType(InitiatorType.HUMAN).build()
-                )
-            }
+            serviceStateBuilder =
+                if (systemSync) {
+                    ActionDescriptionProcessor.generateAndSetResponsibleAction(
+                        serviceStateBuilder,
+                        serviceType,
+                        unitController,
+                        Timeout.INFINITY_TIMEOUT,
+                        TimeUnit.MINUTES,
+                        false,
+                        false,
+                        false,
+                        ActionPriority.Priority.NO,
+                        ActionInitiator.newBuilder().setInitiatorType(InitiatorType.SYSTEM).build(),
+                    )
+                } else {
+                    ActionDescriptionProcessor.generateAndSetResponsibleAction(
+                        serviceStateBuilder,
+                        serviceType,
+                        unitController,
+                        30,
+                        TimeUnit.MINUTES,
+                        false,
+                        false,
+                        true,
+                        ActionPriority.Priority.HIGH,
+                        ActionInitiator.newBuilder().setInitiatorType(InitiatorType.HUMAN).build(),
+                    )
+                }
 
             LOGGER.info("Apply ItemUpdate[$entityId=$state].")
             unitController.applyDataUpdate(serviceStateBuilder, serviceType)
         } catch (ex: InvalidStateException) {
             LOGGER.debug(
                 ("Ignore state update [" + state + "] for service[" + serviceType).toString() + "]",
-                ex
+                ex,
             )
         } catch (ex: CouldNotPerformException) {
             LOGGER.warn(
                 ("Ignore state update [" + state + "] for service[" + serviceType).toString() + "]",
-                ex
+                ex,
             )
         }
-    }
-
-    init {
-        this.unitControllerRegistry = unitControllerRegistry
-        this.jsonParser = JsonParser()
     }
 
     companion object {
@@ -191,26 +188,30 @@ class ServiceActionExecutor(unitControllerRegistry: UnitControllerRegistry<UnitC
 
                 val commandClass: Class<out ServiceAction?> = ServiceTypeServiceActionMapping.lookupServiceActionClass(stateType)
                 try {
-                    command = commandClass.getMethod("valueOf", commandString.javaClass)
-                        .invoke(null, commandString) as ServiceAction
+                    command =
+                        commandClass
+                            .getMethod("valueOf", commandString.javaClass)
+                            .invoke(null, commandString) as ServiceAction
                 } catch (ex: IllegalAccessException) {
-                    exceptionStack = MultiException.push(
-                        ServiceActionExecutor::class.java,
-                        InvalidStateException(
-                            "ServiceAction class[" + commandClass.simpleName + "] does not posses a valueOf(String) method",
-                            ex
-                        ),
-                        exceptionStack
-                    )
+                    exceptionStack =
+                        MultiException.push(
+                            ServiceActionExecutor::class.java,
+                            InvalidStateException(
+                                "ServiceAction class[" + commandClass.simpleName + "] does not posses a valueOf(String) method",
+                                ex,
+                            ),
+                            exceptionStack,
+                        )
                 } catch (ex: NoSuchMethodException) {
-                    exceptionStack = MultiException.push(
-                        ServiceActionExecutor::class.java,
-                        InvalidStateException(
-                            "ServiceAction class[" + commandClass.simpleName + "] does not posses a valueOf(String) method",
-                            ex
-                        ),
-                        exceptionStack
-                    )
+                    exceptionStack =
+                        MultiException.push(
+                            ServiceActionExecutor::class.java,
+                            InvalidStateException(
+                                "ServiceAction class[" + commandClass.simpleName + "] does not posses a valueOf(String) method",
+                                ex,
+                            ),
+                            exceptionStack,
+                        )
                 } catch (ex: IllegalArgumentException) {
                     // continue with the next command class, exception will be thrown if none is found
                     exceptionStack = MultiException.push(ServiceActionExecutor::class.java, ex, exceptionStack)
@@ -220,14 +221,16 @@ class ServiceActionExecutor(unitControllerRegistry: UnitControllerRegistry<UnitC
 
                     exceptionStack = MultiException.push(ServiceActionExecutor::class.java, ex, exceptionStack)
 
-                    //apply workaround for temperature values
+                    // apply workaround for temperature values
                     // todo: implement valueOf() method in all transformer and individually parse the string and setup the physical unit as well
                     try {
-                        command = commandClass.getMethod("valueOf", commandString.javaClass).invoke(
-                            null, commandString
-                                .replace(" °C", "")
-                                .replace(" %", "")
-                        ) as ServiceAction
+                        command =
+                            commandClass.getMethod("valueOf", commandString.javaClass).invoke(
+                                null,
+                                commandString
+                                    .replace(" °C", "")
+                                    .replace(" %", ""),
+                            ) as ServiceAction
                     } catch (exx: Exception) {
                         exceptionStack = MultiException.push(ServiceActionExecutor::class.java, exx, exceptionStack)
                     }
@@ -235,27 +238,36 @@ class ServiceActionExecutor(unitControllerRegistry: UnitControllerRegistry<UnitC
 
                 if (command == null) {
                     if (exceptionStack == null) {
-                        exceptionStack = MultiException.push(
-                            ServiceActionExecutor::class.java,
-                            InvalidStateException("ServiceAction class not available! Please configure the eclipse smart home command class within the meta config of service template of type " + serviceType.name),
-                            exceptionStack
-                        )
+                        exceptionStack =
+                            MultiException.push(
+                                ServiceActionExecutor::class.java,
+                                @Suppress("ktlint:standard:max-line-length")
+                                InvalidStateException(
+                                    "ServiceAction class not available! Please configure the eclipse smart home command class within the meta config of service template of type " +
+                                        serviceType.name,
+                                ),
+                                exceptionStack,
+                            )
                     }
 
                     MultiException.checkAndThrow(
                         { "Could not transform [" + commandString + "] into a state for service type[" + serviceType.name + "]" },
-                        exceptionStack
+                        exceptionStack,
                     )
                 }
 
                 val serviceData: Message =
-                    ServiceStateServiceActionTransformerPool.instance.getTransformer(serviceType, command!!.javaClass)
+                    ServiceStateServiceActionTransformerPool.instance
+                        .getTransformer(serviceType, command!!.javaClass)
                         .transform(command)
                 return updateTimestamp(System.currentTimeMillis(), serviceData, TimeUnit.MILLISECONDS)
             } catch (ex: NotAvailableException) {
                 throw CouldNotPerformException(
-                    "Could not transform [" + commandString + "] of class [" + commandString.javaClass.simpleName + "] into a state for service type[" + serviceType.name + "]",
-                    ex
+                    "Could not transform [" + commandString + "] of class [" + commandString.javaClass.simpleName +
+                        "] into a state for service type[" +
+                        serviceType.name +
+                        "]",
+                    ex,
                 )
             }
         }

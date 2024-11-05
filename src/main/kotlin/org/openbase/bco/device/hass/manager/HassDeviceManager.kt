@@ -19,11 +19,10 @@ package org.openbase.bco.device.hass.manager /*-
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-
-import org.example.org.openbase.bco.device.hass.execution.ServiceActionExecutor
 import org.example.org.openbase.bco.device.hass.manager.unit.HassGatewayControllerFactory
 import org.openbase.bco.dal.control.layer.unit.device.DeviceManagerImpl
 import org.openbase.bco.dal.lib.layer.unit.UnitController
+import org.openbase.bco.device.hass.action.ServiceActionExecutor
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto

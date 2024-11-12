@@ -16,6 +16,7 @@ import org.openbase.jps.core.JPService
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.iface.Activatable
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState
+import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -24,6 +25,7 @@ import kotlin.concurrent.write
 class HassWebsocketConnection(
     private val tokenProvider: TokenProvider
 ) : Activatable {
+    private val logger = LoggerFactory.getLogger(HassWebsocketConnection::class.java)
 
     @Volatile
     private var commandCounter: Long = 0
@@ -92,7 +94,7 @@ class HassWebsocketConnection(
     inner class EchoWebSocketListener : WebSocketListener() {
 
         override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
-            println("Connection established.")
+            logger.info("Connection to websocket server established.")
             connectionState = ConnectionState.State.CONNECTING
         }
 
@@ -102,13 +104,17 @@ class HassWebsocketConnection(
 
             when (jsonResult.asJsonObject.getAsJsonPrimitive("type").asString) {
                 "auth_required" -> {
-                    println("Authentication required.")
+                    logger.debug("Websocket authentication required.")
                     webSocket.send(mapOf("type" to "auth", "access_token" to tokenProvider.token).toRequest())
                     return
                 }
                 "auth_ok" -> {
-                    println("Authentication successful.")
+                    logger.info("Websocket authentication successful.")
                     connectionState = ConnectionState.State.CONNECTED
+                    return
+                }
+                "auth_invalid" -> {
+                    logger.error("Websocket could not be authenticated.")
                     return
                 }
                 else -> {
@@ -119,7 +125,7 @@ class HassWebsocketConnection(
             val result = try {
                  JsonUtils.gson.fromJson(jsonResult, ResultCommand::class.java)
             } catch (ex: Exception) {
-                println("Could not process result: ${jsonResult}")
+                logger.error("Could not process result: ${jsonResult}")
                 throw  ex
             }
 
@@ -133,7 +139,7 @@ class HassWebsocketConnection(
         }
 
         override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-            println("Receiving bytes : " + bytes.hex())
+            logger.info("Receiving bytes : " + bytes.hex())
             TODO()
         }
 

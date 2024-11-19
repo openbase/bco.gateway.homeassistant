@@ -6,6 +6,6 @@ data class ResultCommand(
     val id: Long,
     val type: String,
     val success: Boolean?,
-    val result: JsonElement,
+    val result: JsonElement?,
     val error: JsonElement?,
 )

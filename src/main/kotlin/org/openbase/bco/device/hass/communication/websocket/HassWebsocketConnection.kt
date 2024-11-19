@@ -9,18 +9,26 @@ import okio.ByteString
 import org.openbase.bco.device.hass.jp.JPHassHost
 import org.openbase.bco.device.hass.jp.JpHassPort
 import org.example.util.toRequest
+import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.TokenProvider
 import org.openbase.bco.device.hass.communication.websocket.command.ResultCommand
 import org.openbase.bco.device.hass.utils.JsonUtils
+import org.openbase.bco.device.hass.utils.await
 import org.openbase.jps.core.JPService
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.iface.Activatable
+import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.write
+
+data class Subscription (
+    val commandType: String = HassCommunicator.EVENT_WS_SUBSCRIPTION,
+    val eventType: String? = null,
+)
 
 class HassWebsocketConnection(
     private val tokenProvider: TokenProvider
@@ -34,9 +42,41 @@ class HassWebsocketConnection(
     private var ws: WebSocket? = null
     val requestMap: MutableMap<Long, CompletableFuture<String>> = mutableMapOf()
     val requestMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock()
+    private val subscriptions: MutableList<Subscription> = emptyList<Subscription>().toMutableList()
 
     @Volatile
     var connectionState: ConnectionState.State = ConnectionState.State.UNKNOWN
+        set(value) {
+            field = value
+
+            logger.trace("connection state updated to {}", value)
+
+            if (value == ConnectionState.State.CONNECTED) {
+                GlobalCachedExecutorService.execute {
+                    subscriptions.forEach { subscription ->
+                        sendCommand(subscription.commandType, subscription.eventType).await().also {
+                            logger.info("subscribe on: $subscription")
+                        }
+                    }
+                }
+            }
+        }
+
+    /**
+     * Subscribe has to be called before the client is activated.
+     */
+    fun subscribe(
+        subscription: Subscription,
+    ) {
+        if(active) {
+            error("Can not register a subscription on an already active client.")
+        }
+
+        subscriptions
+            .find { it == subscription}
+            ?.let { logger.error("Already subscribed to ${subscription.commandType}") }
+            ?: subscriptions.add(subscription)
+    }
 
     override fun activate() {
         active = true
@@ -49,7 +89,7 @@ class HassWebsocketConnection(
                         ENDPOINT
             )
             .build()
-        val listener = EchoWebSocketListener()
+        val listener = EventProcessor()
         ws = client.newWebSocket(request, listener)
     }
 
@@ -62,7 +102,10 @@ class HassWebsocketConnection(
 
     fun ping() = sendCommand(COMMAND_PING)
 
-    fun sendCommand(command: String): Future<String?> {
+    fun sendCommand(
+        commandType: String,
+        eventType: String? = null,
+    ): Future<String?> {
 
         if(connectionState != ConnectionState.State.CONNECTED) {
             return CompletableFuture.failedFuture(CouldNotPerformException("Connection is not established."))
@@ -77,11 +120,19 @@ class HassWebsocketConnection(
             requestMap[commandId] = resultFuture
         }
 
+        // generate payload
+        val payload = mapOf(
+            "id" to commandId,
+            "type" to commandType,
+        ).let { payload ->
+            eventType?.let { payload.plus("event_type" to eventType) } ?: payload
+        }
+
         // send message
-        val result = ws?.send(mapOf("id" to commandId, "type" to command).toRequest())
+        val success = ws?.send(payload.toRequest())
 
         // error handling
-        if (result == null || result == false) {
+        if (success == null || success == false) {
             requestMapLock.write {
                 requestMap.remove(commandId)
             }
@@ -91,11 +142,12 @@ class HassWebsocketConnection(
         return resultFuture
     }
 
-    inner class EchoWebSocketListener : WebSocketListener() {
+    inner class EventProcessor : WebSocketListener() {
 
         override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
             logger.info("Connection to websocket server established.")
             connectionState = ConnectionState.State.CONNECTING
+            super.onOpen(webSocket, response)
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
@@ -125,13 +177,15 @@ class HassWebsocketConnection(
             val result = try {
                  JsonUtils.gson.fromJson(jsonResult, ResultCommand::class.java)
             } catch (ex: Exception) {
-                logger.error("Could not process result: ${jsonResult}")
+                logger.error("Could not process result: $jsonResult")
                 throw  ex
             }
 
             requestMapLock.write {
                 if (result.success != false) {
-                    requestMap.remove(result.id)?.complete(result.result.toString())
+                    requestMap.remove(result.id)?.complete(result.result?.toString()) ?: also {
+                        logger.info("Incoming Event Stream: $jsonResult")
+                    }
                 } else {
                     requestMap.remove(result.id)?.completeExceptionally(CouldNotPerformException("Canceled by target"))
                 }
@@ -140,7 +194,6 @@ class HassWebsocketConnection(
 
         override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
             logger.info("Receiving bytes : " + bytes.hex())
-            TODO()
         }
 
         override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
@@ -151,10 +204,17 @@ class HassWebsocketConnection(
                     it.completeExceptionally(CouldNotPerformException("Connection closed: $code / $reason"))
                 }
             }
+            super.onClosing(webSocket, code, reason)
         }
 
-        override fun onFailure(webSocket: WebSocket, t: Throwable, response: okhttp3.Response?) {
-            t.printStackTrace()
+        override fun onFailure(webSocket: WebSocket, throwable: Throwable, response: okhttp3.Response?) {
+            logger.error("Connection failure!", throwable)
+            super.onFailure(webSocket, throwable, response)
+        }
+
+        override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+            logger.error("Connection closed: $code - $reason")
+            super.onClosed(webSocket, code, reason)
         }
     }
 

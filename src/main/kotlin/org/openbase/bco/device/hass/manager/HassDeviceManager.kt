@@ -24,8 +24,11 @@ import org.openbase.bco.dal.control.layer.unit.device.DeviceManagerImpl
 import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.device.hass.action.ServiceActionExecutor
 import org.openbase.bco.device.hass.communication.HassCommunicator
+import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_TYPE_STATE
+import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
+import org.openbase.bco.device.hass.utils.await
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
 import org.openbase.jul.exception.CouldNotPerformException
@@ -47,26 +50,25 @@ import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), false),
     Launchable<Void>, VoidInitializable {
 
-    private val serviceActionExecutor: ServiceActionExecutor
+    private val executor: ServiceActionExecutor
 
     /**
      * Synchronization observer that triggers resynchronization of all units if their configuration changes.
      */
     private val synchronizationObserver: Observer<DataProvider<MutableMap<String, UnitController<*, *>>>, MutableMap<String, UnitController<*, *>>>
-    private val unitChangeSynchronizationFilter: RecurrenceEventFilter<Any>
+    private val unitFilter: RecurrenceEventFilter<Any>
 
-    private val unitFilter:RecurrenceEventFilter<Any> get() = unitChangeSynchronizationFilter
-    private val executor:ServiceActionExecutor get() = serviceActionExecutor
     private var entityIdToUnitId = mapOf<String, String>()
 
     init {
         // the sync observer triggers a lot when the device manager is initially activated and all unit controllers are created
-        this.unitChangeSynchronizationFilter = object : RecurrenceEventFilter<Any>(5000) {
+        this.unitFilter = object : RecurrenceEventFilter<Any>(5000) {
             @Throws(InterruptedException::class)
             override fun relay() {
                 // skip update if hass is not available but trigger again so the sync is performed later on.
@@ -106,8 +108,7 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                         UnitConfig.newBuilder()
                             .setUnitType(UnitType.LOCATION)
                             .apply {
-                                locationConfigBuilder
-                                    .setLocationType(LocationType.ZONE)
+                                locationConfigBuilder.locationType = LocationType.ZONE
                             }
                             .setLabel(LabelProcessor.generateLabelBuilder(floor.name))
                             .apply { metaConfigBuilder[ALIAS_KEY_HASS_FLOOR_ID] = floor.id }
@@ -115,9 +116,9 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     }.map { zoneConfig ->
                         floorIdToZones[zoneConfig.metaConfig[ALIAS_KEY_HASS_FLOOR_ID]]?.let { existingZoneConfig ->
                             existingZoneConfig.toBuilder().mergeFrom(zoneConfig).build().let {
-                                Registries.getUnitRegistry().updateUnitConfig(it).get(30, TimeUnit.SECONDS)
+                                Registries.getUnitRegistry().updateUnitConfig(it).await()
                             }
-                        } ?: Registries.getUnitRegistry().registerUnitConfig(zoneConfig).get(30, TimeUnit.SECONDS)
+                        } ?: Registries.getUnitRegistry().registerUnitConfig(zoneConfig).await()
                     }
 
                 // ======= SYNC AREAS ========
@@ -131,8 +132,7 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                         UnitConfig.newBuilder()
                             .setUnitType(UnitType.LOCATION)
                             .apply {
-                                locationConfigBuilder
-                                    .setLocationType(LocationType.TILE)
+                                locationConfigBuilder.locationType = LocationType.TILE
                             }
                             .setLabel(LabelProcessor.generateLabelBuilder(area.name))
                             .apply { metaConfigBuilder[ALIAS_KEY_HASS_AREA_ID] = area.id }
@@ -140,9 +140,9 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     }.map { tileConfig ->
                         areaIdToTiles[tileConfig.metaConfig[ALIAS_KEY_HASS_AREA_ID]]?.let { existingTileConfig ->
                             existingTileConfig.toBuilder().mergeFromWithoutRepeatedFields(tileConfig).build().let {
-                                Registries.getUnitRegistry().updateUnitConfig(it).get(30, TimeUnit.SECONDS)
+                                Registries.getUnitRegistry().updateUnitConfig(it).await()
                             }
-                        } ?: Registries.getUnitRegistry().registerUnitConfig(tileConfig).get(30, TimeUnit.SECONDS)
+                        } ?: Registries.getUnitRegistry().registerUnitConfig(tileConfig).await()
                     }
 
                 val deviceIdToEntity: Map<String, List<HassEntityDto>> = HassCommunicator.instance.getEntities()
@@ -177,9 +177,9 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     }.map { deviceConfig ->
                         deviceIdToDevices[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]?.let { existingDeviceConfig ->
                             existingDeviceConfig.toBuilder().mergeFromWithoutRepeatedFields(deviceConfig).build().let {
-                                Registries.getUnitRegistry().updateUnitConfig(it).get(30, TimeUnit.SECONDS)
+                                Registries.getUnitRegistry().updateUnitConfig(it).await()
                             }
-                        } ?: Registries.getUnitRegistry().registerUnitConfig(deviceConfig).get(30, TimeUnit.SECONDS)
+                        } ?: Registries.getUnitRegistry().registerUnitConfig(deviceConfig).await()
                     }.flatMap { deviceConfig ->
                         deviceConfig.deviceConfig.unitIdList.map { dalUnitId ->
                             val unit = Registries.getUnitRegistry().getUnitConfigById(dalUnitId)
@@ -202,7 +202,7 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                                         }
                                     }.build()
                                 }
-                                ?.let { Registries.getUnitRegistry().updateUnitConfig(it).get(30, TimeUnit.SECONDS) }
+                                ?.let { Registries.getUnitRegistry().updateUnitConfig(it).await() }
                         }
                     }.filterNotNull()
 
@@ -215,6 +215,7 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                 // TODO: Implement Service Mapping BCO -> HASS (COLORABLE LIGHT)
                 // TODO: Implement Service Mapping HASS -> BCO (COLORABLE LIGHT)
                 // TODO: Finish initial state mapping (there we have to map from the state type onto the service type by analysing the entire event)
+                // TODO: After the events (state_changes) are subscribed (done) we need to introduce a dto and parse it and then apply it on the service executor.
 
 
                 // initial device synchronization
@@ -255,9 +256,9 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     ?.forEach { println("${it.name}: ${it.model}") }
             }
         }
-        this.serviceActionExecutor = ServiceActionExecutor(unitControllerRegistry, this::entityIdToUnitId)
+        this.executor = ServiceActionExecutor(unitControllerRegistry, this::entityIdToUnitId)
         this.synchronizationObserver =
-            (Observer { observable: Any?, value: Any? -> unitChangeSynchronizationFilter.trigger() })
+            (Observer { observable: Any?, value: Any? -> unitFilter.trigger() })
     }
 
     override fun isGatewaySupported(config: UnitConfig?): Boolean {
@@ -275,16 +276,16 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
         LOGGER.info("Connect to bco...")
         Registries.waitUntilReady()
         LOGGER.info("Login to bco...")
+
         BCOLogin.getSession().loginBCOUser()
 
-//        HassCommunicator.instance.addWEBSOCKETObserver(serviceActionExecutor, ENTITY_STATE_TOPIC_FILTER)
-        unitChangeSynchronizationFilter.trigger()
+        HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, EVENT_TYPE_STATE)
+        unitFilter.trigger()
     }
 
     @Throws(CouldNotPerformException::class, InterruptedException::class)
     override fun deactivate() {
         unitControllerRegistry.removeObserver(synchronizationObserver)
-//        HassCommunicator.getInstance().removeWEBSOCKETObserver(serviceActionExecutor, ITEM_STATE_TOPIC_FILTER)
         super.deactivate()
     }
 
@@ -301,14 +302,12 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
         MetaConfigProcessor.setValue(this, key, value)
 
     companion object {
-//        const val ITEM_STATE_TOPIC_FILTER: String = "hass/items/(.+)/state"
         const val ALIAS_KEY_HASS_FLOOR_ID = "HASS_FLOOR_ID"
         const val ALIAS_KEY_HASS_DEVICE_ID = "HASS_DEVICE_ID"
         const val HASS_GATEWAY_CLASS_ID = "96dd4c43-92de-48b6-ba16-f9bafefc3c44"
         const val HASS_ENTITY_TYPE = "HASS_ENTITY_TYPE"
         const val ALIAS_KEY_HASS_ENTITY_ID = "HASS_ENTITY_ID"
         const val ALIAS_KEY_HASS_AREA_ID = "HASS_AREA_ID"
-
 
         private val LOGGER: Logger = LoggerFactory.getLogger(HassDeviceManager::class.java)
     }

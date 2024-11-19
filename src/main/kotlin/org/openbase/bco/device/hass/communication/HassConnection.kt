@@ -13,6 +13,7 @@ import org.openbase.bco.device.hass.jp.JPHassHost
 import org.openbase.bco.device.hass.jp.JpHassPort
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport
 import org.openbase.bco.device.hass.communication.websocket.HassWebsocketConnection
+import org.openbase.bco.device.hass.communication.websocket.Subscription
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.jps.core.JPService
 import org.openbase.jps.exception.JPNotAvailableException
@@ -189,57 +190,6 @@ abstract class HassConnection : Shutdownable, TokenProvider {
             }
         }
     }
-
-//    private fun initWebsocket() {
-
-//        webSocketConnection.HassWebsocketConnection
-//        if (websocketSource != null) {
-//            LOGGER.warn("WEBSOCKET already initialized!")
-//            return
-//        }
-//
-//        websocketSource = WebsocketEventSource
-//            .target(restTarget.path(EVENTS_TARGET))
-//            .reconnectingEvery(15, TimeUnit.SECONDS)
-//            .build()
-//            .also { it.open() }
-//
-//
-//        val evenConsumer = Consumer { inboundWebsocketEvent: InboundWebsocketEvent ->
-//            // dispatch event
-//            try {
-//                val payload = JsonParser.parseString(inboundWebsocketEvent.readData()).asJsonObject
-//                for ((key, value) in topicObservableMap) {
-//                    try {
-//                        payload[TOPIC_KEY]
-//                            ?.asString
-//                            ?.takeIf { it.matches(key.toRegex()) }
-//                            ?.run { value.notifyObservers(payload) }
-//                    } catch (ex: Exception) {
-//                        ExceptionPrinter.printHistory(
-//                            CouldNotPerformException(
-//                                "Could not notify listeners on topic[$key]",
-//                                ex
-//                            ), LOGGER
-//                        )
-//                    }
-//                }
-//            } catch (ex: Exception) {
-//                ExceptionPrinter.printHistory(CouldNotPerformException("Could not handle WEBSOCKET payload!", ex), LOGGER)
-//            }
-//        }
-//
-//        val errorHandler = Consumer { ex: Throwable ->
-//            ExceptionPrinter.printHistory("Hass connection error detected!", ex, LOGGER, LogLevel.DEBUG)
-//            checkConnectionState()
-//        }
-//
-//        val reconnectHandler = Runnable {
-//            setConnectState(ConnectionStateType.ConnectionState.State.RECONNECTING)
-//        }
-//
-//        websocketSource?.register(evenConsumer, errorHandler, reconnectHandler)
-//    }
 
     private fun checkConnectionState() {
         connectionStateLock.withLock {
@@ -430,7 +380,10 @@ abstract class HassConnection : Shutdownable, TokenProvider {
         }
     }
 
-    fun sendWSCommand(message: String): Future<String?> = webSocketConnection.sendCommand(message)
+    fun sendWSCommand(
+        commandType: String,
+        eventType: String? = null,
+    ): Future<String?> = webSocketConnection.sendCommand(commandType, eventType)
 
     override fun shutdown() {
         // prepare shutdown
@@ -456,6 +409,9 @@ abstract class HassConnection : Shutdownable, TokenProvider {
         Registries.getClassRegistry().gatewayClasses.find { contains(it.label, HASS_GATEWAY_CLASS_LABEL) }
 
 
+    fun subscribe(
+        subscription: Subscription,
+    ) = webSocketConnection.subscribe(subscription)
 
     companion object {
 

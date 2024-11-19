@@ -7,11 +7,12 @@ import com.google.gson.JsonSyntaxException
 import jakarta.ws.rs.core.MediaType
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
 import org.example.org.openbase.bco.device.hass.manager.dto.ServiceAction
+import org.openbase.bco.device.hass.communication.websocket.Subscription
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassAreaDto
 import org.openbase.bco.device.hass.manager.dto.HassFloorDto
 import org.openbase.bco.device.hass.manager.dto.HassStateDto
-import org.openbase.bco.device.hass.utils.get
+import org.openbase.bco.device.hass.utils.await
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InitializationException
 import org.openbase.jul.exception.NotAvailableException
@@ -19,9 +20,9 @@ import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.iface.Shutdownable
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.Duration
 
 class HassCommunicator private constructor() : HassConnection() {
+
 
     // ==========================================================================================================================================
     // ITEMS
@@ -182,17 +183,16 @@ class HassCommunicator private constructor() : HassConnection() {
     // ==========================================================================================================================================
     // Devices
     // ==========================================================================================================================================
-
     fun getDevices(): List<HassDeviceDto> =
         JsonParser.parseString(
-            sendWSCommand(DEVICE_WS_REQUEST).get(Duration.ofSeconds(5))
+            sendWSCommand(DEVICE_WS_REQUEST).await()
         )
             .asJsonArray
             .map { gson.fromJson(it, HassDeviceDto::class.java) }
 
     fun getEntities(): List<HassEntityDto> =
         JsonParser.parseString(
-            sendWSCommand(ENTITIES_WS_REQUEST).get(Duration.ofSeconds(5))
+            sendWSCommand(ENTITIES_WS_REQUEST).await()
         )
             .asJsonArray
             .map { gson.fromJson(it, HassEntityDto::class.java) }
@@ -202,7 +202,7 @@ class HassCommunicator private constructor() : HassConnection() {
     // ==========================================================================================================================================
     fun getStates(): List<HassStateDto> =
         JsonParser.parseString(
-            sendWSCommand(STATES_WS_REQUEST).get(Duration.ofSeconds(5))
+            sendWSCommand(STATES_WS_REQUEST).await()
         )
             .asJsonArray
             .map { gson.fromJson(it, HassStateDto::class.java) }
@@ -212,7 +212,7 @@ class HassCommunicator private constructor() : HassConnection() {
     // ==========================================================================================================================================
     fun getAreas(): List<HassAreaDto> =
         JsonParser.parseString(
-            sendWSCommand(AREA_WS_REQUEST).get(Duration.ofSeconds(5))
+            sendWSCommand(AREA_WS_REQUEST).await()
         )
             .asJsonArray
             .map { gson.fromJson(it, HassAreaDto::class.java) }
@@ -222,7 +222,7 @@ class HassCommunicator private constructor() : HassConnection() {
     // ==========================================================================================================================================
     fun getFloors(): List<HassFloorDto> =
         JsonParser.parseString(
-            sendWSCommand(FLOOR_WS_REQUEST).get(Duration.ofSeconds(5))
+            sendWSCommand(FLOOR_WS_REQUEST).await()
         )
             .asJsonArray
             .map { gson.fromJson(it, HassFloorDto::class.java) }
@@ -267,9 +267,21 @@ class HassCommunicator private constructor() : HassConnection() {
         get(API_HEALTH, true)
     }
 
+    fun subscribe(
+        commandType: String,
+        eventType: String? = null,
+    ) = subscribe(
+        Subscription(
+            commandType = commandType,
+            eventType = eventType,
+        ),
+    )
+
     companion object {
         const val API_HEALTH: String = "/"
         const val STATES_WS_REQUEST: String = "get_states"
+        const val EVENT_WS_SUBSCRIPTION: String = "subscribe_events"
+        const val EVENT_TYPE_STATE: String = "state_changed"
         const val DEVICE_WS_REQUEST: String = "config/device_registry/list"
         const val AREA_WS_REQUEST: String = "config/area_registry/list"
         const val FLOOR_WS_REQUEST: String = "config/floor_registry/list"

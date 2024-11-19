@@ -121,13 +121,12 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     }
 
                 // ======= SYNC AREAS ========
-
                 val areaIdToTiles = Registries.getUnitRegistry()
                     .getUnitConfigsByUnitType(UnitType.LOCATION)
                     .filter { it.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_AREA_ID} }
                     .associateBy { it.metaConfig[ALIAS_KEY_HASS_AREA_ID] }
 
-                HassCommunicator.instance.getAreas()
+                val dalLocations = HassCommunicator.instance.getAreas()
                     .map { area ->
                         UnitConfig.newBuilder()
                             .setUnitType(UnitType.LOCATION)
@@ -162,12 +161,18 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                             .setUnitType(UnitType.DEVICE)
                             .apply {
                                 deviceClassMapping[device.id]!!.let { (_, deviceClass) ->
-                                    deviceConfigBuilder
-                                        .setDeviceClassId(deviceClass.id)
+                                    deviceConfigBuilder.deviceClassId = deviceClass.id
                                 }
                             }
                             .setLabel(LabelProcessor.generateLabelBuilder(device.name))
                             .apply { metaConfigBuilder[ALIAS_KEY_HASS_DEVICE_ID] = device.id }
+                            .apply {
+                                dalLocations.firstOrNull { location ->
+                                    location.metaConfig[ALIAS_KEY_HASS_AREA_ID] == device.areaId
+                                }?.let { unitLocation ->
+                                    placementConfigBuilder.locationId = unitLocation.id
+                                }
+                            }
                             .build()
                     }.map { deviceConfig ->
                         deviceIdToDevices[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]?.let { existingDeviceConfig ->
@@ -176,8 +181,8 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                             }
                         } ?: Registries.getUnitRegistry().registerUnitConfig(deviceConfig).get(30, TimeUnit.SECONDS)
                     }.flatMap { deviceConfig ->
-                        deviceConfig.deviceConfig.unitIdList.map { unitId ->
-                            val unit = Registries.getUnitRegistry().getUnitConfigById(unitId)
+                        deviceConfig.deviceConfig.unitIdList.map { dalUnitId ->
+                            val unit = Registries.getUnitRegistry().getUnitConfigById(dalUnitId)
                             val entityType = unit.unitType
                                 .let { Registries.getTemplateRegistry().getUnitTemplateByType(it) }
                                 .metaConfig.entryList.associate { it.key to it.value!! }[HASS_ENTITY_TYPE]
@@ -186,8 +191,15 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                                 ?.find { it.type == entityType }
                                 ?.let { entity ->
                                     unit.toBuilder().apply {
+                                        // set hass id as alias and add to meta config
                                         addAlias(entity.entityId)
                                         metaConfigBuilder[ALIAS_KEY_HASS_ENTITY_ID] = entity.entityId
+                                        // add location to unit
+                                        dalLocations.firstOrNull { location ->
+                                            location.metaConfig[ALIAS_KEY_HASS_AREA_ID] == entity.areaId
+                                        }?.let { unitLocation ->
+                                            placementConfigBuilder.locationId = unitLocation.id
+                                        }
                                     }.build()
                                 }
                                 ?.let { Registries.getUnitRegistry().updateUnitConfig(it).get(30, TimeUnit.SECONDS) }

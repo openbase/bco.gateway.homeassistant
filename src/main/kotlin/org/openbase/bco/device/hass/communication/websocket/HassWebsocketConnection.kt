@@ -1,5 +1,6 @@
 package org.openbase.bco.device.hass.communication.websocket
 
+import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -11,7 +12,8 @@ import org.openbase.bco.device.hass.jp.JpHassPort
 import org.example.util.toRequest
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.TokenProvider
-import org.openbase.bco.device.hass.communication.websocket.command.ResultCommand
+import org.openbase.bco.device.hass.communication.websocket.command.CommandResult
+import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.device.hass.utils.JsonUtils
 import org.openbase.bco.device.hass.utils.await
 import org.openbase.jps.core.JPService
@@ -28,6 +30,7 @@ import kotlin.concurrent.write
 data class Subscription (
     val commandType: String = HassCommunicator.EVENT_WS_SUBSCRIPTION,
     val eventType: String? = null,
+    val eventProcessor: (event: SubscriptionEvent.Event) -> Any,
 )
 
 class HassWebsocketConnection(
@@ -169,13 +172,21 @@ class HassWebsocketConnection(
                     logger.error("Websocket could not be authenticated.")
                     return
                 }
+                "event" -> {
+                    JsonUtils.gson.fromJson(jsonResult, SubscriptionEvent::class.java).also { result ->
+                        if (!result.event.data.entityId.contains("light")) return
+
+                        subscriptions.find { it.eventType == result.event.eventType }?.eventProcessor?.invoke(result.event)
+                    }
+                    return
+                }
                 else -> {
                     // continue with command result handling
                 }
             }
 
             val result = try {
-                 JsonUtils.gson.fromJson(jsonResult, ResultCommand::class.java)
+                 JsonUtils.gson.fromJson(jsonResult, CommandResult::class.java)
             } catch (ex: Exception) {
                 logger.error("Could not process result: $jsonResult")
                 throw  ex
@@ -184,7 +195,7 @@ class HassWebsocketConnection(
             requestMapLock.write {
                 if (result.success != false) {
                     requestMap.remove(result.id)?.complete(result.result?.toString()) ?: also {
-                        logger.info("Incoming Event Stream: $jsonResult")
+                        logger.info("Unknown Event: $jsonResult")
                     }
                 } else {
                     requestMap.remove(result.id)?.completeExceptionally(CouldNotPerformException("Canceled by target"))

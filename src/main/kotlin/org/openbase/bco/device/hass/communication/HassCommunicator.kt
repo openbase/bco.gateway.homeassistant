@@ -8,6 +8,7 @@ import jakarta.ws.rs.core.MediaType
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
 import org.example.org.openbase.bco.device.hass.manager.dto.ServiceAction
 import org.openbase.bco.device.hass.communication.websocket.Subscription
+import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassAreaDto
 import org.openbase.bco.device.hass.manager.dto.HassFloorDto
@@ -270,12 +271,13 @@ class HassCommunicator private constructor() : HassConnection() {
     fun subscribe(
         commandType: String,
         eventType: String? = null,
-    ) = subscribe(
+        eventProcessor: (event: SubscriptionEvent.Event) -> Any,
+    ): Subscription =
         Subscription(
             commandType = commandType,
             eventType = eventType,
-        ),
-    )
+            eventProcessor = eventProcessor,
+        ).also { subscribe(it) }
 
     companion object {
         const val API_HEALTH: String = "/"

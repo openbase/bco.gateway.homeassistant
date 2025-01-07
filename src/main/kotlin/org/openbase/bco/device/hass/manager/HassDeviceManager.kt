@@ -28,6 +28,7 @@ import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVE
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
+import org.openbase.bco.device.hass.manager.dto.HassStateDto
 import org.openbase.bco.device.hass.utils.await
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
@@ -50,8 +51,7 @@ import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.Duration
-import java.util.concurrent.TimeUnit
+import kotlin.collections.filter
 
 class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), false),
     Launchable<Void>, VoidInitializable {
@@ -65,6 +65,8 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
     private val unitFilter: RecurrenceEventFilter<Any>
 
     private var entityIdToUnitId = mapOf<String, String>()
+
+    private var supportedEntities = listOf<HassEntityDto>()
 
     init {
         // the sync observer triggers a lot when the device manager is initially activated and all unit controllers are created
@@ -215,29 +217,17 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                 // TODO: Implement Service Mapping BCO -> HASS (COLORABLE LIGHT)
                 // TODO: Implement Service Mapping HASS -> BCO (COLORABLE LIGHT)
                 // TODO: Finish initial state mapping (there we have to map from the state type onto the service type by analysing the entire event)
-                // TODO: After the events (state_changes) are subscribed (done) we need to introduce a dto and parse it and then apply it on the service executor.
 
+                // DONE: After the events (state_changes) are subscribed (done) we need to introduce a dto and parse it and then apply it on the service executor (done).
+                // TODO: Apply state changes from bco onto home assistant.
 
                 // initial device synchronization
 
-                val supportedEntities = HassCommunicator.instance.getEntities()
+                supportedEntities = HassCommunicator.instance.getEntities()
                     .filter { deviceIdToDevices.keys.contains(it.deviceId) }
 
                 try {
-                    HassCommunicator.instance.getStates()
-                        .filter { supportedEntities.map { it.entityId }.contains(it.entityId) }
-                        .forEach { state ->
-                            try {
-                                executor.applyStateUpdate(state.entityId, state.type, state.state, true)
-                            } catch (ex: CouldNotPerformException) {
-                                ExceptionPrinter.printHistory(
-                                    ((("Skip synchronization of item[name:" + state.name + ", type:" + state.type) + ", " + ", state:" + state.state))+ "]",
-                                    ex,
-                                    LOGGER,
-                                    LogLevel.WARN
-                                )
-                            }
-                        }
+                    HassCommunicator.instance.getStates().applyStateUpdates()
                 } catch (ex: CouldNotPerformException) {
                     if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                         ExceptionPrinter.printHistory(
@@ -271,6 +261,12 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
     @Throws(CouldNotPerformException::class, InterruptedException::class)
     override fun activate() {
         unitControllerRegistry.addObserver(synchronizationObserver)
+
+        HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, EVENT_TYPE_STATE) { event ->
+            LOGGER.info("new state event: $event")
+            listOf(event.data.newState).applyStateUpdates()
+        }
+
         super.activate()
 
         LOGGER.info("Connect to bco...")
@@ -279,9 +275,24 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
 
         BCOLogin.getSession().loginBCOUser()
 
-        HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, EVENT_TYPE_STATE)
+
         unitFilter.trigger()
     }
+
+    fun List<HassStateDto>.applyStateUpdates() = this
+        .filter { supportedEntities.map { it.entityId }.contains(it.entityId) }
+        .forEach { state ->
+            try {
+                executor.applyStateUpdate(state.entityId, state.type, state.state, true)
+            } catch (ex: CouldNotPerformException) {
+                ExceptionPrinter.printHistory(
+                    ((("Skip synchronization of item[name:" + state.name + ", type:" + state.type) + ", " + ", state:" + state.state))+ "]",
+                    ex,
+                    LOGGER,
+                    LogLevel.WARN
+                )
+            }
+        }
 
     @Throws(CouldNotPerformException::class, InterruptedException::class)
     override fun deactivate() {

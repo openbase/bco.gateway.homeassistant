@@ -2,35 +2,24 @@ package org.openbase.bco.device.hass.action
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.google.protobuf.Message
-import org.example.org.openbase.bco.device.hass.manager.dto.ServiceAction
 import org.openbase.bco.dal.lib.action.ActionDescriptionProcessor
 import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.dal.lib.layer.unit.UnitControllerRegistry
 import org.openbase.bco.dal.lib.state.States
 import org.openbase.bco.device.hass.communication.HassConnection
-import org.openbase.bco.device.hass.manager.service.ServiceTypeServiceActionMapping
-import org.openbase.bco.device.hass.manager.transformer.ServiceStateServiceActionTransformerPool
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InvalidStateException
-import org.openbase.jul.exception.MultiException
-import org.openbase.jul.exception.MultiException.ExceptionStack
-import org.openbase.jul.exception.NotAvailableException
 import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
-import org.openbase.jul.extension.type.processing.TimestampProcessor.updateTimestamp
 import org.openbase.jul.pattern.Observer
 import org.openbase.jul.schedule.Timeout
 import org.openbase.type.domotic.action.ActionInitiatorType.ActionInitiator
 import org.openbase.type.domotic.action.ActionInitiatorType.ActionInitiator.InitiatorType
 import org.openbase.type.domotic.action.ActionPriorityType.ActionPriority
 import org.openbase.type.domotic.service.ServiceTemplateType.ServiceTemplate.ServiceType
-import org.openbase.type.domotic.state.PowerStateType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.TimeUnit
-import javax.swing.plaf.nimbus.State
 
 class ServiceActionExecutor(
     private val unitControllerRegistry: UnitControllerRegistry<UnitController<*, *>>,

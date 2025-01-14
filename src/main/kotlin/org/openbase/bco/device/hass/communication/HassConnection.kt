@@ -31,6 +31,7 @@ import org.openbase.type.domotic.unit.gateway.GatewayClassType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ScheduledFuture
@@ -382,8 +383,8 @@ abstract class HassConnection : Shutdownable, TokenProvider {
 
     fun sendWSCommand(
         commandType: String,
-        eventType: String? = null,
-    ): Future<String?> = webSocketConnection.sendCommand(commandType, eventType)
+        payload: JsonObject = JsonObject(),
+    ): CompletableFuture<String> = webSocketConnection.sendCommand(commandType, payload)
 
     override fun shutdown() {
         // prepare shutdown

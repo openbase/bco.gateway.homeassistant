@@ -23,7 +23,7 @@ package org.openbase.bco.device.hass.manager.transformer
 */
 
 import com.google.protobuf.Message
-import org.example.org.openbase.bco.device.hass.manager.dto.ServiceAction
+import org.openbase.bco.device.hass.manager.service.ServiceAction
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.NotAvailableException

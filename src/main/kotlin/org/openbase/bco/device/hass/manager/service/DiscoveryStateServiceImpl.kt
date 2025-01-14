@@ -22,7 +22,7 @@ package org.openbase.bco.device.hass.manager.service
 * #L%
 */
 
-import org.example.org.openbase.bco.device.hass.manager.unit.HassGatewayController
+import org.openbase.bco.device.hass.manager.unit.HassGatewayController
 import org.openbase.bco.dal.control.action.ActionImpl
 import org.openbase.bco.dal.control.layer.unit.AbstractUnitController
 import org.openbase.bco.dal.lib.layer.service.operation.DiscoveryStateOperationService
@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit
 import java.util.function.Supplier
 
 class DiscoveryStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
-    DiscoveryStateOperationService where ST : DiscoveryStateOperationService, ST : Unit<*>? {
+    DiscoveryStateOperationService where ST : DiscoveryStateOperationService, ST : Unit<*> {
 //    private val DISCOVERY_STATE_SERVICE_LOCK = "DISCOVERY_SERVICE_LOCK"
 
     override fun getDiscoveryState(): ActivationState {

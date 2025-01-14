@@ -1,6 +1,8 @@
 package org.openbase.bco.device.hass.communication.websocket
 
+import com.fasterxml.jackson.core.util.RequestPayload
 import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -9,11 +11,11 @@ import okhttp3.WebSocketListener
 import okio.ByteString
 import org.openbase.bco.device.hass.jp.JPHassHost
 import org.openbase.bco.device.hass.jp.JpHassPort
-import org.example.util.toRequest
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.TokenProvider
 import org.openbase.bco.device.hass.communication.websocket.command.CommandResult
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
+import org.openbase.bco.device.hass.util.toRequest
 import org.openbase.bco.device.hass.utils.JsonUtils
 import org.openbase.bco.device.hass.utils.await
 import org.openbase.jps.core.JPService
@@ -57,9 +59,13 @@ class HassWebsocketConnection(
             if (value == ConnectionState.State.CONNECTED) {
                 GlobalCachedExecutorService.execute {
                     subscriptions.forEach { subscription ->
-                        sendCommand(subscription.commandType, subscription.eventType).await().also {
-                            logger.info("subscribe on: $subscription")
-                        }
+                        val json = JsonObject()
+                        json.addProperty("event_type", subscription.eventType.toString())
+                        sendCommand(subscription.commandType,json)
+                            .await()
+                            .also {
+                                logger.info("subscribe on: $subscription")
+                            }
                     }
                 }
             }
@@ -107,8 +113,8 @@ class HassWebsocketConnection(
 
     fun sendCommand(
         commandType: String,
-        eventType: String? = null,
-    ): Future<String?> {
+        payload: JsonObject = JsonObject(),
+    ): CompletableFuture<String> {
 
         if(connectionState != ConnectionState.State.CONNECTED) {
             return CompletableFuture.failedFuture(CouldNotPerformException("Connection is not established."))
@@ -124,15 +130,11 @@ class HassWebsocketConnection(
         }
 
         // generate payload
-        val payload = mapOf(
-            "id" to commandId,
-            "type" to commandType,
-        ).let { payload ->
-            eventType?.let { payload.plus("event_type" to eventType) } ?: payload
-        }
+        payload.addProperty("id", commandId)
+        payload.addProperty("type", commandType)
 
         // send message
-        val success = ws?.send(payload.toRequest())
+        val success = ws?.send(payload.toString())
 
         // error handling
         if (success == null || success == false) {

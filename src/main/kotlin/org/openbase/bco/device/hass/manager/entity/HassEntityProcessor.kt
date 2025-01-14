@@ -71,26 +71,26 @@ object HassEntityProcessor {
     //            this.commandClass = commandClass;
     //        }
     //    }
-    fun generateEntityId(unitConfig: UnitConfig?, serviceType: ServiceTemplate.ServiceType): String {
-        return UnitConfigProcessor.getDefaultAlias(unitConfig, "?")
-            .replace(UnitAliasGenerationConsistencyHandler.ALIAS_NUMBER_SEPARATOR, ENTITY_SUBSEGMENT_DELIMITER) +
-                ENTITY_SEGMENT_DELIMITER +
-                StringProcessor.transformUpperCaseToPascalCase(serviceType.name)
-    }
+//    fun generateEntityId(unitConfig: UnitConfig?, serviceType: ServiceTemplate.ServiceType): String {
+//        return UnitConfigProcessor.getDefaultAlias(unitConfig, "?")
+//            .replace(UnitAliasGenerationConsistencyHandler.ALIAS_NUMBER_SEPARATOR, ENTITY_SUBSEGMENT_DELIMITER) +
+//                ENTITY_SEGMENT_DELIMITER +
+//                StringProcessor.transformUpperCaseToPascalCase(serviceType.name)
+//    }
 
-    @Throws(NotAvailableException::class)
-    fun getEntityType(serviceType: ServiceTemplate.ServiceType): String {
-        return when (serviceType) {
-            ServiceTemplate.ServiceType.COLOR_STATE_SERVICE -> HASS_COLOR_TYPE
-            ServiceTemplate.ServiceType.POWER_CONSUMPTION_STATE_SERVICE, ServiceTemplate.ServiceType.TEMPERATURE_STATE_SERVICE, ServiceTemplate.ServiceType.BATTERY_STATE_SERVICE, ServiceTemplate.ServiceType.TARGET_TEMPERATURE_STATE_SERVICE, ServiceTemplate.ServiceType.ILLUMINANCE_STATE_SERVICE, ServiceTemplate.ServiceType.USER_TRANSIT_STATE_SERVICE, ServiceTemplate.ServiceType.SMOKE_STATE_SERVICE -> HASS_NUMBER_TYPE
-            ServiceTemplate.ServiceType.BLIND_STATE_SERVICE -> HASS_ROLLERSHUTTER_TYPE
-            ServiceTemplate.ServiceType.TAMPER_STATE_SERVICE, ServiceTemplate.ServiceType.DISCOVERY_STATE_SERVICE, ServiceTemplate.ServiceType.STANDBY_STATE_SERVICE, ServiceTemplate.ServiceType.SWITCH_STATE_SERVICE, ServiceTemplate.ServiceType.AVAILABILITY_STATE_SERVICE, ServiceTemplate.ServiceType.MOTION_STATE_SERVICE, ServiceTemplate.ServiceType.PRESENCE_STATE_SERVICE, ServiceTemplate.ServiceType.POWER_STATE_SERVICE, ServiceTemplate.ServiceType.BUTTON_STATE_SERVICE, ServiceTemplate.ServiceType.ACTIVATION_STATE_SERVICE, ServiceTemplate.ServiceType.SMOKE_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.FIRE_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.EARTHQUAKE_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.INTRUSION_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.MEDICAL_EMERGENCY_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.TEMPEST_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.WATER_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.TEMPERATURE_ALARM_STATE_SERVICE -> HASS_SWITCH_TYPE
-
-            ServiceTemplate.ServiceType.CONTACT_STATE_SERVICE, ServiceTemplate.ServiceType.WINDOW_STATE_SERVICE, ServiceTemplate.ServiceType.DOOR_STATE_SERVICE -> HASS_CONTACT_TYPE
-            ServiceTemplate.ServiceType.HANDLE_STATE_SERVICE -> HASS_STRING_TYPE
-            ServiceTemplate.ServiceType.BRIGHTNESS_STATE_SERVICE -> HASS_DIMMER_TYPE
-            ServiceTemplate.ServiceType.GLOBAL_POSITION_STATE_SERVICE -> HASS_LOCATION_TYPE
-            else -> throw NotAvailableException("Hass entity type for service[" + serviceType.name + "]")
-        }
-    }
+//    @Throws(NotAvailableException::class)
+//    fun getEntityType(serviceType: ServiceTemplate.ServiceType): String {
+//        return when (serviceType) {
+//            ServiceTemplate.ServiceType.COLOR_STATE_SERVICE -> HASS_COLOR_TYPE
+//            ServiceTemplate.ServiceType.POWER_CONSUMPTION_STATE_SERVICE, ServiceTemplate.ServiceType.TEMPERATURE_STATE_SERVICE, ServiceTemplate.ServiceType.BATTERY_STATE_SERVICE, ServiceTemplate.ServiceType.TARGET_TEMPERATURE_STATE_SERVICE, ServiceTemplate.ServiceType.ILLUMINANCE_STATE_SERVICE, ServiceTemplate.ServiceType.USER_TRANSIT_STATE_SERVICE, ServiceTemplate.ServiceType.SMOKE_STATE_SERVICE -> HASS_NUMBER_TYPE
+//            ServiceTemplate.ServiceType.BLIND_STATE_SERVICE -> HASS_ROLLERSHUTTER_TYPE
+//            ServiceTemplate.ServiceType.TAMPER_STATE_SERVICE, ServiceTemplate.ServiceType.DISCOVERY_STATE_SERVICE, ServiceTemplate.ServiceType.STANDBY_STATE_SERVICE, ServiceTemplate.ServiceType.SWITCH_STATE_SERVICE, ServiceTemplate.ServiceType.AVAILABILITY_STATE_SERVICE, ServiceTemplate.ServiceType.MOTION_STATE_SERVICE, ServiceTemplate.ServiceType.PRESENCE_STATE_SERVICE, ServiceTemplate.ServiceType.POWER_STATE_SERVICE, ServiceTemplate.ServiceType.BUTTON_STATE_SERVICE, ServiceTemplate.ServiceType.ACTIVATION_STATE_SERVICE, ServiceTemplate.ServiceType.SMOKE_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.FIRE_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.EARTHQUAKE_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.INTRUSION_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.MEDICAL_EMERGENCY_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.TEMPEST_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.WATER_ALARM_STATE_SERVICE, ServiceTemplate.ServiceType.TEMPERATURE_ALARM_STATE_SERVICE -> HASS_SWITCH_TYPE
+//
+//            ServiceTemplate.ServiceType.CONTACT_STATE_SERVICE, ServiceTemplate.ServiceType.WINDOW_STATE_SERVICE, ServiceTemplate.ServiceType.DOOR_STATE_SERVICE -> HASS_CONTACT_TYPE
+//            ServiceTemplate.ServiceType.HANDLE_STATE_SERVICE -> HASS_STRING_TYPE
+//            ServiceTemplate.ServiceType.BRIGHTNESS_STATE_SERVICE -> HASS_DIMMER_TYPE
+//            ServiceTemplate.ServiceType.GLOBAL_POSITION_STATE_SERVICE -> HASS_LOCATION_TYPE
+//            else -> throw NotAvailableException("Hass entity type for service[" + serviceType.name + "]")
+//        }
+//    }
 }

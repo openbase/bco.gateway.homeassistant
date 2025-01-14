@@ -33,10 +33,10 @@ import java.util.concurrent.Future
 */
 
 class ColorStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
-    ColorStateOperationService where ST : ColorStateOperationService?, ST : Unit<*> {
+    ColorStateOperationService where ST : ColorStateOperationService, ST : Unit<*> {
     @Throws(NotAvailableException::class)
     override fun getColorState(): ColorState {
-        return unit!!.colorState
+        return unit.colorState
     }
 
     override fun setColorState(colorState: ColorState): Future<ActionDescription> {
@@ -45,7 +45,7 @@ class ColorStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
 
     @Throws(NotAvailableException::class)
     override fun getNeutralWhiteColor(): ColorType.Color {
-        return unit!!.neutralWhiteColor
+        return unit.neutralWhiteColor
     }
 
     companion object {

@@ -4,14 +4,13 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
-import jakarta.ws.rs.core.MediaType
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
-import org.example.org.openbase.bco.device.hass.manager.dto.ServiceAction
 import org.openbase.bco.device.hass.communication.websocket.Subscription
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassAreaDto
 import org.openbase.bco.device.hass.manager.dto.HassFloorDto
+import org.openbase.bco.device.hass.manager.dto.HassServiceDto
 import org.openbase.bco.device.hass.manager.dto.HassStateDto
 import org.openbase.bco.device.hass.utils.await
 import org.openbase.jul.exception.CouldNotPerformException
@@ -21,6 +20,8 @@ import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.iface.Shutdownable
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Future
 
 class HassCommunicator private constructor() : HassConnection() {
 
@@ -77,15 +78,8 @@ class HassCommunicator private constructor() : HassConnection() {
         }
     }
 
-    @Throws(CouldNotPerformException::class)
-    fun postServiceAction(entityId: String, serviceAction: ServiceAction) {
-        postServiceAction(entityId, serviceAction.toString())
-    }
-
-    @Throws(CouldNotPerformException::class)
-    fun postServiceAction(entityId: String, serviceAction: String?) {
-        post(STATES_WS_REQUEST + SEPARATOR + entityId, serviceAction!!, MediaType.TEXT_PLAIN_TYPE)
-    }
+    fun callService(service: HassServiceDto): CompletableFuture<String> =
+        sendWSCommand(CALL_SERVICE_WS_REQUEST, gson.toJsonTree(service).asJsonObject)
 
 //    // ==========================================================================================================================================
 //    // ITEM_CHANNEL_LINK
@@ -288,6 +282,7 @@ class HassCommunicator private constructor() : HassConnection() {
         const val AREA_WS_REQUEST: String = "config/area_registry/list"
         const val FLOOR_WS_REQUEST: String = "config/floor_registry/list"
         const val ENTITIES_WS_REQUEST: String = "config/entity_registry/list"
+        const val CALL_SERVICE_WS_REQUEST = "call_service"
         const val LINKS_TARGET: String = "links"
         const val INBOX_TARGET: String = "inbox"
         const val DISCOVERY_TARGET: String = "discovery"

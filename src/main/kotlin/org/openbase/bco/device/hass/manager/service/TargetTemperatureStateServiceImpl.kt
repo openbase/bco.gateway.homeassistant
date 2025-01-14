@@ -30,13 +30,13 @@ import java.util.concurrent.Future
 */
 
 class TargetTemperatureStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
-    TargetTemperatureStateOperationService where ST : TargetTemperatureStateOperationService?, ST : Unit<*> {
+    TargetTemperatureStateOperationService where ST : TargetTemperatureStateOperationService, ST : Unit<*> {
     override fun setTargetTemperatureState(temperatureState: TemperatureState): Future<ActionDescription> {
         return setState(temperatureState)
     }
 
     @Throws(NotAvailableException::class)
     override fun getTargetTemperatureState(): TemperatureState {
-        return unit!!.targetTemperatureState
+        return unit.targetTemperatureState
     }
 }

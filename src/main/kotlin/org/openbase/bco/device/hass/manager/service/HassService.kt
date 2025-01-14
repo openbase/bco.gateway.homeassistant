@@ -23,14 +23,17 @@ package org.openbase.bco.device.hass.manager.service
 */
 
 import com.google.protobuf.Message
-import org.example.org.openbase.bco.device.hass.manager.dto.ServiceAction
+import org.openbase.bco.device.hass.manager.service.ServiceAction
 import org.openbase.bco.dal.lib.layer.service.Service
 import org.openbase.bco.dal.lib.layer.service.ServiceProvider
 import org.openbase.bco.dal.lib.layer.service.ServiceStateProcessor
 import org.openbase.bco.dal.lib.layer.unit.Unit
 import org.openbase.bco.device.hass.communication.HassCommunicator
+import org.openbase.bco.device.hass.manager.HassDeviceManager
+import org.openbase.bco.device.hass.manager.dto.HassServiceDto
 import org.openbase.bco.device.hass.manager.entity.HassEntityProcessor
 import org.openbase.bco.device.hass.manager.transformer.ServiceStateServiceActionTransformerPool
+import org.openbase.bco.device.hass.util.get
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InstantiationException
 import org.openbase.jul.exception.MultiException
@@ -46,19 +49,24 @@ import org.openbase.type.domotic.service.ServiceTemplateType.ServiceTemplate
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Callable
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 import java.util.function.Supplier
 
-abstract class HassService<ST>(unit: ST) :
-    Service where ST : Service?, ST : Unit<*>? {
-    var unit: ST? = null
+abstract class HassService<ST>(
+    unit: ST,
+) :
+    Service where ST : Service, ST : Unit<*> {
+    var unit: ST
+    var entityId: String
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
     private var serviceType: ServiceTemplate.ServiceType = detectServiceType()
-    var entityId: String = HassEntityProcessor.generateEntityId(unit!!.config, serviceType)
 
     init {
         try {
             this.unit = unit
+            this.entityId = unit.config.metaConfig[HassDeviceManager.ALIAS_KEY_HASS_ENTITY_ID]
+                ?: error("Could not solve entity Id!")
             loadServiceConfig()
         } catch (ex: CouldNotPerformException) {
             throw InstantiationException(this, ex)
@@ -67,7 +75,7 @@ abstract class HassService<ST>(unit: ST) :
 
     @Throws(CouldNotPerformException::class)
     private fun loadServiceConfig() {
-        for (serviceConfig in unit!!.config.serviceConfigList) {
+        for (serviceConfig in unit.config.serviceConfigList) {
             if (serviceConfig.serviceDescription.serviceType == serviceType) {
                 return
             }
@@ -87,6 +95,8 @@ abstract class HassService<ST>(unit: ST) :
         )
     }
 
+    fun callService(service: HassServiceDto): CompletableFuture<String> = HassCommunicator.instance.callService(service)
+
     fun setState(serviceState: Message): Future<ActionDescription> {
         try {
             var success = false
@@ -94,7 +104,7 @@ abstract class HassService<ST>(unit: ST) :
             for (serviceActionClass in ServiceTypeServiceActionMapping.getServiceActionClasses(serviceType)) {
                 val serviceAction: ServiceAction = ServiceStateServiceActionTransformerPool.instance.getTransformer(serviceState.javaClass, serviceActionClass).transform(serviceState = serviceState)
                 try {
-                    HassCommunicator.instance.postServiceAction(entityId, serviceAction.toString())
+//                    HassCommunicator.instance.postServiceAction(entityId, serviceAction.toString())
                     TODO()
                     success = true
                 } catch (ex: CouldNotPerformException) {

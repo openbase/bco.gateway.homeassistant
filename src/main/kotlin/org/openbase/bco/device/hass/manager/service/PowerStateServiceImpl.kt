@@ -1,9 +1,14 @@
 package org.openbase.bco.device.hass.manager.service
 
+import org.openbase.bco.dal.lib.layer.service.ServiceStateProcessor
 import org.openbase.bco.dal.lib.layer.service.operation.PowerStateOperationService
 import org.openbase.bco.dal.lib.layer.unit.Unit
+import org.openbase.bco.device.hass.manager.dto.HassServiceDto
+import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.jul.exception.NotAvailableException
+import org.openbase.jul.schedule.FutureProcessor
 import org.openbase.type.domotic.action.ActionDescriptionType.ActionDescription
+import org.openbase.type.domotic.service.ServiceTemplateType
 import org.openbase.type.domotic.state.PowerStateType.PowerState
 import java.util.concurrent.Future
 
@@ -30,13 +35,29 @@ import java.util.concurrent.Future
 */
 
 class PowerStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
-    PowerStateOperationService where ST : PowerStateOperationService?, ST : Unit<*>? {
+    PowerStateOperationService where ST : PowerStateOperationService, ST : Unit<*> {
     override fun setPowerState(powerState: PowerState): Future<ActionDescription> {
-        return setState(powerState)
+
+        val serviceType: HassServiceType = when(powerState.value) {
+            PowerState.State.ON -> HassServiceType.TURN_ON
+            PowerState.State.OFF -> HassServiceType.TURN_OFF
+            PowerState.State.UNKNOWN -> HassServiceType.UNKNOWN
+        }
+
+        return callService(
+            HassServiceDto(
+                service = serviceType,
+                entityId = entityId,
+            ),
+            // todo: handle response and parse if response is successfull=false and then fail the future.
+        ).thenApply { response ->
+            ServiceStateProcessor.getResponsibleAction(powerState) {
+                ActionDescription.getDefaultInstance()
+            }
+        }
     }
 
     @Throws(NotAvailableException::class)
-    override fun getPowerState(): PowerState {
-        return unit!!.powerState
-    }
+    override fun getPowerState(): PowerState =
+        unit.powerState
 }

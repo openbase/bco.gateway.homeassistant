@@ -1,4 +1,4 @@
-package org.example.util
+package org.openbase.bco.device.hass.util
 
 import com.google.gson.JsonObject
 

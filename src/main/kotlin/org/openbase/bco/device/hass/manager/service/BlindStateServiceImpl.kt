@@ -37,6 +37,6 @@ class BlindStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
 
     @Throws(NotAvailableException::class)
     override fun getBlindState(): BlindState {
-        return unit!!.blindState
+        return unit.blindState
     }
 }

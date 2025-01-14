@@ -19,7 +19,7 @@ package org.openbase.bco.device.hass.manager /*-
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-import org.example.org.openbase.bco.device.hass.manager.unit.HassGatewayControllerFactory
+import org.openbase.bco.device.hass.manager.unit.HassGatewayControllerFactory
 import org.openbase.bco.dal.control.layer.unit.device.DeviceManagerImpl
 import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.device.hass.action.ServiceActionExecutor
@@ -30,6 +30,8 @@ import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
 import org.openbase.bco.device.hass.manager.dto.HassStateDto
 import org.openbase.bco.device.hass.utils.await
+import org.openbase.bco.device.hass.util.get
+import org.openbase.bco.device.hass.util.set
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
 import org.openbase.jul.exception.CouldNotPerformException
@@ -38,13 +40,11 @@ import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
 import org.openbase.jul.extension.protobuf.ProtoBufBuilderProcessor.mergeFromWithoutRepeatedFields
 import org.openbase.jul.extension.type.processing.LabelProcessor
-import org.openbase.jul.extension.type.processing.MetaConfigProcessor
 import org.openbase.jul.iface.Launchable
 import org.openbase.jul.iface.VoidInitializable
 import org.openbase.jul.pattern.Observer
 import org.openbase.jul.pattern.provider.DataProvider
 import org.openbase.jul.schedule.RecurrenceEventFilter
-import org.openbase.type.configuration.MetaConfigType
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.device.DeviceClassType.DeviceClass
 import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig.LocationType
@@ -220,6 +220,7 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
 
                 // DONE: After the events (state_changes) are subscribed (done) we need to introduce a dto and parse it and then apply it on the service executor (done).
                 // TODO: Apply state changes from bco onto home assistant.
+                // TODO: Implement ID Mapping Service (Unit <-> Entity)
 
                 // initial device synchronization
 
@@ -299,18 +300,6 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
         unitControllerRegistry.removeObserver(synchronizationObserver)
         super.deactivate()
     }
-
-    private operator fun MetaConfigType.MetaConfig.get(key: String): String? =
-        MetaConfigProcessor.getValue(this, key)
-
-    private operator fun MetaConfigType.MetaConfig.set(key: String, value: String): MetaConfigType.MetaConfig =
-        MetaConfigProcessor.setValue(this, key, value)
-
-    private operator fun MetaConfigType.MetaConfig.Builder.get(key: String): String? =
-        MetaConfigProcessor.getValue(this.build(), key)
-
-    private operator fun MetaConfigType.MetaConfig.Builder.set(key: String, value: String): MetaConfigType.MetaConfig.Builder =
-        MetaConfigProcessor.setValue(this, key, value)
 
     companion object {
         const val ALIAS_KEY_HASS_FLOOR_ID = "HASS_FLOOR_ID"

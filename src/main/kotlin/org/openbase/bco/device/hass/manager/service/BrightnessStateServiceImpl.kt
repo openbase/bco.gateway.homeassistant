@@ -30,13 +30,13 @@ import java.util.concurrent.Future
 */
 
 class BrightnessStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
-    BrightnessStateOperationService where ST : BrightnessStateOperationService?, ST : Unit<*> {
+    BrightnessStateOperationService where ST : BrightnessStateOperationService, ST : Unit<*> {
     override fun setBrightnessState(brightnessState: BrightnessState): Future<ActionDescription> {
         return setState(brightnessState)
     }
 
     @Throws(NotAvailableException::class)
     override fun getBrightnessState(): BrightnessState {
-        return unit!!.brightnessState
+        return unit.brightnessState
     }
 }

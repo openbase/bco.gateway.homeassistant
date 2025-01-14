@@ -30,13 +30,13 @@ import java.util.concurrent.Future
 */
 
 class StandbyStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
-    StandbyStateOperationService where ST : StandbyStateOperationService?, ST : Unit<*> {
+    StandbyStateOperationService where ST : StandbyStateOperationService, ST : Unit<*> {
     override fun setStandbyState(standbyState: StandbyState): Future<ActionDescription> {
         return setState(standbyState)
     }
 
     @Throws(NotAvailableException::class)
     override fun getStandbyState(): StandbyState {
-        return unit!!.standbyState
+        return unit.standbyState
     }
 }

@@ -66,7 +66,7 @@ abstract class HassService<ST>(
         try {
             this.unit = unit
             this.entityId = unit.config.metaConfig[HassDeviceManager.ALIAS_KEY_HASS_ENTITY_ID]
-                ?: error("Could not solve entity Id!")
+                ?: error("Could not solve entity Id! For unit $unit")
             loadServiceConfig()
         } catch (ex: CouldNotPerformException) {
             throw InstantiationException(this, ex)

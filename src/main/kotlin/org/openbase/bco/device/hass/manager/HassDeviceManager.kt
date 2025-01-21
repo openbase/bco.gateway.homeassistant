@@ -268,7 +268,6 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
             listOf(event.data.newState).applyStateUpdates()
         }
 
-        super.activate()
 
         LOGGER.info("Connect to bco...")
         Registries.waitUntilReady()
@@ -276,6 +275,7 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
 
         BCOLogin.getSession().loginBCOUser()
 
+        super.activate()
 
         unitFilter.trigger()
     }

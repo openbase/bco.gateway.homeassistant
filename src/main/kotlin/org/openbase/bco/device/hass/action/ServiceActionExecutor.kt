@@ -7,6 +7,7 @@ import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.dal.lib.layer.unit.UnitControllerRegistry
 import org.openbase.bco.dal.lib.state.States
 import org.openbase.bco.device.hass.communication.HassConnection
+import org.openbase.bco.device.hass.manager.cache.HassIdToUnitConfigCache
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InvalidStateException
 import org.openbase.jul.exception.printer.ExceptionPrinter
@@ -23,7 +24,7 @@ import java.util.concurrent.TimeUnit
 
 class ServiceActionExecutor(
     private val unitControllerRegistry: UnitControllerRegistry<UnitController<*, *>>,
-    private var entityIdToUnitId: () -> Map<String, String>,
+    private val hassIdToUnitConfigCache: HassIdToUnitConfigCache,
 ) : Observer<Any?, JsonObject> {
     private val jsonParser: JsonParser = JsonParser()
 
@@ -97,7 +98,9 @@ class ServiceActionExecutor(
 
         try {
             // load controller
-            val unitController = unitControllerRegistry.get(entityIdToUnitId.invoke()[entityId])
+            val unitController = hassIdToUnitConfigCache.getEntry(entityId)?.let {
+                unitControllerRegistry.get(it.id)
+            }
 
             // filter all events that are not handled by this instance.
             if (unitController == null || serviceStateBuilder == null) {

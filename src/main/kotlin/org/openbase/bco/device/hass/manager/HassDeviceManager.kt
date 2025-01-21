@@ -26,6 +26,7 @@ import org.openbase.bco.device.hass.action.ServiceActionExecutor
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_TYPE_STATE
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
+import org.openbase.bco.device.hass.manager.cache.HassIdToUnitConfigCache
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
 import org.openbase.bco.device.hass.manager.dto.HassStateDto
@@ -57,6 +58,8 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
     Launchable<Void>, VoidInitializable {
 
     private val executor: ServiceActionExecutor
+
+    private val hassIdToUnitConfigCache: HassIdToUnitConfigCache = HassIdToUnitConfigCache()
 
     /**
      * Synchronization observer that triggers resynchronization of all units if their configuration changes.
@@ -206,9 +209,9 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     }.filterNotNull()
 
                 // fill unit to entity rainbow table
-                entityIdToUnitId = dalUnitConfigs
-                    .associate { unitConfig -> unitConfig.metaConfig[ALIAS_KEY_HASS_ENTITY_ID]!! to unitConfig.id }
-
+                dalUnitConfigs.forEach { unitConfig ->
+                    hassIdToUnitConfigCache.addEntry(unitConfig)
+                }
 
                 // TODO: Location and Device initial sync draft is ready, however we have issues with repeated field that are not merged correctly.
                 // TODO: Implement Service Mapping BCO -> HASS (COLORABLE LIGHT)
@@ -244,7 +247,7 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     ?.forEach { println("${it.name}: ${it.model}") }
             }
         }
-        this.executor = ServiceActionExecutor(unitControllerRegistry, this::entityIdToUnitId)
+        this.executor = ServiceActionExecutor(unitControllerRegistry, hassIdToUnitConfigCache)
         this.synchronizationObserver =
             (Observer { observable: Any?, value: Any? -> unitFilter.trigger() })
     }

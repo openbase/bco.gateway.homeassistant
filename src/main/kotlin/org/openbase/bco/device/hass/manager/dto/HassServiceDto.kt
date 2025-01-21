@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 import org.openbase.bco.device.hass.manager.dto.service.ServiceDto
 import org.openbase.bco.device.hass.type.HassDomainType
 import org.openbase.bco.device.hass.type.HassServiceType
+import org.openbase.bco.device.hass.type.toHassDomainType
 
 //{
 //    "id": 1,
@@ -19,7 +20,6 @@ import org.openbase.bco.device.hass.type.HassServiceType
 //    }
 //}
 
-
 data class HassServiceDto(
     val domain: String,
     val service: String,
@@ -32,14 +32,14 @@ data class HassServiceDto(
     constructor(
         service: HassServiceType = HassServiceType.TURN_ON,
         entityId: String,
-        domain: HassDomainType = HassDomainType.fromId(entityId.substringBefore("."))?: HassDomainType.UNKNOWN,
+        domain: HassDomainType = entityId.toHassDomainType(),
         serviceData: ServiceDto? = null,
         returnResponse: Boolean = false,
     ): this(
         domain = domain.id,
         service = service.id,
         serviceData = serviceData,
-        target = Target(entityId = entityId),
+        target = entityId.toTarget(),
         returnResponse = returnResponse,
     )
 
@@ -47,4 +47,8 @@ data class HassServiceDto(
         @SerializedName("entity_id")
         val entityId: String,
     )
+
+    companion object {
+        fun String.toTarget(): Target = Target(this)
+    }
 }

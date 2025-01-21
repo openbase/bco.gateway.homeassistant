@@ -87,12 +87,9 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                 val notIdentifiedDevices = mutableListOf<HassDeviceDto>()
                 val deviceClasses = Registries.getClassRegistry(true).deviceClasses
                 val deviceClassMapping: Map<String, Pair<HassDeviceDto, DeviceClass>> = HassCommunicator.instance.getDevices()
+                    .filter { !it.model.isNullOrBlank() }
                     .map { hassDevice -> hassDevice to deviceClasses
-                        .find { deviceClass ->
-                            deviceClass.productNumber
-                                .split(",")
-                                .map(String::trim)
-                        .contains(hassDevice.model) } }
+                        .find { deviceClass -> deviceClass.productNumber == hassDevice.model || deviceClass.metaConfig[ALIAS_KEY_HASS_DEVICE_MODEL] == hassDevice.model } }
                     .filter { (hassDevice, deviceClass) -> (deviceClass != null)
                         .also { if(!it) { notIdentifiedDevices.add(hassDevice)} } }
                     .map { (hassDevice, deviceClass) -> hassDevice to deviceClass!! }
@@ -302,6 +299,7 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
     }
 
     companion object {
+        const val ALIAS_KEY_HASS_DEVICE_MODEL = "HASS_DEVICE_MODEL"
         const val ALIAS_KEY_HASS_FLOOR_ID = "HASS_FLOOR_ID"
         const val ALIAS_KEY_HASS_DEVICE_ID = "HASS_DEVICE_ID"
         const val HASS_GATEWAY_CLASS_ID = "96dd4c43-92de-48b6-ba16-f9bafefc3c44"

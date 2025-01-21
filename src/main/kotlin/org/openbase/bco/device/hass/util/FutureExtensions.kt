@@ -1,4 +1,4 @@
-package org.openbase.bco.device.hass.utils
+package org.openbase.bco.device.hass.util
 
 import java.time.Duration
 import java.util.concurrent.Future

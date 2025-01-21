@@ -1,7 +1,5 @@
 package org.openbase.bco.device.hass.communication.websocket
 
-import com.fasterxml.jackson.core.util.RequestPayload
-import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
@@ -16,8 +14,8 @@ import org.openbase.bco.device.hass.communication.TokenProvider
 import org.openbase.bco.device.hass.communication.websocket.command.CommandResult
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.device.hass.util.toRequest
-import org.openbase.bco.device.hass.utils.JsonUtils
-import org.openbase.bco.device.hass.utils.await
+import org.openbase.bco.device.hass.util.JsonUtils
+import org.openbase.bco.device.hass.util.await
 import org.openbase.jps.core.JPService
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.iface.Activatable
@@ -25,7 +23,6 @@ import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Future
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.write
 

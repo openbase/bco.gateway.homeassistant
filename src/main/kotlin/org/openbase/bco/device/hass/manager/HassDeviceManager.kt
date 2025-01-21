@@ -29,7 +29,7 @@ import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVE
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
 import org.openbase.bco.device.hass.manager.dto.HassStateDto
-import org.openbase.bco.device.hass.utils.await
+import org.openbase.bco.device.hass.util.await
 import org.openbase.bco.device.hass.util.get
 import org.openbase.bco.device.hass.util.set
 import org.openbase.bco.registry.remote.Registries

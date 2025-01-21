@@ -26,7 +26,6 @@ class ServiceActionExecutor(
     private val unitControllerRegistry: UnitControllerRegistry<UnitController<*, *>>,
     private val hassIdToUnitConfigCache: HassIdToUnitConfigCache,
 ) : Observer<Any?, JsonObject> {
-    private val jsonParser: JsonParser = JsonParser()
 
     override fun update(
         source: Any?,
@@ -43,7 +42,7 @@ class ServiceActionExecutor(
             topic.split(HassConnection.TOPIC_SEPARATOR.toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[2]
 
         // extract payload
-        val payloadObject = jsonParser.parse(payload[PAYLOAD_KEY].asString).asJsonObject
+        val payloadObject = JsonParser.parseString(payload[PAYLOAD_KEY].asString).asJsonObject
         val state = payloadObject[PAYLOAD_STATE_KEY].asString
         val type = payloadObject[PAYLOAD_STATE_TYPE_KEY].asString
 

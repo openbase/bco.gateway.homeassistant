@@ -384,7 +384,7 @@ abstract class HassConnection : Shutdownable, TokenProvider {
     fun sendWSCommand(
         commandType: String,
         payload: JsonObject = JsonObject(),
-    ): CompletableFuture<String> = webSocketConnection.sendCommand(commandType, payload)
+    ): CompletableFuture<JsonElement?> = webSocketConnection.sendCommand(commandType, payload)
 
     override fun shutdown() {
         // prepare shutdown

@@ -1,5 +1,6 @@
 package org.openbase.bco.device.hass.communication.websocket
 
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
@@ -42,7 +43,7 @@ class HassWebsocketConnection(
     private val client = OkHttpClient()
     private var active = false
     private var ws: WebSocket? = null
-    val requestMap: MutableMap<Long, CompletableFuture<String>> = mutableMapOf()
+    val requestMap: MutableMap<Long, CompletableFuture<JsonElement?>> = mutableMapOf()
     val requestMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock()
     private val subscriptions: MutableList<Subscription> = emptyList<Subscription>().toMutableList()
 
@@ -111,7 +112,7 @@ class HassWebsocketConnection(
     fun sendCommand(
         commandType: String,
         payload: JsonObject = JsonObject(),
-    ): CompletableFuture<String> {
+    ): CompletableFuture<JsonElement?> {
 
         if(connectionState != ConnectionState.State.CONNECTED) {
             return CompletableFuture.failedFuture(CouldNotPerformException("Connection is not established."))
@@ -119,10 +120,10 @@ class HassWebsocketConnection(
 
         // prepare request
         val commandId: Long
-        val resultFuture: CompletableFuture<String>
+        val resultFuture: CompletableFuture<JsonElement?>
         requestMapLock.write {
             commandId = ++commandCounter
-            resultFuture = CompletableFuture<String>()
+            resultFuture = CompletableFuture<JsonElement?>()
             requestMap[commandId] = resultFuture
         }
 
@@ -193,7 +194,7 @@ class HassWebsocketConnection(
 
             requestMapLock.write {
                 if (result.success != false) {
-                    requestMap.remove(result.id)?.complete(result.result?.toString()) ?: also {
+                    requestMap.remove(result.id)?.complete(result.result) ?: also {
                         logger.info("Unknown Event: $jsonResult")
                     }
                 } else {

@@ -5,10 +5,9 @@ import org.openbase.bco.dal.lib.layer.service.operation.PowerStateOperationServi
 import org.openbase.bco.dal.lib.layer.unit.Unit
 import org.openbase.bco.device.hass.manager.dto.HassServiceDto
 import org.openbase.bco.device.hass.type.HassServiceType
+import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.NotAvailableException
-import org.openbase.jul.schedule.FutureProcessor
 import org.openbase.type.domotic.action.ActionDescriptionType.ActionDescription
-import org.openbase.type.domotic.service.ServiceTemplateType
 import org.openbase.type.domotic.state.PowerStateType.PowerState
 import java.util.concurrent.Future
 
@@ -49,10 +48,14 @@ class PowerStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
                 service = serviceType,
                 entityId = entityId,
             ),
-            // todo: handle response and parse if response is successfull=false and then fail the future.
         ).thenApply { response ->
-            ServiceStateProcessor.getResponsibleAction(powerState) {
-                ActionDescription.getDefaultInstance()
+            if (response?.asJsonObject?.get("success")?.asBoolean == true){
+                ServiceStateProcessor.getResponsibleAction(powerState) {
+                    ActionDescription.getDefaultInstance()
+                }
+            } else {
+                val errorMessage = response?.asJsonObject?.get("errorMessage")?.asString ?: "Unknown Error"
+                throw CouldNotPerformException("Service call failed: $errorMessage")
             }
         }
     }

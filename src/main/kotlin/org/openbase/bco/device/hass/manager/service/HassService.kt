@@ -22,6 +22,7 @@ package org.openbase.bco.device.hass.manager.service
 * #L%
 */
 
+import com.google.gson.JsonElement
 import com.google.protobuf.Message
 import org.openbase.bco.device.hass.manager.service.ServiceAction
 import org.openbase.bco.dal.lib.layer.service.Service
@@ -95,7 +96,7 @@ abstract class HassService<ST>(
         )
     }
 
-    fun callService(service: HassServiceDto): CompletableFuture<String> = HassCommunicator.instance.callService(service)
+    fun callService(service: HassServiceDto): CompletableFuture<JsonElement?> = HassCommunicator.instance.callService(service)
 
     fun setState(serviceState: Message): Future<ActionDescription> {
         try {

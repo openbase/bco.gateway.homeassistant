@@ -21,6 +21,7 @@ import org.openbase.jul.iface.Shutdownable
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
+import kotlin.collections.orEmpty
 
 class HassCommunicator private constructor() : HassConnection() {
 
@@ -77,7 +78,7 @@ class HassCommunicator private constructor() : HassConnection() {
         }
     }
 
-    fun callService(service: HassServiceDto): CompletableFuture<String> =
+    fun callService(service: HassServiceDto): CompletableFuture<JsonElement?> =
         sendWSCommand(CALL_SERVICE_WS_REQUEST, gson.toJsonTree(service).asJsonObject)
 
 //    // ==========================================================================================================================================
@@ -178,48 +179,43 @@ class HassCommunicator private constructor() : HassConnection() {
     // Devices
     // ==========================================================================================================================================
     fun getDevices(): List<HassDeviceDto> =
-        JsonParser.parseString(
-            sendWSCommand(DEVICE_WS_REQUEST).await()
-        )
-            .asJsonArray
-            .map { gson.fromJson(it, HassDeviceDto::class.java) }
+        sendWSCommand(DEVICE_WS_REQUEST).await()
+            ?.asJsonArray
+            ?.map { gson.fromJson(it, HassDeviceDto::class.java) }
+            .orEmpty()
 
     fun getEntities(): List<HassEntityDto> =
-        JsonParser.parseString(
-            sendWSCommand(ENTITIES_WS_REQUEST).await()
-        )
-            .asJsonArray
-            .map { gson.fromJson(it, HassEntityDto::class.java) }
+        sendWSCommand(ENTITIES_WS_REQUEST).await()
+            ?.asJsonArray
+            ?.map { gson.fromJson(it, HassEntityDto::class.java) }
+            .orEmpty()
 
     // ==========================================================================================================================================
     // States
     // ==========================================================================================================================================
     fun getStates(): List<HassStateDto> =
-        JsonParser.parseString(
-            sendWSCommand(STATES_WS_REQUEST).await()
-        )
-            .asJsonArray
-            .map { gson.fromJson(it, HassStateDto::class.java) }
+        sendWSCommand(STATES_WS_REQUEST).await()
+            ?.asJsonArray
+            ?.map { gson.fromJson(it, HassStateDto::class.java) }
+            .orEmpty()
 
     // ==========================================================================================================================================
     // Areas
     // ==========================================================================================================================================
     fun getAreas(): List<HassAreaDto> =
-        JsonParser.parseString(
-            sendWSCommand(AREA_WS_REQUEST).await()
-        )
-            .asJsonArray
-            .map { gson.fromJson(it, HassAreaDto::class.java) }
+        sendWSCommand(AREA_WS_REQUEST).await()
+            ?.asJsonArray
+            ?.map { gson.fromJson(it, HassAreaDto::class.java) }
+            .orEmpty()
 
     // ==========================================================================================================================================
     // Floors
     // ==========================================================================================================================================
     fun getFloors(): List<HassFloorDto> =
-        JsonParser.parseString(
-            sendWSCommand(FLOOR_WS_REQUEST).await()
-        )
-            .asJsonArray
-            .map { gson.fromJson(it, HassFloorDto::class.java) }
+        sendWSCommand(FLOOR_WS_REQUEST).await()
+            ?.asJsonArray
+            ?.map { gson.fromJson(it, HassFloorDto::class.java) }
+            .orEmpty()
 
     // ==========================================================================================================================================
     // UTIL

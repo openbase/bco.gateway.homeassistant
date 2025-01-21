@@ -12,7 +12,7 @@ import org.openbase.bco.device.hass.manager.dto.HassAreaDto
 import org.openbase.bco.device.hass.manager.dto.HassFloorDto
 import org.openbase.bco.device.hass.manager.dto.HassServiceDto
 import org.openbase.bco.device.hass.manager.dto.HassStateDto
-import org.openbase.bco.device.hass.utils.await
+import org.openbase.bco.device.hass.util.await
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InitializationException
 import org.openbase.jul.exception.NotAvailableException
@@ -21,7 +21,6 @@ import org.openbase.jul.iface.Shutdownable
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Future
 
 class HassCommunicator private constructor() : HassConnection() {
 

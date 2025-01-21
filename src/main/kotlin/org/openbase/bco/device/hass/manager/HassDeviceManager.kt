@@ -214,16 +214,9 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                 }
 
                 // TODO: Location and Device initial sync draft is ready, however we have issues with repeated field that are not merged correctly.
-                // TODO: Implement Service Mapping BCO -> HASS (COLORABLE LIGHT)
-                // TODO: Implement Service Mapping HASS -> BCO (COLORABLE LIGHT)
                 // TODO: Finish initial state mapping (there we have to map from the state type onto the service type by analysing the entire event)
 
-                // DONE: After the events (state_changes) are subscribed (done) we need to introduce a dto and parse it and then apply it on the service executor (done).
-                // TODO: Apply state changes from bco onto home assistant.
-                // TODO: Implement ID Mapping Service (Unit <-> Entity)
-
                 // initial device synchronization
-
                 supportedEntities = HassCommunicator.instance.getEntities()
                     .filter { deviceIdToDevices.keys.contains(it.deviceId) }
 

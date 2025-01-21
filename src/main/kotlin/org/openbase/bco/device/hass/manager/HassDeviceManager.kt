@@ -228,7 +228,7 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
                     .filter { deviceIdToDevices.keys.contains(it.deviceId) }
 
                 try {
-                    HassCommunicator.instance.getStates().applyStateUpdates()
+                    HassCommunicator.instance.getStates().applyStateUpdates(systemSync = true)
                 } catch (ex: CouldNotPerformException) {
                     if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                         ExceptionPrinter.printHistory(
@@ -265,7 +265,7 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
 
         HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, EVENT_TYPE_STATE) { event ->
             LOGGER.info("new state event: $event")
-            listOf(event.data.newState).applyStateUpdates()
+            listOf(event.data.newState).applyStateUpdates(systemSync = false)
         }
 
 
@@ -280,11 +280,13 @@ class HassDeviceManager : DeviceManagerImpl(HassGatewayControllerFactory(), fals
         unitFilter.trigger()
     }
 
-    fun List<HassStateDto>.applyStateUpdates() = this
+    fun List<HassStateDto>.applyStateUpdates(
+        systemSync: Boolean,
+    ) = this
         .filter { supportedEntities.map { it.entityId }.contains(it.entityId) }
         .forEach { state ->
             try {
-                executor.applyStateUpdate(state.entityId, state.type, state.state, true)
+                executor.applyStateUpdate(state.entityId, state.type, state.state, systemSync)
             } catch (ex: CouldNotPerformException) {
                 ExceptionPrinter.printHistory(
                     ((("Skip synchronization of item[name:" + state.name + ", type:" + state.type) + ", " + ", state:" + state.state))+ "]",

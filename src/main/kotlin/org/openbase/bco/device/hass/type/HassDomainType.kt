@@ -1,7 +1,5 @@
 package org.openbase.bco.device.hass.type
 
-import kotlin.time.Duration
-
 enum class HassDomainType(
     val id: String,
 ) {
@@ -45,17 +43,15 @@ enum class HassDomainType(
     AIR_QUALITY("air_quality"),
     HUMIDITY("humidity"),
     VOLUME("volume"),
-    UNKNOWN("unknown");
+    UNKNOWN("unknown"),
+    ;
 
     companion object {
-        const val ENTITY_ID_DELIMITER: String = "."
+        private const val ENTITY_ID_DELIMITER: String = "."
 
-        fun fromId(id: String): HassDomainType? =
-            HassDomainType.entries.find { it.id == id }
+        private fun fromId(id: String): HassDomainType? = HassDomainType.entries.find { it.id == id }
 
-        fun fromEntityId(entityId: String): HassDomainType =
-            HassDomainType.fromId(entityId.substringBefore(ENTITY_ID_DELIMITER)) ?: UNKNOWN
-
+        fun fromEntityId(entityId: String): HassDomainType = HassDomainType.fromId(entityId.substringBefore(ENTITY_ID_DELIMITER)) ?: UNKNOWN
     }
 }
 

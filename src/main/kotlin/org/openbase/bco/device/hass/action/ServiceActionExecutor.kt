@@ -8,6 +8,8 @@ import org.openbase.bco.dal.lib.layer.unit.UnitControllerRegistry
 import org.openbase.bco.dal.lib.state.States
 import org.openbase.bco.device.hass.communication.HassConnection
 import org.openbase.bco.device.hass.manager.cache.HassIdToUnitConfigCache
+import org.openbase.bco.device.hass.type.HassDomainType
+import org.openbase.bco.device.hass.type.toHassDomainType
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InvalidStateException
 import org.openbase.jul.exception.printer.ExceptionPrinter
@@ -26,15 +28,13 @@ class ServiceActionExecutor(
     private val unitControllerRegistry: UnitControllerRegistry<UnitController<*, *>>,
     private val hassIdToUnitConfigCache: HassIdToUnitConfigCache,
 ) : Observer<Any?, JsonObject> {
-
     override fun update(
         source: Any?,
         payload: JsonObject,
     ) {
-        // System.out.println("payload: " + payload.toString());
+        LOGGER.trace("Received update from source[{}] with payload[{}].", source, payload)
 
         // extract item name from topic
-
         val topic = payload[HassConnection.TOPIC_KEY].asString
 
         // topic structure: hass/items/{entityId}/command
@@ -44,7 +44,7 @@ class ServiceActionExecutor(
         // extract payload
         val payloadObject = JsonParser.parseString(payload[PAYLOAD_KEY].asString).asJsonObject
         val state = payloadObject[PAYLOAD_STATE_KEY].asString
-        val type = payloadObject[PAYLOAD_STATE_TYPE_KEY].asString
+        val type = payloadObject[PAYLOAD_STATE_TYPE_KEY].asString.toHassDomainType()
 
         try {
             applyStateUpdate(entityId, type, state)
@@ -64,7 +64,7 @@ class ServiceActionExecutor(
      * Else the update is handled as a human action.
      *
      * @param entityId   the item identifying the unit who's the state should be updated.
-     * @param entityType  defines the type class.
+     * @param hassDomainType  defines the type class.
      * @param state      a string serializing the state to be set.
      * @param systemSync flag determining if the state update is the result of a system sync.
      * @throws CouldNotPerformException
@@ -73,23 +73,23 @@ class ServiceActionExecutor(
     @Throws(CouldNotPerformException::class)
     fun applyStateUpdate(
         entityId: String,
-        entityType: String,
+        hassDomainType: HassDomainType,
         state: String,
         systemSync: Boolean = false,
     ) {
-        // todo: implement correct mapping
+        // TODO: implement correct mapping
         val serviceType =
-            when (entityType) {
-                "light" -> ServiceType.POWER_STATE_SERVICE
+            when (hassDomainType) {
+                HassDomainType.LIGHT -> ServiceType.POWER_STATE_SERVICE
                 else -> ServiceType.UNKNOWN
             }
 
         var serviceStateBuilder =
-            when (entityType) {
-                "light" -> {
-                    when(state) {
+            when (hassDomainType) {
+                HassDomainType.LIGHT -> {
+                    when (state) {
                         "on" -> States.Power.ON
-                         else -> States.Power.OFF
+                        else -> States.Power.OFF
                     }.toBuilder()
                 }
                 else -> null
@@ -97,16 +97,15 @@ class ServiceActionExecutor(
 
         try {
             // load controller
-            val unitController = hassIdToUnitConfigCache.getEntry(entityId)?.let {
-                unitControllerRegistry.get(it.id)
-            }
+            val unitController =
+                hassIdToUnitConfigCache.getEntry(entityId)?.let {
+                    unitControllerRegistry.get(it.id)
+                }
 
             // filter all events that are not handled by this instance.
             if (unitController == null || serviceStateBuilder == null) {
                 return
             }
-
-//            var serviceStateBuilder = getServiceData(entityType, state, serviceType).toBuilder()
 
             // update the responsible action to show that it was triggered by hass and add other parameters
             // note that the responsible action is overwritten if it matches a requested state in the unit controller and thus was triggered by a different user through BCO
@@ -142,10 +141,7 @@ class ServiceActionExecutor(
             LOGGER.info("Apply ItemUpdate[$entityId=$state].")
             unitController.applyDataUpdate(serviceStateBuilder, serviceType)
         } catch (ex: InvalidStateException) {
-            LOGGER.debug(
-                "Ignore state update [$state] for service[$serviceType]",
-                ex,
-            )
+            LOGGER.debug("Ignore state update [{}] for service[{}]", state, serviceType, ex)
         } catch (ex: CouldNotPerformException) {
             LOGGER.warn(
                 "Ignore state update [$state] for service[$serviceType]",

@@ -140,7 +140,7 @@ class ServiceActionExecutor(
                 }
 
             LOGGER.info("Apply ItemUpdate[$entityId=$state].")
-            unitController.applyDataUpdate(serviceStateBuilder, serviceType)
+            unitController!!.applyDataUpdate(serviceStateBuilder, serviceType)
         } catch (ex: InvalidStateException) {
             LOGGER.debug("Ignore state update [{}] for service[{}]", state, serviceType, ex)
         } catch (ex: CouldNotPerformException) {

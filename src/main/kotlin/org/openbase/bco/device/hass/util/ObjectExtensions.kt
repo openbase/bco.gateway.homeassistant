@@ -5,7 +5,8 @@ import kotlin.contracts.contract
 
 @OptIn(ExperimentalContracts::class)
 fun Any?.isNull(): Boolean {
-    contract { returns(true) implies (this@isNull != null) }
+    contract { returns(true) implies (this@isNull == null) }
+    contract { returns(false) implies (this@isNull != null) }
 
     return this == null
 }
@@ -13,6 +14,7 @@ fun Any?.isNull(): Boolean {
 @OptIn(ExperimentalContracts::class)
 fun Any?.isNotNull(): Boolean {
     contract { returns(true) implies (this@isNotNull != null) }
+    contract { returns(false) implies (this@isNotNull == null) }
 
     return this == null
 }

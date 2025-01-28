@@ -81,7 +81,6 @@ class ServiceActionExecutor(
         val serviceType =
             when (hassDomainType) {
                 HassDomainType.LIGHT -> ServiceType.POWER_STATE_SERVICE
-                HassDomainType.SWITCH -> ServiceType.ACTIVATION_STATE_SERVICE
                 else -> ServiceType.UNKNOWN
             }
 
@@ -91,12 +90,6 @@ class ServiceActionExecutor(
                     when (state) {
                         "on" -> States.Power.ON
                         else -> States.Power.OFF
-                    }.toBuilder()
-                }
-                HassDomainType.SWITCH -> {
-                    when (state) {
-                        "on" -> States.Activation.ACTIVE
-                        else -> States.Activation.INACTIVE
                     }.toBuilder()
                 }
                 else -> null

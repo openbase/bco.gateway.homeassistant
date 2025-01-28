@@ -68,7 +68,7 @@ class HassDeviceManager :
      */
     private val synchronizationObserver:
         Observer<DataProvider<MutableMap<String, UnitController<*, *>>>, MutableMap<String, UnitController<*, *>>>
-    private val unitFilter: RecurrenceEventFilter<Any>
+    private lateinit var unitFilter: RecurrenceEventFilter<Any>
 
     private var entityIdToUnitId = mapOf<String, String>()
 

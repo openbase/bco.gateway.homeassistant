@@ -38,7 +38,7 @@ class BrightnessStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
         state = brightnessState,
         serviceData = BrightnessServiceDto(
             entityId = entityId,
-            brightness = brightnessState.brightness,
+            brightness = brightnessState.brightness * 255 + 1,
         )
     )
 

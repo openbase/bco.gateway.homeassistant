@@ -47,8 +47,8 @@ class ColorStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
         state = colorState,
         serviceData = ColorServiceDto(
             entityId = entityId,
-            hsColor = listOf(colorState.color.hsbColor.hue, colorState.color.hsbColor.saturation),
-            brightness = colorState.color.hsbColor.brightness,
+            hsColor = listOf(colorState.color.hsbColor.hue, colorState.color.hsbColor.saturation * 100),
+            brightness = colorState.color.hsbColor.brightness * 255 + 1,
         )
     )
 

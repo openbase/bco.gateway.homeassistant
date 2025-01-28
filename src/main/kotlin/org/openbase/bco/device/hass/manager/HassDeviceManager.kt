@@ -314,8 +314,7 @@ class HassDeviceManager :
                     executor.applyStateUpdate(state.entityId, state.type.toHassDomainType(), state.state, systemSync)
                 } catch (ex: CouldNotPerformException) {
                     ExceptionPrinter.printHistory(
-                        ((("Skip synchronization of item[name:" + state.name + ", type:" + state.type) + ", " + ", state:" + state.state)) +
-                            "]",
+                        "Skip synchronization of item[name: ${state.name}, type: ${state.type}, state: ${state.state}]",
                         ex,
                         LOGGER,
                         LogLevel.WARN,

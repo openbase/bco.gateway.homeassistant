@@ -11,15 +11,14 @@ class ActivationStateServiceImpl<ST>(
     unit: ST,
 ) : HassService<ST>(unit),
     ActivationStateOperationService where ST : ActivationStateOperationService, ST : Unit<*> {
-    override fun setActivationState(activationState: ActivationState?): Future<ActionDescription> =
+    override fun setActivationState(activationState: ActivationState): Future<ActionDescription> =
         callService(
-            type =
-                when (activationState?.value) {
+            hassServiceType =
+                when (activationState.value) {
                     ActivationState.State.ACTIVE -> HassServiceType.TURN_ON
                     ActivationState.State.INACTIVE -> HassServiceType.TURN_OFF
                     else -> HassServiceType.UNKNOWN
                 },
-            entityId = entityId,
             state = activationState,
         )
 

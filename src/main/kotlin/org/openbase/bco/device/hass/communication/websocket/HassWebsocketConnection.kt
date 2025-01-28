@@ -17,6 +17,7 @@ import org.openbase.bco.device.hass.communication.websocket.command.Subscription
 import org.openbase.bco.device.hass.util.toRequest
 import org.openbase.bco.device.hass.util.JsonUtils
 import org.openbase.bco.device.hass.util.await
+import org.openbase.bco.device.hass.util.isNull
 import org.openbase.jps.core.JPService
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.iface.Activatable
@@ -135,7 +136,7 @@ class HassWebsocketConnection(
         val success = ws?.send(payload.toString())
 
         // error handling
-        if (success == null || success == false) {
+        if (success.isNull() || success == false) {
             requestMapLock.write {
                 requestMap.remove(commandId)
             }

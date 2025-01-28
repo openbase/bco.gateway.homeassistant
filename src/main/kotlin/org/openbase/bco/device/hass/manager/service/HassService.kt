@@ -31,6 +31,7 @@ import org.openbase.bco.device.hass.manager.HassDeviceManager
 import org.openbase.bco.device.hass.manager.dto.HassServiceDto
 import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.bco.device.hass.util.get
+import org.openbase.bco.device.hass.util.isNull
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InstantiationException
 import org.openbase.jul.exception.NotSupportedException
@@ -95,6 +96,10 @@ abstract class HassService<ST>(
                     entityId = entityId,
                 ),
             ).thenApply { response ->
+                if (state.isNull()) {
+                    throw CouldNotPerformException("State not set!")
+                }
+
                 if (response?.asJsonObject?.get("success")?.asBoolean == true) {
                     ServiceStateProcessor.getResponsibleAction(state) {
                         ActionDescription.getDefaultInstance()

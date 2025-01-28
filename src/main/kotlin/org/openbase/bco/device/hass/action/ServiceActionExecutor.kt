@@ -10,6 +10,7 @@ import org.openbase.bco.device.hass.communication.HassConnection
 import org.openbase.bco.device.hass.manager.cache.HassIdToUnitConfigCache
 import org.openbase.bco.device.hass.type.HassDomainType
 import org.openbase.bco.device.hass.type.toHassDomainType
+import org.openbase.bco.device.hass.util.isNull
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InvalidStateException
 import org.openbase.jul.exception.printer.ExceptionPrinter
@@ -103,7 +104,7 @@ class ServiceActionExecutor(
                 }
 
             // filter all events that are not handled by this instance.
-            if (unitController == null || serviceStateBuilder == null) {
+            if (unitController.isNull() || serviceStateBuilder.isNull()) {
                 return
             }
 

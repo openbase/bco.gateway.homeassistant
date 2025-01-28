@@ -33,6 +33,7 @@ import org.openbase.bco.device.hass.manager.unit.HassGatewayControllerFactory
 import org.openbase.bco.device.hass.type.toHassDomainType
 import org.openbase.bco.device.hass.util.await
 import org.openbase.bco.device.hass.util.get
+import org.openbase.bco.device.hass.util.isNotNull
 import org.openbase.bco.device.hass.util.set
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
@@ -105,7 +106,7 @@ class HassDeviceManager :
                                                 deviceClass.metaConfig[ALIAS_KEY_HASS_DEVICE_MODEL] == hassDevice.model
                                         }
                             }.filter { (hassDevice, deviceClass) ->
-                                (deviceClass != null)
+                                (deviceClass.isNotNull())
                                     .also {
                                         if (!it) {
                                             notIdentifiedDevices.add(hassDevice)
@@ -187,7 +188,7 @@ class HassDeviceManager :
                     val dalUnitConfigs =
                         HassCommunicator.instance
                             .getDevices()
-                            .filter { device -> deviceClassMapping[device.id] != null }
+                            .filter { device -> deviceClassMapping[device.id].isNotNull() }
                             .map { device ->
                                 UnitConfig
                                     .newBuilder()

@@ -8,6 +8,8 @@ import org.openbase.bco.dal.lib.layer.unit.UnitControllerRegistry
 import org.openbase.bco.dal.lib.state.States
 import org.openbase.bco.device.hass.communication.HassConnection
 import org.openbase.bco.device.hass.manager.cache.HassIdToUnitConfigCache
+import org.openbase.bco.device.hass.type.HassDomainType
+import org.openbase.bco.device.hass.type.toHassDomainType
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InvalidStateException
 import org.openbase.jul.exception.printer.ExceptionPrinter
@@ -26,15 +28,13 @@ class ServiceActionExecutor(
     private val unitControllerRegistry: UnitControllerRegistry<UnitController<*, *>>,
     private val hassIdToUnitConfigCache: HassIdToUnitConfigCache,
 ) : Observer<Any?, JsonObject> {
-
     override fun update(
         source: Any?,
         payload: JsonObject,
     ) {
-        // System.out.println("payload: " + payload.toString());
+        LOGGER.trace("Received update from source[{}] with payload[{}].", source, payload)
 
         // extract item name from topic
-
         val topic = payload[HassConnection.TOPIC_KEY].asString
 
         // topic structure: hass/items/{entityId}/command
@@ -44,7 +44,7 @@ class ServiceActionExecutor(
         // extract payload
         val payloadObject = JsonParser.parseString(payload[PAYLOAD_KEY].asString).asJsonObject
         val state = payloadObject[PAYLOAD_STATE_KEY].asString
-        val type = payloadObject[PAYLOAD_STATE_TYPE_KEY].asString
+        val type = payloadObject[PAYLOAD_STATE_TYPE_KEY].asString.toHassDomainType()
 
         try {
             applyStateUpdate(entityId, type, state)
@@ -64,7 +64,7 @@ class ServiceActionExecutor(
      * Else the update is handled as a human action.
      *
      * @param entityId   the item identifying the unit who's the state should be updated.
-     * @param entityType  defines the type class.
+     * @param hassDomainType  defines the type class.
      * @param state      a string serializing the state to be set.
      * @param systemSync flag determining if the state update is the result of a system sync.
      * @throws CouldNotPerformException
@@ -73,23 +73,30 @@ class ServiceActionExecutor(
     @Throws(CouldNotPerformException::class)
     fun applyStateUpdate(
         entityId: String,
-        entityType: String,
+        hassDomainType: HassDomainType,
         state: String,
         systemSync: Boolean = false,
     ) {
-        // todo: implement correct mapping
+        // TODO: implement correct mapping
         val serviceType =
-            when (entityType) {
-                "light" -> ServiceType.POWER_STATE_SERVICE
+            when (hassDomainType) {
+                HassDomainType.LIGHT -> ServiceType.POWER_STATE_SERVICE
+                HassDomainType.SWITCH -> ServiceType.ACTIVATION_STATE_SERVICE
                 else -> ServiceType.UNKNOWN
             }
 
         var serviceStateBuilder =
-            when (entityType) {
-                "light" -> {
-                    when(state) {
+            when (hassDomainType) {
+                HassDomainType.LIGHT -> {
+                    when (state) {
                         "on" -> States.Power.ON
-                         else -> States.Power.OFF
+                        else -> States.Power.OFF
+                    }.toBuilder()
+                }
+                HassDomainType.SWITCH -> {
+                    when (state) {
+                        "on" -> States.Activation.ACTIVE
+                        else -> States.Activation.INACTIVE
                     }.toBuilder()
                 }
                 else -> null
@@ -97,16 +104,15 @@ class ServiceActionExecutor(
 
         try {
             // load controller
-            val unitController = hassIdToUnitConfigCache.getEntry(entityId)?.let {
-                unitControllerRegistry.get(it.id)
-            }
+            val unitController =
+                hassIdToUnitConfigCache.getEntry(entityId)?.let {
+                    unitControllerRegistry.get(it.id)
+                }
 
             // filter all events that are not handled by this instance.
             if (unitController == null || serviceStateBuilder == null) {
                 return
             }
-
-//            var serviceStateBuilder = getServiceData(entityType, state, serviceType).toBuilder()
 
             // update the responsible action to show that it was triggered by hass and add other parameters
             // note that the responsible action is overwritten if it matches a requested state in the unit controller and thus was triggered by a different user through BCO
@@ -142,10 +148,7 @@ class ServiceActionExecutor(
             LOGGER.info("Apply ItemUpdate[$entityId=$state].")
             unitController.applyDataUpdate(serviceStateBuilder, serviceType)
         } catch (ex: InvalidStateException) {
-            LOGGER.debug(
-                "Ignore state update [$state] for service[$serviceType]",
-                ex,
-            )
+            LOGGER.debug("Ignore state update [{}] for service[{}]", state, serviceType, ex)
         } catch (ex: CouldNotPerformException) {
             LOGGER.warn(
                 "Ignore state update [$state] for service[$serviceType]",
@@ -160,103 +163,5 @@ class ServiceActionExecutor(
         const val PAYLOAD_STATE_TYPE_KEY: String = "type"
 
         private val LOGGER: Logger = LoggerFactory.getLogger(ServiceActionExecutor::class.java)
-
-        private const val EMPTY_COMMAND_STRING = "null"
-
-//        @Throws(CouldNotPerformException::class)
-//        fun getServiceData(
-//            entityType: String,
-//            commandString: String,
-//            serviceType: ServiceType,
-//        ): Message {
-//            try {
-//                var command: ServiceAction? = null
-//                var exceptionStack: ExceptionStack? = null
-//
-//                val commandClass: Class<out ServiceAction?> = ServiceTypeServiceActionMapping.lookupServiceActionClass(serviceType)
-//                try {
-//                    command =
-//                        commandClass
-//                            .getMethod("valueOf", commandString.javaClass)
-//                            .invoke(null, commandString) as ServiceAction
-//                } catch (ex: IllegalAccessException) {
-//                    exceptionStack =
-//                        MultiException.push(
-//                            ServiceActionExecutor::class.java,
-//                            InvalidStateException(
-//                                "ServiceAction class[" + commandClass.simpleName + "] does not posses a valueOf(String) method",
-//                                ex,
-//                            ),
-//                            exceptionStack,
-//                        )
-//                } catch (ex: NoSuchMethodException) {
-//                    exceptionStack =
-//                        MultiException.push(
-//                            ServiceActionExecutor::class.java,
-//                            InvalidStateException(
-//                                "ServiceAction class[" + commandClass.simpleName + "] does not posses a valueOf(String) method",
-//                                ex,
-//                            ),
-//                            exceptionStack,
-//                        )
-//                } catch (ex: IllegalArgumentException) {
-//                    // continue with the next command class, exception will be thrown if none is found
-//                    exceptionStack = MultiException.push(ServiceActionExecutor::class.java, ex, exceptionStack)
-//                } catch (ex: InvocationTargetException) {
-//                    // ignore because the value of method threw an exception, this can happen if e.g. 0 is returned for
-//                    // a roller shutter as the opening ratio and the stopMoveType is tested
-//
-//                    exceptionStack = MultiException.push(ServiceActionExecutor::class.java, ex, exceptionStack)
-//
-//                    // apply workaround for temperature values
-//                    // todo: implement valueOf() method in all transformer and individually parse the string and setup the physical unit as well
-//                    try {
-//                        command =
-//                            commandClass.getMethod("valueOf", commandString.javaClass).invoke(
-//                                null,
-//                                commandString
-//                                    .replace(" °C", "")
-//                                    .replace(" %", ""),
-//                            ) as ServiceAction
-//                    } catch (exx: Exception) {
-//                        exceptionStack = MultiException.push(ServiceActionExecutor::class.java, exx, exceptionStack)
-//                    }
-//                }
-//
-//                if (command == null) {
-//                    if (exceptionStack == null) {
-//                        exceptionStack =
-//                            MultiException.push(
-//                                ServiceActionExecutor::class.java,
-//                                @Suppress("ktlint:standard:max-line-length")
-//                                InvalidStateException(
-//                                    "ServiceAction class not available! Please configure the eclipse smart home command class within the meta config of service template of type " +
-//                                        serviceType.name,
-//                                ),
-//                                exceptionStack,
-//                            )
-//                    }
-//
-//                    MultiException.checkAndThrow(
-//                        { "Could not transform [" + commandString + "] into a state for service type[" + serviceType.name + "]" },
-//                        exceptionStack,
-//                    )
-//                }
-//
-//                val serviceData: Message =
-//                    ServiceStateServiceActionTransformerPool.instance
-//                        .getTransformer(serviceType, command!!.javaClass)
-//                        .transform(command)
-//                return updateTimestamp(System.currentTimeMillis(), serviceData, TimeUnit.MILLISECONDS)
-//            } catch (ex: NotAvailableException) {
-//                throw CouldNotPerformException(
-//                    "Could not transform [" + commandString + "] of class [" + commandString.javaClass.simpleName +
-//                        "] into a state for service type[" +
-//                        serviceType.name +
-//                        "]",
-//                    ex,
-//                )
-//            }
-//        }
     }
 }

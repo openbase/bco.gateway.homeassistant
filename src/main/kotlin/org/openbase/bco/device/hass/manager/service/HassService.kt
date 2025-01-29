@@ -21,17 +21,21 @@ package org.openbase.bco.device.hass.manager.service
 * <http://www.gnu.org/licenses/gpl-3.0.html>.
 * #L%
 */
+import com.google.gson.JsonElement
 import com.google.protobuf.Message
 import org.openbase.bco.dal.lib.layer.service.Service
 import org.openbase.bco.dal.lib.layer.service.ServiceProvider
 import org.openbase.bco.dal.lib.layer.service.ServiceStateProcessor
 import org.openbase.bco.dal.lib.layer.unit.Unit
 import org.openbase.bco.device.hass.communication.HassCommunicator
+import org.openbase.bco.device.hass.communication.websocket.command.CommandResult
 import org.openbase.bco.device.hass.manager.HassDeviceManager
 import org.openbase.bco.device.hass.manager.dto.HassServiceDto
 import org.openbase.bco.device.hass.manager.dto.service.ServiceDto
 import org.openbase.bco.device.hass.type.HassServiceType
+import org.openbase.bco.device.hass.util.JsonUtils
 import org.openbase.bco.device.hass.util.get
+import org.openbase.bco.device.hass.util.isNotNull
 import org.openbase.bco.device.hass.util.isNull
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InstantiationException
@@ -41,6 +45,7 @@ import org.openbase.type.domotic.action.ActionDescriptionType.ActionDescription
 import org.openbase.type.domotic.service.ServiceTemplateType.ServiceTemplate
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 
 abstract class HassService<ST>(
@@ -98,13 +103,16 @@ abstract class HassService<ST>(
                     serviceData = serviceData,
                 ),
             ).thenApply { response ->
-                if (response?.asJsonObject?.get("success")?.asBoolean == true) {
+                if (response.isNotNull()) {
                     ServiceStateProcessor.getResponsibleAction(state) {
                         ActionDescription.getDefaultInstance()
                     }
                 } else {
-                    val errorMessage = response?.asJsonObject?.get("errorMessage")?.asString ?: "Unknown Error"
-                    throw CouldNotPerformException("Service call failed: $errorMessage")
+                    run {
+                        response?.asJsonObject?.get("errorMessage")?.asString ?: "Unknown Error"
+                    }.let { errorMessage ->
+                        throw CouldNotPerformException("Service call failed: $errorMessage")
+                    }
                 }
             }
 

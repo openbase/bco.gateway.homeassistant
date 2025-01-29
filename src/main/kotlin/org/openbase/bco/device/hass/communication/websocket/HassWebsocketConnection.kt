@@ -14,6 +14,8 @@ import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.TokenProvider
 import org.openbase.bco.device.hass.communication.websocket.command.CommandResult
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
+import org.openbase.bco.device.hass.type.HassDomainType
+import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.bco.device.hass.util.toRequest
 import org.openbase.bco.device.hass.util.JsonUtils
 import org.openbase.bco.device.hass.util.await
@@ -175,7 +177,7 @@ class HassWebsocketConnection(
                 }
                 "event" -> {
                     JsonUtils.gson.fromJson(jsonResult, SubscriptionEvent::class.java).also { result ->
-                        if (!result.event.data.entityId.contains("light")) return
+                        if (!result.event.data.entityId.contains(HassDomainType.LIGHT.id)) return
 
                         subscriptions.find { it.eventType == result.event.eventType }?.eventProcessor?.invoke(result.event)
                     }

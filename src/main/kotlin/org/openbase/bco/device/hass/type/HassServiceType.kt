@@ -19,7 +19,6 @@ enum class HassServiceType(
     SET_HVAC_MODE("set_hvac_mode"),
     SET_TEMPERATURE("set_temperature"),
     SET_HUMIDITY("set_humidity"),
-    SET_COLOR("set_color"),
     SET_BRIGHTNESS("set_brightness"),
     PLAY_MEDIA("play_media"),
     STOP_MEDIA("stop_media"),

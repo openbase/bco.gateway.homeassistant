@@ -2,6 +2,8 @@ package org.openbase.bco.device.hass.manager.service
 
 import org.openbase.bco.dal.lib.layer.service.operation.ColorStateOperationService
 import org.openbase.bco.dal.lib.layer.unit.Unit
+import org.openbase.bco.device.hass.manager.dto.service.ColorServiceDto
+import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.jul.exception.NotAvailableException
 import org.openbase.type.domotic.action.ActionDescriptionType.ActionDescription
 import org.openbase.type.domotic.state.ColorStateType.ColorState
@@ -35,13 +37,20 @@ import java.util.concurrent.Future
 class ColorStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
     ColorStateOperationService where ST : ColorStateOperationService, ST : Unit<*> {
     @Throws(NotAvailableException::class)
-    override fun getColorState(): ColorState {
-        return unit.colorState
-    }
+    override fun getColorState(): ColorState = unit.colorState
 
-    override fun setColorState(colorState: ColorState): Future<ActionDescription> {
-        return setState(colorState)
-    }
+    override fun setColorState(colorState: ColorState): Future<ActionDescription> = callService(
+        hassServiceType = when (colorState.color.hsbColor.brightness) {
+            0.0 -> HassServiceType.TURN_OFF
+            else -> HassServiceType.TURN_ON
+        },
+        state = colorState,
+        serviceData = ColorServiceDto(
+            entityId = entityId,
+            hsColor = listOf(colorState.color.hsbColor.hue, colorState.color.hsbColor.saturation * 100),
+            brightness = colorState.color.hsbColor.brightness * 255 + 1,
+        )
+    )
 
     @Throws(NotAvailableException::class)
     override fun getNeutralWhiteColor(): ColorType.Color {

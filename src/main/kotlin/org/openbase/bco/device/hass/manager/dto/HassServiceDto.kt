@@ -30,14 +30,14 @@ data class HassServiceDto(
     val returnResponse: Boolean = false,
 ){
     constructor(
-        service: HassServiceType = HassServiceType.TURN_ON,
+        hassServiceType: HassServiceType = HassServiceType.TURN_ON,
         entityId: String,
         domain: HassDomainType = entityId.toHassDomainType(),
         serviceData: ServiceDto? = null,
         returnResponse: Boolean = false,
     ): this(
         domain = domain.id,
-        service = service.id,
+        service = hassServiceType.id,
         serviceData = serviceData,
         target = entityId.toTarget(),
         returnResponse = returnResponse,

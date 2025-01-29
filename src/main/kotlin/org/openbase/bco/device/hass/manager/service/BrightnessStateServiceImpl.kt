@@ -2,6 +2,7 @@ package org.openbase.bco.device.hass.manager.service
 
 import org.openbase.bco.dal.lib.layer.service.operation.BrightnessStateOperationService
 import org.openbase.bco.dal.lib.layer.unit.Unit
+import org.openbase.bco.device.hass.manager.dto.service.ServiceDto
 import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.jul.exception.NotAvailableException
 import org.openbase.type.domotic.action.ActionDescriptionType.ActionDescription
@@ -32,11 +33,7 @@ import java.util.concurrent.Future
 
 class BrightnessStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
     BrightnessStateOperationService where ST : BrightnessStateOperationService, ST : Unit<*> {
-    override fun setBrightnessState(brightnessState: BrightnessState): Future<ActionDescription> = callService(
-        type = HassServiceType.SET_BRIGHTNESS,
-        entityId = entityId,
-        state = brightnessState,
-    )
+    override fun setBrightnessState(brightnessState: BrightnessState): Future<ActionDescription> = setState(brightnessState)
 
     @Throws(NotAvailableException::class)
     override fun getBrightnessState(): BrightnessState {

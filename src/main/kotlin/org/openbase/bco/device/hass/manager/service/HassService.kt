@@ -29,6 +29,7 @@ import org.openbase.bco.dal.lib.layer.unit.Unit
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.manager.HassDeviceManager
 import org.openbase.bco.device.hass.manager.dto.HassServiceDto
+import org.openbase.bco.device.hass.manager.dto.service.ServiceDto
 import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.bco.device.hass.util.get
 import org.openbase.bco.device.hass.util.isNull
@@ -85,21 +86,18 @@ abstract class HassService<ST>(
         )
 
     fun callService(
-        type: HassServiceType,
-        entityId: String,
-        state: Message?,
+        hassServiceType: HassServiceType,
+        state: Message,
+        serviceData: ServiceDto? = null,
     ): Future<ActionDescription> =
         HassCommunicator.instance
             .callService(
                 HassServiceDto(
-                    service = type,
+                    hassServiceType = hassServiceType,
                     entityId = entityId,
+                    serviceData = serviceData,
                 ),
             ).thenApply { response ->
-                if (state.isNull()) {
-                    throw CouldNotPerformException("State not set!")
-                }
-
                 if (response?.asJsonObject?.get("success")?.asBoolean == true) {
                     ServiceStateProcessor.getResponsibleAction(state) {
                         ActionDescription.getDefaultInstance()

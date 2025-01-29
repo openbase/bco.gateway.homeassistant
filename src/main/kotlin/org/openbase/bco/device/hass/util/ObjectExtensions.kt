@@ -14,5 +14,5 @@ fun Any?.isNull(): Boolean {
 fun Any?.isNotNull(): Boolean {
     contract { returns(true) implies (this@isNotNull != null) }
 
-    return this == null
+    return this != null
 }

@@ -36,13 +36,12 @@ class PowerStateServiceImpl<ST>(
     PowerStateOperationService where ST : PowerStateOperationService, ST : Unit<*> {
     override fun setPowerState(powerState: PowerState): Future<ActionDescription> =
         callService(
-            type =
+            hassServiceType =
                 when (powerState.value) {
                     PowerState.State.ON -> HassServiceType.TURN_ON
                     PowerState.State.OFF -> HassServiceType.TURN_OFF
                     else -> HassServiceType.UNKNOWN
                 },
-            entityId = entityId,
             state = powerState,
         )
 

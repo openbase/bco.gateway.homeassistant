@@ -3,6 +3,7 @@ package org.openbase.bco.device.hass.manager.service
 import org.openbase.bco.dal.lib.layer.service.operation.BrightnessStateOperationService
 import org.openbase.bco.dal.lib.layer.unit.Unit
 import org.openbase.bco.device.hass.manager.dto.service.BrightnessServiceDto
+import org.openbase.bco.device.hass.util.toHassBrightness
 import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.jul.exception.NotAvailableException
 import org.openbase.type.domotic.action.ActionDescriptionType.ActionDescription
@@ -38,7 +39,7 @@ class BrightnessStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
         state = brightnessState,
         serviceData = BrightnessServiceDto(
             entityId = entityId,
-            brightness = brightnessState.brightness * 255 + 1,
+            brightness = brightnessState.brightness.toHassBrightness(),
         )
     )
 

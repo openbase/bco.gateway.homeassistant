@@ -220,7 +220,7 @@ class HassDeviceManager :
                         ?.forEach { println("${it.name}: ${it.model}") }
                 }
             }
-        this.executor = ServiceActionExecutor(unitControllerRegistry, hassIdToUnitControllerCache)
+        this.executor = ServiceActionExecutor(hassIdToUnitControllerCache)
         this.synchronizationObserver =
             (Observer { observable: Any?, value: Any? -> unitFilter.trigger() })
     }

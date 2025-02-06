@@ -59,11 +59,5 @@ class ColorStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
     )
 
     @Throws(NotAvailableException::class)
-    override fun getNeutralWhiteColor(): ColorType.Color {
-        return unit.neutralWhiteColor
-    }
-
-    companion object {
-        private val LOGGER: Logger = LoggerFactory.getLogger(ColorStateServiceImpl::class.java)
-    }
+    override fun getNeutralWhiteColor(): ColorType.Color = unit.neutralWhiteColor
 }

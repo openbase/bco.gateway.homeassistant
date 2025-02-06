@@ -3,9 +3,6 @@ package org.openbase.bco.device.hass.manager.dto
 import com.google.gson.annotations.SerializedName
 import org.openbase.bco.device.hass.type.HassDomainType
 import org.openbase.bco.device.hass.type.toHassDomainType
-import org.openbase.bco.device.hass.util.toBCOBrightness
-import org.openbase.bco.device.hass.util.toBCOHue
-import org.openbase.bco.device.hass.util.toBCOSaturation
 
 data class HassStateDto(
     @SerializedName("entity_id")
@@ -29,11 +26,11 @@ data class HassStateDto(
             ?.let { it[0].toDouble() to it[1].toDouble() }
 
     val hue: Double? get() =
-        hsColor?.first?.toBCOHue()
+        hsColor?.first
 
     val saturation: Double? get() =
-        hsColor?.second?.toBCOSaturation()
+        hsColor?.second
 
     val brightness: Double? get() =
-       (attributes["brightness"] as? Double)?.toBCOBrightness()
+       (attributes["brightness"] as? Double)
 }

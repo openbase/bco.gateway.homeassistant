@@ -8,6 +8,9 @@ import org.openbase.bco.device.hass.manager.cache.HassIdToUnitControllerCache
 import org.openbase.bco.device.hass.manager.dto.HassStateDto
 import org.openbase.bco.device.hass.type.HassDomainType
 import org.openbase.bco.device.hass.util.isNotNull
+import org.openbase.bco.device.hass.util.toBCOBrightness
+import org.openbase.bco.device.hass.util.toBCOHue
+import org.openbase.bco.device.hass.util.toBCOSaturation
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InvalidStateException
 import org.openbase.jul.pattern.Observer
@@ -58,9 +61,9 @@ class ServiceActionExecutor(
                         colorBuilder.apply {
                             setHsbColor(
                                 hsbColorBuilder.apply {
-                                    hue = hassState.hue!!
-                                    saturation = hassState.saturation!!
-                                    brightness = hassState.brightness!!
+                                    hue = hassState.hue!!.toBCOHue()
+                                    saturation = hassState.saturation!!.toBCOSaturation()
+                                    brightness = hassState.brightness!!.toBCOBrightness()
                                 }
                             )
                         }

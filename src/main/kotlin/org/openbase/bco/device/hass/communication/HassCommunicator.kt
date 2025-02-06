@@ -25,9 +25,8 @@ import kotlin.collections.orEmpty
 
 class HassCommunicator private constructor() : HassConnection() {
 
-
     // ==========================================================================================================================================
-    // ITEMS
+    // Entities
     // ==========================================================================================================================================
     @Throws(CouldNotPerformException::class)
     fun registerEntity(entity: HassEntityDto): HassEntityDto {
@@ -59,121 +58,16 @@ class HassCommunicator private constructor() : HassConnection() {
     }
 
     @Throws(NotAvailableException::class)
-    fun getEntity(entityId: String): HassEntityDto =
-        try {
-            jsonToClass(
-                JsonParser.parseString(get(STATES_WS_REQUEST + SEPARATOR + entityId)),
-                HassEntityDto::class.java
-            )
-        } catch (ex: CouldNotPerformException) {
-            throw NotAvailableException("Entity with name[$entityId]")
-        }
+    fun getEntity(entityId: String): HassEntityDto = jsonToClass(
+        JsonParser.parseString(get(STATES_WS_REQUEST + SEPARATOR + entityId)),
+        HassEntityDto::class.java
+    )
 
-    fun hasEntity(entityId: String): Boolean {
-        try {
-            getEntity(entityId)
-            return true
-        } catch (ex: NotAvailableException) {
-            return false
-        }
-    }
-
+    // ==========================================================================================================================================
+    // Services
+    // ==========================================================================================================================================
     fun callService(service: HassServiceDto): CompletableFuture<JsonElement?> =
         sendWSCommand(CALL_SERVICE_WS_REQUEST, gson.toJsonTree(service).asJsonObject)
-
-//    // ==========================================================================================================================================
-//    // ITEM_CHANNEL_LINK
-//    // ==========================================================================================================================================
-//    @Throws(CouldNotPerformException::class)
-//    fun registerEntityChannelLink(entityId: String?, channelUID: String?) {
-//        registerEntityChannelLink(EntityChannelLinkDTO(entityId, channelUID, HashMap()))
-//    }
-//
-//    @Throws(CouldNotPerformException::class)
-//    fun registerEntityChannelLink(itemChannelLinkDTO: EntityChannelLinkDTO) {
-//        putJson(
-//            LINKS_TARGET + SEPARATOR + itemChannelLinkDTO.entityId + SEPARATOR + itemChannelLinkDTO.channelUID,
-//            itemChannelLinkDTO
-//        )
-//    }
-//
-//    @Throws(CouldNotPerformException::class)
-//    fun deleteEntityChannelLink(itemChannelLinkDTO: EntityChannelLinkDTO) {
-//        deleteEntityChannelLink(itemChannelLinkDTO.entityId, itemChannelLinkDTO.channelUID)
-//    }
-//
-//    @Throws(CouldNotPerformException::class)
-//    fun deleteEntityChannelLink(entityId: String, channelUID: String) {
-//        delete(LINKS_TARGET + SEPARATOR + entityId + SEPARATOR + channelUID)
-//    }
-//
-//    @get:Throws(CouldNotPerformException::class)
-//    val itemChannelLinks: List<EntityChannelLinkDTO>
-//        get() = jsonElementToTypedList(JsonParser.parseString(get(LINKS_TARGET)), EntityChannelLinkDTO::class.java)
-
-    // ==========================================================================================================================================
-    // DISCOVERY
-    // ==========================================================================================================================================
-//    /**
-//     * @param bindingId
-//     *
-//     * @return the discovery timeout in seconds
-//     *
-//     * @throws CouldNotPerformException
-//     */
-//    @Throws(CouldNotPerformException::class)
-//    fun startDiscovery(bindingId: String): Int {
-//        val response = post(
-//            DISCOVERY_TARGET + SEPARATOR + BINDINGS_TARGET + SEPARATOR + bindingId + SCAN_TARGET,
-//            "",
-//            MediaType.APPLICATION_JSON_TYPE
-//        )
-//        val discoveryTimeout = response.toInt()
-//
-//        if (discoveryTimeout <= 0) {
-//            throw CouldNotPerformException("Invalid discovery timeout. Maybe binding $bindingId is not available")
-//        }
-//
-//        return discoveryTimeout
-//    }
-//
-//    @Throws(CouldNotPerformException::class)
-//    fun approve(entityUID: String, label: String?) {
-//        post(INBOX_TARGET + SEPARATOR + entityUID + SEPARATOR + APPROVE_TARGET, label!!, MediaType.TEXT_PLAIN_TYPE)
-//    }
-//
-//    @get:Throws(CouldNotPerformException::class)
-//    val discoveryResults: List<DiscoveryResultDTO>
-//        get() = jsonElementToTypedList(JsonParser.parseString(get(INBOX_TARGET)), DiscoveryResultDTO::class.java)
-
-//    // ==========================================================================================================================================
-//    // Extensions
-//    // ==========================================================================================================================================
-//    @Throws(CouldNotPerformException::class)
-//    fun installBinding(bindingId: String) {
-//        LOGGER.debug("Install Binding[$bindingId]")
-//        post(
-//            ADDONS_TARGET + SEPARATOR + ADDONS_BINDING_PREFIX + bindingId + SEPARATOR + INSTALL_TARGET,
-//            "",
-//            MediaType.APPLICATION_JSON_TYPE
-//        )
-//    }
-//
-//    fun isBindingInstalled(bindingId: String): Boolean {
-//        try {
-//            get(BINDINGS_TARGET + SEPARATOR + bindingId + SEPARATOR + CONFIG_TARGET)
-//            LOGGER.debug("Binding[$bindingId] currently not installed!")
-//            return true
-//        } catch (ex: CouldNotPerformException) {
-//            LOGGER.debug("Binding[$bindingId] is already installed.")
-//            return false
-//        }
-//    }
-//
-//    @Throws(CouldNotPerformException::class)
-//    fun uninstallBindings(bindingId: String) {
-//        post(ADDONS_TARGET + SEPARATOR + bindingId + SEPARATOR + UNINSTALL_TARGET, "", MediaType.APPLICATION_JSON_TYPE)
-//    }
 
     // ==========================================================================================================================================
     // Devices
@@ -217,6 +111,22 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.map { gson.fromJson(it, HassFloorDto::class.java) }
             .orEmpty()
 
+    @Throws(CouldNotPerformException::class)
+    override fun testConnection() {
+        get(API_HEALTH, true)
+    }
+
+    fun subscribe(
+        commandType: String,
+        eventType: String? = null,
+        eventProcessor: (event: SubscriptionEvent.Event) -> Any,
+    ): Subscription =
+        Subscription(
+            commandType = commandType,
+            eventType = eventType,
+            eventProcessor = eventProcessor,
+        ).also { subscribe(it) }
+
     // ==========================================================================================================================================
     // UTIL
     // ==========================================================================================================================================
@@ -252,22 +162,6 @@ class HassCommunicator private constructor() : HassConnection() {
         }
     }
 
-    @Throws(CouldNotPerformException::class)
-    override fun testConnection() {
-        get(API_HEALTH, true)
-    }
-
-    fun subscribe(
-        commandType: String,
-        eventType: String? = null,
-        eventProcessor: (event: SubscriptionEvent.Event) -> Any,
-    ): Subscription =
-        Subscription(
-            commandType = commandType,
-            eventType = eventType,
-            eventProcessor = eventProcessor,
-        ).also { subscribe(it) }
-
     companion object {
         const val API_HEALTH: String = "/"
         const val STATES_WS_REQUEST: String = "get_states"
@@ -278,27 +172,15 @@ class HassCommunicator private constructor() : HassConnection() {
         const val FLOOR_WS_REQUEST: String = "config/floor_registry/list"
         const val ENTITIES_WS_REQUEST: String = "config/entity_registry/list"
         const val CALL_SERVICE_WS_REQUEST = "call_service"
-        const val LINKS_TARGET: String = "links"
-        const val INBOX_TARGET: String = "inbox"
-        const val DISCOVERY_TARGET: String = "discovery"
-        const val ADDONS_TARGET: String = "addons"
-        const val ADDONS_BINDING_PREFIX: String = "binding-"
-        const val INSTALL_TARGET: String = "install"
-        const val UNINSTALL_TARGET: String = "uninstall"
-        const val BINDINGS_TARGET: String = "bindings"
-        const val CONFIG_TARGET: String = "config"
-        const val SCAN_TARGET: String = "scan"
 
         private val LOGGER: Logger = LoggerFactory.getLogger(HassCommunicator::class.java)
 
         @get:Synchronized
         var instance: HassCommunicator = HassCommunicator().also {
             try {
-                    Shutdownable.registerShutdownHook(it)
+                Shutdownable.registerShutdownHook(it)
             } catch (ex: InitializationException) {
                 ExceptionPrinter.printHistory("Could not create HassCommunicator", ex, LOGGER)
-            } catch (ex: CouldNotPerformException) {
-                // only thrown if instance would be null
             }
         }
     }

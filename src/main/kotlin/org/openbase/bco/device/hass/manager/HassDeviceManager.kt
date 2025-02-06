@@ -29,6 +29,7 @@ import org.openbase.bco.device.hass.manager.cache.HassIdToUnitControllerCache
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
 import org.openbase.bco.device.hass.manager.dto.HassStateDto
+import org.openbase.bco.device.hass.manager.service.location.LocationSynchronizer
 import org.openbase.bco.device.hass.manager.unit.HassGatewayControllerFactory
 import org.openbase.bco.device.hass.util.await
 import org.openbase.bco.device.hass.util.get
@@ -74,6 +75,8 @@ class HassDeviceManager :
 
     private var supportedEntities = listOf<HassEntityDto>()
 
+    private val locationSynchronizer = LocationSynchronizer()
+
     init {
         // the sync observer triggers a lot when the device manager is initially activated and all unit controllers are created
         this.unitFilter =
@@ -116,61 +119,6 @@ class HassDeviceManager :
                                 println("found compatible device: $hassDevice served by ${LabelProcessor.getBestMatch(deviceClass.label)}")
                             }.associateBy { (hassDevice, _) -> hassDevice.id }
 
-                    // ======= SYNC FlOORS ========
-                    val floorIdToZones =
-                        Registries
-                            .getUnitRegistry()
-                            .getUnitConfigsByUnitType(UnitType.LOCATION)
-                            .filter { it.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_FLOOR_ID } }
-                            .associateBy { it.metaConfig[ALIAS_KEY_HASS_FLOOR_ID] }
-
-                    HassCommunicator.instance
-                        .getFloors()
-                        .map { floor ->
-                            UnitConfig
-                                .newBuilder()
-                                .setUnitType(UnitType.LOCATION)
-                                .apply {
-                                    locationConfigBuilder.locationType = LocationType.ZONE
-                                }.setLabel(LabelProcessor.generateLabelBuilder(floor.name))
-                                .apply { metaConfigBuilder[ALIAS_KEY_HASS_FLOOR_ID] = floor.id }
-                                .build()
-                        }.map { zoneConfig ->
-                            floorIdToZones[zoneConfig.metaConfig[ALIAS_KEY_HASS_FLOOR_ID]]?.let { existingZoneConfig ->
-                                existingZoneConfig.toBuilder().mergeFrom(zoneConfig).build().let {
-                                    Registries.getUnitRegistry().updateUnitConfig(it).await()
-                                }
-                            } ?: Registries.getUnitRegistry().registerUnitConfig(zoneConfig).await()
-                        }
-
-                    // ======= SYNC AREAS ========
-                    val areaIdToTiles =
-                        Registries
-                            .getUnitRegistry()
-                            .getUnitConfigsByUnitType(UnitType.LOCATION)
-                            .filter { it.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_AREA_ID } }
-                            .associateBy { it.metaConfig[ALIAS_KEY_HASS_AREA_ID] }
-
-                    val dalLocations =
-                        HassCommunicator.instance
-                            .getAreas()
-                            .map { area ->
-                                UnitConfig
-                                    .newBuilder()
-                                    .setUnitType(UnitType.LOCATION)
-                                    .apply {
-                                        locationConfigBuilder.locationType = LocationType.TILE
-                                    }.setLabel(LabelProcessor.generateLabelBuilder(area.name))
-                                    .apply { metaConfigBuilder[ALIAS_KEY_HASS_AREA_ID] = area.id }
-                                    .build()
-                            }.map { tileConfig ->
-                                areaIdToTiles[tileConfig.metaConfig[ALIAS_KEY_HASS_AREA_ID]]?.let { existingTileConfig ->
-                                    existingTileConfig.toBuilder().mergeFromWithoutRepeatedFields(tileConfig).build().let {
-                                        Registries.getUnitRegistry().updateUnitConfig(it).await()
-                                    }
-                                } ?: Registries.getUnitRegistry().registerUnitConfig(tileConfig).await()
-                            }
-
                     val deviceIdToEntity: Map<String, List<HassEntityDto>> =
                         HassCommunicator.instance
                             .getEntities()
@@ -199,8 +147,8 @@ class HassDeviceManager :
                                     }.setLabel(LabelProcessor.generateLabelBuilder(device.name))
                                     .apply { metaConfigBuilder[ALIAS_KEY_HASS_DEVICE_ID] = device.id }
                                     .apply {
-                                        dalLocations
-                                            .firstOrNull { location ->
+                                        locationSynchronizer.tileConfigs
+                                            .find { location ->
                                                 location.metaConfig[ALIAS_KEY_HASS_AREA_ID] == device.areaId
                                             }?.let { unitLocation ->
                                                 placementConfigBuilder.locationId = unitLocation.id
@@ -231,8 +179,9 @@ class HassDeviceManager :
                                                     addAlias(entity.entityId)
                                                     metaConfigBuilder[ALIAS_KEY_HASS_ENTITY_ID] = entity.entityId
                                                     // add location to unit
-                                                    dalLocations
-                                                        .firstOrNull { location ->
+//                                                    locationSynchronizer.find(areaId) -.
+                                                    locationSynchronizer.tileConfigs
+                                                        .find { location ->
                                                             location.metaConfig[ALIAS_KEY_HASS_AREA_ID] == entity.areaId
                                                         }?.let { unitLocation ->
                                                             placementConfigBuilder.locationId = unitLocation.id
@@ -297,6 +246,7 @@ class HassDeviceManager :
 
         super.activate()
 
+        locationSynchronizer.activate()
         unitFilter.trigger()
     }
 
@@ -322,6 +272,7 @@ class HassDeviceManager :
     @Throws(CouldNotPerformException::class, InterruptedException::class)
     override fun deactivate() {
         unitControllerRegistry.removeObserver(synchronizationObserver)
+        locationSynchronizer.deactivate()
         super.deactivate()
     }
 

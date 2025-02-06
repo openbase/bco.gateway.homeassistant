@@ -1,15 +1,17 @@
 package org.openbase.bco.device.hass.action
 
+import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.google.protobuf.Message
 import org.openbase.bco.dal.lib.action.ActionDescriptionProcessor
 import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.dal.lib.layer.unit.UnitControllerRegistry
-import org.openbase.bco.dal.lib.state.States
 import org.openbase.bco.device.hass.communication.HassConnection
-import org.openbase.bco.device.hass.manager.cache.HassIdToUnitConfigCache
+import org.openbase.bco.device.hass.manager.cache.HassIdToUnitControllerCache
+import org.openbase.bco.device.hass.manager.dto.HassStateDto
 import org.openbase.bco.device.hass.type.HassDomainType
-import org.openbase.bco.device.hass.type.toHassDomainType
+import org.openbase.bco.device.hass.util.isNotNull
 import org.openbase.bco.device.hass.util.isNull
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InvalidStateException
@@ -21,13 +23,16 @@ import org.openbase.type.domotic.action.ActionInitiatorType.ActionInitiator
 import org.openbase.type.domotic.action.ActionInitiatorType.ActionInitiator.InitiatorType
 import org.openbase.type.domotic.action.ActionPriorityType.ActionPriority
 import org.openbase.type.domotic.service.ServiceTemplateType.ServiceTemplate.ServiceType
+import org.openbase.type.domotic.state.ColorStateType.ColorState
+import org.openbase.type.domotic.state.PowerStateType.PowerState
+import org.openbase.type.vision.ColorType.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
 class ServiceActionExecutor(
     private val unitControllerRegistry: UnitControllerRegistry<UnitController<*, *>>,
-    private val hassIdToUnitConfigCache: HassIdToUnitConfigCache,
+    private val hassIdToUnitControllerCache: HassIdToUnitControllerCache,
 ) : Observer<Any?, JsonObject> {
     override fun update(
         source: Any?,
@@ -45,10 +50,9 @@ class ServiceActionExecutor(
         // extract payload
         val payloadObject = JsonParser.parseString(payload[PAYLOAD_KEY].asString).asJsonObject
         val state = payloadObject[PAYLOAD_STATE_KEY].asString
-        val type = payloadObject[PAYLOAD_STATE_TYPE_KEY].asString.toHassDomainType()
 
         try {
-            applyStateUpdate(entityId, type, state)
+            applyStateUpdate(Gson().fromJson(payload, HassStateDto::class.java))
         } catch (ex: CouldNotPerformException) {
             ExceptionPrinter.printHistory(
                 "Could not apply state update[$state] for item[$entityId]",
@@ -64,44 +68,59 @@ class ServiceActionExecutor(
      * If the update is the result of a system sync it will be scheduled shortly so that the state is only applied.
      * Else the update is handled as a human action.
      *
-     * @param entityId   the item identifying the unit who's the state should be updated.
-     * @param hassDomainType  defines the type class.
-     * @param state      a string serializing the state to be set.
+     * @param hassState an object serializing the state and entity to be set.
      * @param systemSync flag determining if the state update is the result of a system sync.
      * @throws CouldNotPerformException
      */
     @JvmOverloads
     @Throws(CouldNotPerformException::class)
     fun applyStateUpdate(
-        entityId: String,
-        hassDomainType: HassDomainType,
-        state: String,
+        hassState: HassStateDto,
         systemSync: Boolean = false,
     ) {
         // TODO: implement correct mapping
-        val serviceType =
-            when (hassDomainType) {
-                HassDomainType.LIGHT -> ServiceType.POWER_STATE_SERVICE
+        val serviceType : ServiceType =
+            when (hassState.type) {
+                 HassDomainType.LIGHT -> if (hassState.hue.isNotNull() && hassState.saturation.isNotNull() && hassState.brightness.isNotNull()) {
+                     ServiceType.COLOR_STATE_SERVICE
+                 } else {
+                     ServiceType.POWER_STATE_SERVICE
+                 }
+
                 else -> ServiceType.UNKNOWN
             }
 
-        var serviceStateBuilder =
-            when (hassDomainType) {
-                HassDomainType.LIGHT -> {
-                    when (state) {
-                        "on" -> States.Power.ON
-                        else -> States.Power.OFF
-                    }.toBuilder()
+        var serviceStateBuilder : Message.Builder? = when (hassState.type) {
+            HassDomainType.LIGHT -> if (hassState.hue.isNotNull() && hassState.saturation.isNotNull() && hassState.brightness.isNotNull()) {
+                ColorState.newBuilder().apply {
+                    setColor(
+                        colorBuilder.apply {
+                            setHsbColor(
+                                hsbColorBuilder.apply {
+                                    hue = hassState.hue!!
+                                    saturation = hassState.saturation!!
+                                    brightness = hassState.brightness!!
+                                }
+                            )
+                        }
+                    )
                 }
-                else -> null
+            } else {
+                PowerState.newBuilder().apply {
+                    setValue(when (hassState.state) {
+                        "on" -> PowerState.State.ON
+                        "off" -> PowerState.State.ON
+                        else -> PowerState.State.UNKNOWN
+                    })
+                }
             }
+
+            else -> null
+        }
 
         try {
             // load controller
-            val unitController =
-                hassIdToUnitConfigCache.getEntry(entityId)?.let {
-                    unitControllerRegistry.get(it.id)
-                }
+            val unitController : UnitController<*, *>? = hassIdToUnitControllerCache.getEntry(hassState.entityId)
 
             // filter all events that are not handled by this instance.
             if (unitController.isNull() || serviceStateBuilder.isNull()) {
@@ -139,13 +158,13 @@ class ServiceActionExecutor(
                     )
                 }
 
-            LOGGER.info("Apply ItemUpdate[$entityId=$state].")
+            LOGGER.info("Apply ItemUpdate[${hassState.entityId}=${hassState.state}].")
             unitController!!.applyDataUpdate(serviceStateBuilder, serviceType)
         } catch (ex: InvalidStateException) {
-            LOGGER.debug("Ignore state update [{}] for service[{}]", state, serviceType, ex)
+            LOGGER.debug("Ignore state update [{}] for service[{}]", hassState.state, serviceType, ex)
         } catch (ex: CouldNotPerformException) {
             LOGGER.warn(
-                "Ignore state update [$state] for service[$serviceType]",
+                "Ignore state update [${hassState.state}] for service[$serviceType]",
                 ex,
             )
         }

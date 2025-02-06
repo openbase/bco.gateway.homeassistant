@@ -1,6 +1,8 @@
 package org.openbase.bco.device.hass.manager.dto
 
 import com.google.gson.annotations.SerializedName
+import org.openbase.bco.device.hass.type.HassDomainType
+import org.openbase.bco.device.hass.type.toHassDomainType
 
 data class HassStateDto(
     @SerializedName("entity_id")
@@ -11,6 +13,24 @@ data class HassStateDto(
     val attributes: Map<String, Any>,
     val context: Map<String, String?>,
 ) {
-    val type get() = entityId.split(".").first()
+    val type get() : HassDomainType =
+        entityId.split(".").first().toHassDomainType()
     val name get() = entityId.split(".").last()
+
+    private val hsColor: Pair<Double, Double>? get() =
+        attributes["hs_color"]
+            ?.toString()
+            ?.replace("[", "")
+            ?.replace("]", "")
+            ?.split(",")
+            ?.let { it[0].toDouble() to it[1].toDouble() }
+
+    val hue: Double? get() =
+        hsColor?.first
+
+    val saturation: Double? get() =
+        hsColor?.second?.div(100)
+
+    val brightness: Double? get() =
+       (attributes["brightness"] as? Double)?.let { (it - 1) / 255 }
 }

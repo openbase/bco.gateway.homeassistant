@@ -1,5 +1,6 @@
 package org.openbase.bco.device.hass.manager.service.location
 
+import okhttp3.internal.wait
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_AREA_ID
@@ -13,6 +14,8 @@ import org.openbase.bco.registry.remote.Registries
 import org.openbase.jul.extension.protobuf.ProtoBufBuilderProcessor.mergeFromWithoutRepeatedFields
 import org.openbase.jul.extension.type.processing.LabelProcessor
 import org.openbase.jul.iface.Activatable
+import org.openbase.jul.schedule.GlobalCachedExecutorService
+import org.openbase.type.domotic.state.ConnectionStateType
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig.LocationType
@@ -49,23 +52,31 @@ class LocationSynchronizer: Activatable {
     override fun activate() {
         active = true
 
-        initialSync()
+        GlobalCachedExecutorService.execute {
 
-        HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.AREA_UPDATE) { event ->
-            LOGGER.info("new area update: $event")
+            if (!HassCommunicator.instance.isConnected) {
+                LOGGER.info("Waiting for hass connection...")
+                HassCommunicator.instance.waitForConnectionState(ConnectionStateType.ConnectionState.State.CONNECTED)
+            }
+
+            initialSync()
+
+            HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.AREA_UPDATE) { event ->
+                LOGGER.info("new area update: $event")
+            }
+
+            HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.FLOOR_UPDATE) { event ->
+                LOGGER.info("new floor update: $event")
+            }
+
+            HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.CONFIG_UPDATE) { event ->
+                LOGGER.info("new config update: $event")
+                LOGGER.info("Areas: ${HassCommunicator.instance.getAreas().map { it.name } }")
+                LOGGER.info("Floors: ${HassCommunicator.instance.getFloors().map { it.name } }")
+
+            }
+            LOGGER.info("activated ${this::class.simpleName}")
         }
-
-        HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.FLOOR_UPDATE) { event ->
-            LOGGER.info("new floor update: $event")
-        }
-
-        HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.CONFIG_UPDATE) { event ->
-            LOGGER.info("new config update: $event")
-            LOGGER.info("Areas: ${HassCommunicator.instance.getAreas().map { it.name } }")
-            LOGGER.info("Floors: ${HassCommunicator.instance.getFloors().map { it.name } }")
-
-        }
-        LOGGER.info("activated ${this::class.simpleName}")
     }
 
     override fun deactivate() {

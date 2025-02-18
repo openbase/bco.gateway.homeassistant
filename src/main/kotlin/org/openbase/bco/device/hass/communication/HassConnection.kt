@@ -13,7 +13,7 @@ import org.openbase.bco.device.hass.jp.JPHassHost
 import org.openbase.bco.device.hass.jp.JpHassPort
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport
 import org.openbase.bco.device.hass.communication.websocket.HassWebsocketConnection
-import org.openbase.bco.device.hass.communication.websocket.Subscription
+import org.openbase.bco.device.hass.communication.websocket.WSSubscription
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.jps.core.JPService
 import org.openbase.jps.exception.JPNotAvailableException
@@ -32,7 +32,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -40,10 +39,8 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 abstract class HassConnection : Shutdownable, TokenProvider {
-    private val topicObservableMapLock = ReentrantLock()
     private val connectionStateLock = ReentrantLock()
     private val connectionStateCondition = connectionStateLock.newCondition()
-    private var topicObservableMap: MutableMap<String, ObservableImpl<Any, JsonObject>>
 
     private var restClient: Client
     private var restTarget: WebTarget
@@ -70,7 +67,6 @@ abstract class HassConnection : Shutdownable, TokenProvider {
 
     init {
         try {
-            this.topicObservableMap = HashMap()
             this.gson = GsonBuilder().setExclusionStrategies(object : ExclusionStrategy {
                 override fun shouldSkipField(fieldAttributes: FieldAttributes): Boolean {
                     return false
@@ -208,22 +204,6 @@ abstract class HassConnection : Shutdownable, TokenProvider {
 
     val isConnected: Boolean
         get() = hassConnectionState == ConnectionStateType.ConnectionState.State.CONNECTED
-
-    @JvmOverloads
-    fun addWebsockedObserver(observer: Observer<Any, JsonObject>, topicRegex: String = "") {
-        topicObservableMapLock.withLock {
-            topicObservableMap
-                .getOrPut(topicRegex) { ObservableImpl<Any, JsonObject>(this) }
-                .addObserver(observer)
-        }
-    }
-
-    @JvmOverloads
-    fun removeWebsockedObserver(observer: Observer<Any, JsonObject>, topicFilter: String = "") {
-        topicObservableMapLock.withLock {
-            topicObservableMap[topicFilter]?.removeObserver(observer)
-        }
-    }
 
     private fun resetConnection() {
         // cancel ongoing connection task
@@ -395,14 +375,7 @@ abstract class HassConnection : Shutdownable, TokenProvider {
         // stop rest service
         restClient.close()
 
-        // stop org.openbase.bco.device.hass.communication.websocket service
-        topicObservableMapLock.withLock {
-            topicObservableMap.values.forEach { jsonObjectObservable ->
-                jsonObjectObservable.shutdown()
-            }
-            topicObservableMap.clear()
-            resetConnection()
-        }
+        resetConnection()
     }
 
     @Throws(CouldNotPerformException::class)
@@ -411,7 +384,7 @@ abstract class HassConnection : Shutdownable, TokenProvider {
 
 
     fun subscribe(
-        subscription: Subscription,
+        subscription: WSSubscription,
     ) = webSocketConnection.subscribe(subscription)
 
     companion object {

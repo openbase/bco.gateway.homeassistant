@@ -5,7 +5,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
-import org.openbase.bco.device.hass.communication.websocket.Subscription
+import org.openbase.bco.device.hass.communication.websocket.WSSubscription
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassAreaDto
@@ -37,7 +37,10 @@ class HassCommunicator private constructor() : HassConnection() {
 
     @Throws(CouldNotPerformException::class)
     fun registerEntities(entityList: List<HassEntityDto>?): List<HassEntityDto> {
-        return jsonElementToTypedList(JsonParser.parseString(putJson(STATES_WS_REQUEST, entityList)), HassEntityDto::class.java)
+        return jsonElementToTypedList(
+            JsonParser.parseString(putJson(STATES_WS_REQUEST, entityList)),
+            HassEntityDto::class.java
+        )
     }
 
     @Throws(CouldNotPerformException::class)
@@ -54,7 +57,10 @@ class HassCommunicator private constructor() : HassConnection() {
     @Throws(CouldNotPerformException::class)
     fun deleteEntity(entityId: String): HassEntityDto {
         LOGGER.warn("Delete item {}", entityId)
-        return jsonToClass(JsonParser.parseString(delete(STATES_WS_REQUEST + SEPARATOR + entityId)), HassEntityDto::class.java)
+        return jsonToClass(
+            JsonParser.parseString(delete(STATES_WS_REQUEST + SEPARATOR + entityId)),
+            HassEntityDto::class.java
+        )
     }
 
     @Throws(NotAvailableException::class)
@@ -118,14 +124,14 @@ class HassCommunicator private constructor() : HassConnection() {
 
     fun subscribe(
         commandType: String,
-        eventType: String? = null,
+        eventType: HassEventType? = null,
         eventProcessor: (event: SubscriptionEvent.Event) -> Any,
-    ): Subscription =
-        Subscription(
-            commandType = commandType,
-            eventType = eventType,
-            eventProcessor = eventProcessor,
-        ).also { subscribe(it) }
+    ): WSSubscription = WSSubscription(
+        commandType = commandType,
+        eventType = eventType,
+        eventProcessor = eventProcessor,
+    )
+        .also { subscribe(it) }
 
     // ==========================================================================================================================================
     // UTIL
@@ -162,11 +168,17 @@ class HassCommunicator private constructor() : HassConnection() {
         }
     }
 
+    enum class HassEventType(val eventTypeName: String) {
+        CONFIG_UPDATE("config_updated"),
+        FLOOR_UPDATE("floor_registry_updated"),
+        AREA_UPDATE("area_registry_updated"),
+        STATE_UPDATE("state_changed")
+    }
+
     companion object {
         const val API_HEALTH: String = "/"
         const val STATES_WS_REQUEST: String = "get_states"
         const val EVENT_WS_SUBSCRIPTION: String = "subscribe_events"
-        const val EVENT_TYPE_STATE: String = "state_changed"
         const val DEVICE_WS_REQUEST: String = "config/device_registry/list"
         const val AREA_WS_REQUEST: String = "config/area_registry/list"
         const val FLOOR_WS_REQUEST: String = "config/floor_registry/list"

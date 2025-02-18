@@ -3,6 +3,9 @@ package org.openbase.bco.device.hass.manager.service
 import org.openbase.bco.dal.lib.layer.service.operation.ColorStateOperationService
 import org.openbase.bco.dal.lib.layer.unit.Unit
 import org.openbase.bco.device.hass.manager.dto.service.ColorServiceDto
+import org.openbase.bco.device.hass.util.toHassBrightness
+import org.openbase.bco.device.hass.util.toHassHue
+import org.openbase.bco.device.hass.util.toHassSaturation
 import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.jul.exception.NotAvailableException
 import org.openbase.type.domotic.action.ActionDescriptionType.ActionDescription
@@ -47,17 +50,14 @@ class ColorStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
         state = colorState,
         serviceData = ColorServiceDto(
             entityId = entityId,
-            hsColor = listOf(colorState.color.hsbColor.hue, colorState.color.hsbColor.saturation * 100),
-            brightness = colorState.color.hsbColor.brightness * 255 + 1,
+            hsColor = listOf(
+                colorState.color.hsbColor.hue.toHassHue(),
+                colorState.color.hsbColor.saturation.toHassSaturation(),
+            ),
+            brightness = colorState.color.hsbColor.brightness.toHassBrightness(),
         )
     )
 
     @Throws(NotAvailableException::class)
-    override fun getNeutralWhiteColor(): ColorType.Color {
-        return unit.neutralWhiteColor
-    }
-
-    companion object {
-        private val LOGGER: Logger = LoggerFactory.getLogger(ColorStateServiceImpl::class.java)
-    }
+    override fun getNeutralWhiteColor(): ColorType.Color = unit.neutralWhiteColor
 }

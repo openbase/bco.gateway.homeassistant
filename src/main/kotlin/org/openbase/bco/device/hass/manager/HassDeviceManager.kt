@@ -24,13 +24,12 @@ import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.device.hass.action.ServiceActionExecutor
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
-import org.openbase.bco.device.hass.manager.cache.HassIdToUnitConfigCache
+import org.openbase.bco.device.hass.manager.cache.HassIdToUnitControllerCache
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
 import org.openbase.bco.device.hass.manager.dto.HassEntityDto
 import org.openbase.bco.device.hass.manager.dto.HassStateDto
 import org.openbase.bco.device.hass.manager.service.location.LocationSynchronizer
 import org.openbase.bco.device.hass.manager.unit.HassGatewayControllerFactory
-import org.openbase.bco.device.hass.type.toHassDomainType
 import org.openbase.bco.device.hass.util.await
 import org.openbase.bco.device.hass.util.get
 import org.openbase.bco.device.hass.util.isNotNull
@@ -62,7 +61,7 @@ class HassDeviceManager :
     VoidInitializable {
     private val executor: ServiceActionExecutor
 
-    private val hassIdToUnitConfigCache: HassIdToUnitConfigCache = HassIdToUnitConfigCache()
+    private val hassIdToUnitControllerCache: HassIdToUnitControllerCache = HassIdToUnitControllerCache(unitControllerRegistry)
 
     /**
      * Synchronization observer that triggers resynchronization of all units if their configuration changes.
@@ -187,11 +186,6 @@ class HassDeviceManager :
                                 }
                             }.filterNotNull()
 
-                    // fill unit to entity rainbow table
-                    dalUnitConfigs.forEach { unitConfig ->
-                        hassIdToUnitConfigCache.addEntry(unitConfig)
-                    }
-
                     // TODO: Location and Device initial sync draft is ready, however we have issues with repeated field that are not merged correctly.
                     // TODO: Finish initial state mapping (there we have to map from the state type onto the service type by analysing the entire event)
 
@@ -221,7 +215,7 @@ class HassDeviceManager :
                         ?.forEach { println("${it.name}: ${it.model}") }
                 }
             }
-        this.executor = ServiceActionExecutor(unitControllerRegistry, hassIdToUnitConfigCache)
+        this.executor = ServiceActionExecutor(hassIdToUnitControllerCache)
         this.synchronizationObserver =
             (Observer { observable: Any?, value: Any? -> unitFilter.trigger() })
     }
@@ -256,7 +250,10 @@ class HassDeviceManager :
             .filter { supportedEntities.map { it.entityId }.contains(it.entityId) }
             .forEach { state ->
                 try {
-                    executor.applyStateUpdate(state.entityId, state.type.toHassDomainType(), state.state, systemSync)
+                    executor.applyStateUpdate(
+                        hassState = state,
+                        systemSync = systemSync,
+                    )
                 } catch (ex: CouldNotPerformException) {
                     ExceptionPrinter.printHistory(
                         "Skip synchronization of item[name: ${state.name}, type: ${state.type}, state: ${state.state}]",

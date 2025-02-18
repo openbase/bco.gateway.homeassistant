@@ -20,7 +20,9 @@ import org.openbase.type.domotic.action.ActionInitiatorType.ActionInitiator.Init
 import org.openbase.type.domotic.action.ActionPriorityType.ActionPriority
 import org.openbase.type.domotic.service.ServiceTemplateType.ServiceTemplate.ServiceType
 import org.openbase.type.domotic.state.ColorStateType.ColorState
+import org.openbase.type.domotic.state.MotionStateType.MotionState
 import org.openbase.type.domotic.state.PowerStateType.PowerState
+import org.openbase.type.domotic.state.PresenceStateType.PresenceState
 import org.openbase.type.vision.ColorType.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -50,6 +52,8 @@ class ServiceActionExecutor(
                 ServiceType.POWER_STATE_SERVICE
             }
 
+            HassDomainType.BINARY_SENSOR -> ServiceType.MOTION_STATE_SERVICE
+
             else -> ServiceType.UNKNOWN
         }
 
@@ -76,6 +80,18 @@ class ServiceActionExecutor(
                         "off" -> PowerState.State.OFF
                         else -> PowerState.State.UNKNOWN
                     })
+                }
+            }
+
+            HassDomainType.BINARY_SENSOR -> MotionState.newBuilder().apply {
+                if (hassState.attributes["device_class"] == "motion") {
+                    setValue(when (hassState.state) {
+                        "on" -> MotionState.State.MOTION
+                        "off" -> MotionState.State.NO_MOTION
+                        else -> MotionState.State.UNKNOWN
+                    })
+                } else {
+                    null
                 }
             }
 

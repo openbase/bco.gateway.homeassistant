@@ -177,7 +177,10 @@ class HassWebsocketConnection(
                 }
                 "event" -> {
                     JsonUtils.gson.fromJson(jsonResult, SubscriptionEvent::class.java).also { result ->
-                        if (!result.event.data.entityId.contains(HassDomainType.LIGHT.id)) return
+                        if (
+                            !result.event.data.entityId.contains(HassDomainType.LIGHT.id) &&
+                            !result.event.data.entityId.contains(HassDomainType.BINARY_SENSOR.id)
+                        ) return
 
                         subscriptions.find { it.eventType == result.event.eventType }?.eventProcessor?.invoke(result.event)
                     }

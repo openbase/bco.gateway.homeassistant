@@ -36,7 +36,9 @@ data class WSSubscription (
     val eventType: HassEventType? = null,
     val eventProcessor: (event: SubscriptionEvent.Event) -> Any,
 ) {
-    val payload = JsonObject().also { it.addProperty("event_type", eventType.toString()) }
+    val payload = JsonObject().also { jsonObject ->
+        eventType?.also { jsonObject.addProperty("event_type", eventType.eventTypeName) }
+    }
 }
 
 class HassWebsocketConnection(
@@ -188,7 +190,6 @@ class HassWebsocketConnection(
                 }
                 "event" -> {
                     JsonUtils.gson.fromJson(jsonResult, SubscriptionEvent::class.java).also { result ->
-                        if (!result.event.data.entityId.contains(HassDomainType.LIGHT.id)) return
 
                         subscriptions.find { it.eventType?.eventTypeName == result.event.eventType }?.eventProcessor?.invoke(result.event)
                     }

@@ -27,8 +27,10 @@ import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
+import kotlin.concurrent.withLock
 import kotlin.concurrent.write
 
 data class WSSubscription (
@@ -52,6 +54,7 @@ class HassWebsocketConnection(
     private val requestMap: MutableMap<Long, CompletableFuture<JsonElement?>> = mutableMapOf()
     private val requestMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock()
     private val connectionStateLock: ReentrantReadWriteLock = ReentrantReadWriteLock()
+    private val connectionStateCondition: Condition = connectionStateLock.writeLock().newCondition()
     private val subscriptions: MutableList<WSSubscription> = emptyList<WSSubscription>().toMutableList()
 
 
@@ -60,8 +63,12 @@ class HassWebsocketConnection(
         set(value) {
             connectionStateLock.write {
                 field = value
+                connectionStateCondition.signalAll()
+            }
 
+            connectionStateLock.read {
                 LOGGER.trace("connection state updated to {}", value)
+
 
                 if (value == ConnectionState.State.CONNECTED) {
                     GlobalCachedExecutorService.execute {
@@ -75,6 +82,15 @@ class HassWebsocketConnection(
             }
         }
         get() = connectionStateLock.read { field }
+
+    @Throws(InterruptedException::class)
+    fun waitForConnectionState(connectionState: ConnectionState.State) {
+        connectionStateLock.write {
+            while (this.connectionState != connectionState) {
+                connectionStateCondition.await()
+            }
+        }
+    }
 
     /**
      * Subscribe has to be called before the client is activated.
@@ -190,7 +206,6 @@ class HassWebsocketConnection(
                 }
                 "event" -> {
                     JsonUtils.gson.fromJson(jsonResult, SubscriptionEvent::class.java).also { result ->
-
                         subscriptions.find { it.eventType?.eventTypeName == result.event.eventType }?.eventProcessor?.invoke(result.event)
                     }
                     return
@@ -213,7 +228,7 @@ class HassWebsocketConnection(
                         LOGGER.info("Unknown Event: $jsonResult")
                     }
                 } else {
-                    requestMap.remove(result.id)?.completeExceptionally(CouldNotPerformException("Canceled by target"))
+                    requestMap.remove(result.id)?.completeExceptionally(CouldNotPerformException("Request[${jsonResult.asString}] canceled by home assistant possibly because of an invalid request!"))
                 }
             }
         }

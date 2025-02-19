@@ -25,7 +25,7 @@ import org.openbase.jul.iface.Shutdownable
 import org.openbase.jul.pattern.ObservableImpl
 import org.openbase.jul.pattern.Observer
 import org.openbase.jul.schedule.GlobalScheduledExecutorService
-import org.openbase.type.domotic.state.ConnectionStateType
+import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.openbase.type.domotic.unit.gateway.GatewayClassType
 import org.slf4j.Logger
@@ -36,6 +36,7 @@ import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.Volatile
 import kotlin.concurrent.withLock
 
 abstract class HassConnection : Shutdownable, TokenProvider {
@@ -53,9 +54,9 @@ abstract class HassConnection : Shutdownable, TokenProvider {
 
     private var connectionTask: ScheduledFuture<*>? = null
 
-    var hassConnectionState: ConnectionStateType.ConnectionState.State =
-        ConnectionStateType.ConnectionState.State.DISCONNECTED
-        protected set
+    @Volatile
+    private var hassConnectionState: ConnectionState.State =
+        ConnectionState.State.DISCONNECTED
 
     final override val token: String
         get() = findHassGatewayClass()?.let { hassGatewayClass ->
@@ -89,7 +90,7 @@ abstract class HassConnection : Shutdownable, TokenProvider {
                 .port(JPService.getValue(JpHassPort::class.java))
                 .path(REST_ENDPOINT)
             this.restTarget = restClient.target(hassUri)
-            this.setConnectState(ConnectionStateType.ConnectionState.State.CONNECTING)
+            this.setConnectState(ConnectionState.State.CONNECTING)
         } catch (ex: JPNotAvailableException) {
             throw InstantiationException(this, ex)
         } catch (ex: CouldNotPerformException) {
@@ -105,7 +106,7 @@ abstract class HassConnection : Shutdownable, TokenProvider {
 
     @Throws(InterruptedException::class)
     fun waitForConnectionState(
-        connectionState: ConnectionStateType.ConnectionState.State,
+        connectionState: ConnectionState.State,
         timeout: Long,
         timeUnit: TimeUnit,
     ) {
@@ -117,7 +118,7 @@ abstract class HassConnection : Shutdownable, TokenProvider {
     }
 
     @Throws(InterruptedException::class)
-    fun waitForConnectionState(connectionState: ConnectionStateType.ConnectionState.State) {
+    fun waitForConnectionState(connectionState: ConnectionState.State) {
         connectionStateLock.withLock {
             while (hassConnectionState != connectionState) {
                 connectionStateCondition.await()
@@ -125,7 +126,7 @@ abstract class HassConnection : Shutdownable, TokenProvider {
         }
     }
 
-    private fun setConnectState(connectState: ConnectionStateType.ConnectionState.State) {
+    private fun setConnectState(connectState: ConnectionState.State) {
         connectionStateLock.withLock {
             // filter non changing states
             if (connectState == this.hassConnectionState) {
@@ -137,14 +138,19 @@ abstract class HassConnection : Shutdownable, TokenProvider {
             this.hassConnectionState = connectState
 
             when (connectState) {
-                ConnectionStateType.ConnectionState.State.CONNECTING -> {
+                ConnectionState.State.CONNECTING -> {
                     LOGGER.info("Wait for hass...")
                     try {
                         connectionTask?.cancel(true)
                         connectionTask = GlobalScheduledExecutorService.scheduleWithFixedDelay({
                             if (isTargetReachable) {
+
+                                // establish websocket connection
+                                webSocketConnection.activate()
+                                webSocketConnection.waitForConnectionState(ConnectionState.State.CONNECTED)
+
                                 // set connected
-                                setConnectState(ConnectionStateType.ConnectionState.State.CONNECTED)
+                                setConnectState(ConnectionState.State.CONNECTED)
 
                                 // cleanup own task
                                 connectionTask?.cancel(false)
@@ -153,25 +159,24 @@ abstract class HassConnection : Shutdownable, TokenProvider {
                     } catch (ex: NotAvailableException) {
                         // if global executor service is not available we have no chance to connect.
                         LOGGER.warn("Wait for hass...", ex)
-                        setConnectState(ConnectionStateType.ConnectionState.State.DISCONNECTED)
+                        setConnectState(ConnectionState.State.DISCONNECTED)
                     } catch (ex: RejectedExecutionException) {
                         LOGGER.warn("Wait for hass...", ex)
-                        setConnectState(ConnectionStateType.ConnectionState.State.DISCONNECTED)
+                        setConnectState(ConnectionState.State.DISCONNECTED)
                     }
                 }
 
-                ConnectionStateType.ConnectionState.State.CONNECTED -> {
+                ConnectionState.State.CONNECTED -> {
                     LOGGER.info("Connection to Hass established.")
-                    webSocketConnection.activate()
                 }
 
-                ConnectionStateType.ConnectionState.State.RECONNECTING -> {
+                ConnectionState.State.RECONNECTING -> {
                     LOGGER.warn("Connection to Hass lost!")
                     resetConnection()
-                    setConnectState(ConnectionStateType.ConnectionState.State.CONNECTING)
+                    setConnectState(ConnectionState.State.CONNECTING)
                 }
 
-                ConnectionStateType.ConnectionState.State.DISCONNECTED -> {
+                ConnectionState.State.DISCONNECTED -> {
                     LOGGER.info("Connection to Hass closed.")
                     resetConnection()
                 }
@@ -182,8 +187,8 @@ abstract class HassConnection : Shutdownable, TokenProvider {
             }
             // notify state change
             connectionStateCondition.signalAll()
-            if (connectState == ConnectionStateType.ConnectionState.State.RECONNECTING) {
-                setConnectState(ConnectionStateType.ConnectionState.State.CONNECTING)
+            if (connectState == ConnectionState.State.RECONNECTING) {
+                setConnectState(ConnectionState.State.CONNECTING)
             }
         }
     }
@@ -197,13 +202,13 @@ abstract class HassConnection : Shutdownable, TokenProvider {
 
             // if not reachable init a reconnect
             if (!isTargetReachable) {
-                setConnectState(ConnectionStateType.ConnectionState.State.RECONNECTING)
+                setConnectState(ConnectionState.State.RECONNECTING)
             }
         }
     }
 
     val isConnected: Boolean
-        get() = hassConnectionState == ConnectionStateType.ConnectionState.State.CONNECTED
+        get() = hassConnectionState == ConnectionState.State.CONNECTED
 
     private fun resetConnection() {
         // cancel ongoing connection task
@@ -370,7 +375,7 @@ abstract class HassConnection : Shutdownable, TokenProvider {
         // prepare shutdown
 
         isShutdownInitiated = true
-        setConnectState(ConnectionStateType.ConnectionState.State.DISCONNECTED)
+        setConnectState(ConnectionState.State.DISCONNECTED)
 
         // stop rest service
         restClient.close()

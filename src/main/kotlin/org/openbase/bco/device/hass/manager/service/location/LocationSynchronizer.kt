@@ -1,6 +1,5 @@
 package org.openbase.bco.device.hass.manager.service.location
 
-import okhttp3.internal.wait
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_AREA_ID
@@ -59,22 +58,18 @@ class LocationSynchronizer: Activatable {
                 HassCommunicator.instance.waitForConnectionState(ConnectionStateType.ConnectionState.State.CONNECTED)
             }
 
-            initialSync()
-
             HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.AREA_UPDATE) { event ->
                 LOGGER.info("new area update: $event")
+//                syncAll()
             }
 
             HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.FLOOR_UPDATE) { event ->
                 LOGGER.info("new floor update: $event")
+//                syncAll()
             }
 
-            HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.CONFIG_UPDATE) { event ->
-                LOGGER.info("new config update: $event")
-                LOGGER.info("Areas: ${HassCommunicator.instance.getAreas().map { it.name } }")
-                LOGGER.info("Floors: ${HassCommunicator.instance.getFloors().map { it.name } }")
+            syncAll()
 
-            }
             LOGGER.info("activated ${this::class.simpleName}")
         }
     }
@@ -85,7 +80,7 @@ class LocationSynchronizer: Activatable {
 
     override fun isActive(): Boolean = active
 
-    fun initialSync() {
+    fun syncAll() {
         Registries
             .getUnitRegistry()
             .getUnitConfigsByUnitType(UnitType.LOCATION)

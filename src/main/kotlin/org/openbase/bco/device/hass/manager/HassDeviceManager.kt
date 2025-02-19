@@ -229,19 +229,20 @@ class HassDeviceManager :
         unitControllerRegistry.addObserver(synchronizationObserver)
 
         HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.STATE_UPDATE) { event ->
-            LOGGER.info("new state event: $event")
+            LOGGER.trace("new state event: {}", event)
             listOf(event.data.newState).applyStateUpdates(systemSync = false)
         }
 
         LOGGER.info("Connect to bco...")
         Registries.waitUntilReady()
-        LOGGER.info("Login to bco...")
 
+        LOGGER.info("Login to bco...")
         BCOLogin.getSession().loginBCOUser()
+
+        locationSynchronizer.activate()
 
         super.activate()
 
-        locationSynchronizer.activate()
         unitFilter.trigger()
     }
 

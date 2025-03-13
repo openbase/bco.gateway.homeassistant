@@ -84,7 +84,7 @@ class ServiceActionExecutor(
             }
 
             HassDomainType.BINARY_SENSOR -> MotionState.newBuilder().apply {
-                if (hassState.attributes["device_class"] == "motion") {
+                if (hassState.attributes[DEVICE_CLASS] == MOTION_SENSOR) {
                     setValue(when (hassState.state) {
                         STATE_ON -> MotionState.State.MOTION
                         STATE_OFF -> MotionState.State.NO_MOTION
@@ -167,9 +167,14 @@ class ServiceActionExecutor(
     }
 
     companion object {
+        const val PAYLOAD_KEY: String = "payload"
+
         const val STATE_ON: String = "on"
         const val STATE_OFF: String = "off"
-        const val PAYLOAD_KEY: String = "payload"
+
+        const val DEVICE_CLASS: String = "device_class"
+
+        const val MOTION_SENSOR = "motion"
 
         private val LOGGER: Logger = LoggerFactory.getLogger(ServiceActionExecutor::class.java)
     }

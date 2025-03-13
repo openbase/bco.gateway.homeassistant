@@ -76,8 +76,8 @@ class ServiceActionExecutor(
             } else {
                 PowerState.newBuilder().apply {
                     setValue(when (hassState.state) {
-                        "on" -> PowerState.State.ON
-                        "off" -> PowerState.State.OFF
+                        STATE_ON -> PowerState.State.ON
+                        STATE_OFF -> PowerState.State.OFF
                         else -> PowerState.State.UNKNOWN
                     })
                 }
@@ -86,8 +86,8 @@ class ServiceActionExecutor(
             HassDomainType.BINARY_SENSOR -> MotionState.newBuilder().apply {
                 if (hassState.attributes["device_class"] == "motion") {
                     setValue(when (hassState.state) {
-                        "on" -> MotionState.State.MOTION
-                        "off" -> MotionState.State.NO_MOTION
+                        STATE_ON -> MotionState.State.MOTION
+                        STATE_OFF -> MotionState.State.NO_MOTION
                         else -> MotionState.State.UNKNOWN
                     })
                 } else {
@@ -114,6 +114,11 @@ class ServiceActionExecutor(
         hassState: HassStateDto,
         systemSync: Boolean = false,
     ) = hassState.toServiceType().let { serviceType ->
+        if (serviceType == ServiceType.UNKNOWN) {
+            LOGGER.debug("Skip state update because HassServiceType [{}] is not supported.", hassState.type)
+            return null
+        }
+
         try {
             hassState.toServiceState()?.let { serviceState ->
                 hassIdToUnitControllerCache.getEntry(hassState.entityId)?.let { unitController ->
@@ -162,6 +167,8 @@ class ServiceActionExecutor(
     }
 
     companion object {
+        const val STATE_ON: String = "on"
+        const val STATE_OFF: String = "off"
         const val PAYLOAD_KEY: String = "payload"
 
         private val LOGGER: Logger = LoggerFactory.getLogger(ServiceActionExecutor::class.java)

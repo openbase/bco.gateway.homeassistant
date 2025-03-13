@@ -11,11 +11,11 @@ import okio.ByteString
 import org.openbase.bco.device.hass.jp.JPHassHost
 import org.openbase.bco.device.hass.jp.JpHassPort
 import org.openbase.bco.device.hass.communication.HassCommunicator
+import org.openbase.bco.device.hass.communication.HassCommunicator.HassEventType
 import org.openbase.bco.device.hass.communication.TokenProvider
 import org.openbase.bco.device.hass.communication.websocket.command.CommandResult
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.device.hass.type.HassDomainType
-import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.bco.device.hass.util.toRequest
 import org.openbase.bco.device.hass.util.JsonUtils
 import org.openbase.bco.device.hass.util.await
@@ -27,65 +27,89 @@ import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.withLock
 import kotlin.concurrent.write
 
-data class Subscription (
+data class WSSubscription (
     val commandType: String = HassCommunicator.EVENT_WS_SUBSCRIPTION,
-    val eventType: String? = null,
+    val eventType: HassEventType? = null,
     val eventProcessor: (event: SubscriptionEvent.Event) -> Any,
-)
+) {
+    val payload = JsonObject().also { jsonObject ->
+        eventType?.also { jsonObject.addProperty("event_type", eventType.eventTypeName) }
+    }
+}
 
 class HassWebsocketConnection(
     private val tokenProvider: TokenProvider
 ) : Activatable {
-    private val logger = LoggerFactory.getLogger(HassWebsocketConnection::class.java)
-
     @Volatile
     private var commandCounter: Long = 0
     private val client = OkHttpClient()
     private var active = false
     private var ws: WebSocket? = null
-    val requestMap: MutableMap<Long, CompletableFuture<JsonElement?>> = mutableMapOf()
-    val requestMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock()
-    private val subscriptions: MutableList<Subscription> = emptyList<Subscription>().toMutableList()
+    private val requestMap: MutableMap<Long, CompletableFuture<JsonElement?>> = mutableMapOf()
+    private val requestMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock()
+    private val connectionStateLock: ReentrantReadWriteLock = ReentrantReadWriteLock()
+    private val connectionStateCondition: Condition = connectionStateLock.writeLock().newCondition()
+    private val subscriptions: MutableList<WSSubscription> = emptyList<WSSubscription>().toMutableList()
+
 
     @Volatile
     var connectionState: ConnectionState.State = ConnectionState.State.UNKNOWN
         set(value) {
-            field = value
+            connectionStateLock.write {
+                field = value
+                connectionStateCondition.signalAll()
+            }
 
-            logger.trace("connection state updated to {}", value)
+            connectionStateLock.read {
+                LOGGER.trace("connection state updated to {}", value)
 
-            if (value == ConnectionState.State.CONNECTED) {
-                GlobalCachedExecutorService.execute {
-                    subscriptions.forEach { subscription ->
-                        val json = JsonObject()
-                        json.addProperty("event_type", subscription.eventType.toString())
-                        sendCommand(subscription.commandType,json)
-                            .await()
-                            .also {
-                                logger.info("subscribe on: $subscription")
-                            }
+
+                if (value == ConnectionState.State.CONNECTED) {
+                    GlobalCachedExecutorService.execute {
+                        subscriptions.forEach { subscription ->
+                            sendSubscriptionRequest(subscription)
+                                .await()
+                                .also { LOGGER.info("subscribe on: $subscription") }
+                        }
                     }
                 }
             }
         }
+        get() = connectionStateLock.read { field }
+
+    @Throws(InterruptedException::class)
+    fun waitForConnectionState(connectionState: ConnectionState.State) {
+        connectionStateLock.write {
+            while (this.connectionState != connectionState) {
+                connectionStateCondition.await()
+            }
+        }
+    }
 
     /**
      * Subscribe has to be called before the client is activated.
      */
     fun subscribe(
-        subscription: Subscription,
+        subscription: WSSubscription,
     ) {
-        if(active) {
-            error("Can not register a subscription on an already active client.")
-        }
-
         subscriptions
             .find { it == subscription}
-            ?.let { logger.error("Already subscribed to ${subscription.commandType}") }
-            ?: subscriptions.add(subscription)
+            ?.let { LOGGER.error("Already subscribed to ${subscription.commandType}") }
+            ?: subscriptions.add(subscription).also {
+                connectionStateLock.read {
+                    if (connectionState == ConnectionState.State.CONNECTED) {
+                        sendSubscriptionRequest(subscription)
+                            .await()
+                            .also { LOGGER.info("subscribe on: $subscription") }
+                    }
+                }
+            }
     }
 
     override fun activate() {
@@ -112,13 +136,18 @@ class HassWebsocketConnection(
 
     fun ping() = sendCommand(COMMAND_PING)
 
+    private fun sendSubscriptionRequest(subscription: WSSubscription): CompletableFuture<JsonElement?> =
+        sendCommand(subscription.commandType, subscription.payload)
+
     fun sendCommand(
         commandType: String,
         payload: JsonObject = JsonObject(),
     ): CompletableFuture<JsonElement?> {
 
-        if(connectionState != ConnectionState.State.CONNECTED) {
-            return CompletableFuture.failedFuture(CouldNotPerformException("Connection is not established."))
+        connectionStateLock.read {
+            if (connectionState != ConnectionState.State.CONNECTED) {
+                return CompletableFuture.failedFuture(CouldNotPerformException("Connection is not established."))
+            }
         }
 
         // prepare request
@@ -151,7 +180,7 @@ class HassWebsocketConnection(
     inner class EventProcessor : WebSocketListener() {
 
         override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
-            logger.info("Connection to websocket server established.")
+            LOGGER.info("Connection to websocket server established.")
             connectionState = ConnectionState.State.CONNECTING
             super.onOpen(webSocket, response)
         }
@@ -162,27 +191,22 @@ class HassWebsocketConnection(
 
             when (jsonResult.asJsonObject.getAsJsonPrimitive("type").asString) {
                 "auth_required" -> {
-                    logger.debug("Websocket authentication required.")
+                    LOGGER.debug("Websocket authentication required.")
                     webSocket.send(mapOf("type" to "auth", "access_token" to tokenProvider.token).toRequest())
                     return
                 }
                 "auth_ok" -> {
-                    logger.info("Websocket authentication successful.")
+                    LOGGER.info("Websocket authentication successful.")
                     connectionState = ConnectionState.State.CONNECTED
                     return
                 }
                 "auth_invalid" -> {
-                    logger.error("Websocket could not be authenticated.")
+                    LOGGER.error("Websocket could not be authenticated.")
                     return
                 }
                 "event" -> {
                     JsonUtils.gson.fromJson(jsonResult, SubscriptionEvent::class.java).also { result ->
-                        if (
-                            !result.event.data.entityId.contains(HassDomainType.LIGHT.id) &&
-                            !result.event.data.entityId.contains(HassDomainType.BINARY_SENSOR.id)
-                        ) return
-
-                        subscriptions.find { it.eventType == result.event.eventType }?.eventProcessor?.invoke(result.event)
+                        subscriptions.find { it.eventType?.eventTypeName == result.event.eventType }?.eventProcessor?.invoke(result.event)
                     }
                     return
                 }
@@ -194,23 +218,23 @@ class HassWebsocketConnection(
             val result = try {
                  JsonUtils.gson.fromJson(jsonResult, CommandResult::class.java)
             } catch (ex: Exception) {
-                logger.error("Could not process result: $jsonResult")
+                LOGGER.error("Could not process result: $jsonResult")
                 throw  ex
             }
 
             requestMapLock.write {
                 if (result.success != false) {
                     requestMap.remove(result.id)?.complete(result.result) ?: also {
-                        logger.info("Unknown Event: $jsonResult")
+                        LOGGER.info("Unknown Event: $jsonResult")
                     }
                 } else {
-                    requestMap.remove(result.id)?.completeExceptionally(CouldNotPerformException("Canceled by target"))
+                    requestMap.remove(result.id)?.completeExceptionally(CouldNotPerformException("Request[${jsonResult.asString}] canceled by home assistant possibly because of an invalid request!"))
                 }
             }
         }
 
         override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-            logger.info("Receiving bytes : " + bytes.hex())
+            LOGGER.info("Receiving bytes : " + bytes.hex())
         }
 
         override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
@@ -225,12 +249,12 @@ class HassWebsocketConnection(
         }
 
         override fun onFailure(webSocket: WebSocket, throwable: Throwable, response: okhttp3.Response?) {
-            logger.error("Connection failure!", throwable)
+            LOGGER.error("Connection failure!", throwable)
             super.onFailure(webSocket, throwable, response)
         }
 
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-            logger.error("Connection closed: $code - $reason")
+            LOGGER.error("Connection closed: $code - $reason")
             super.onClosed(webSocket, code, reason)
         }
     }
@@ -239,5 +263,7 @@ class HassWebsocketConnection(
         const val PROTOCOL_TYPE = "ws"
         const val ENDPOINT = "/api/websocket"
         const val COMMAND_PING = "ping"
+
+        private val LOGGER = LoggerFactory.getLogger(HassWebsocketConnection::class.java)
     }
 }

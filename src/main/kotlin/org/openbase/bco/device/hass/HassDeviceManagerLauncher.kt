@@ -53,6 +53,7 @@ class HassDeviceManagerLauncher : AbstractLauncher<HassDeviceManager>(
          * @param args the command line arguments
          */
         @JvmStatic
+        @Throws (InterruptedException::class)
         fun main(args: Array<String>) {
             BCO.printLogo()
             main(

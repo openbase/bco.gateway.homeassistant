@@ -23,7 +23,6 @@ import org.openbase.bco.dal.control.layer.unit.device.DeviceManagerImpl
 import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.device.hass.action.ServiceActionExecutor
 import org.openbase.bco.device.hass.communication.HassCommunicator
-import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_TYPE_STATE
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.device.hass.manager.cache.HassIdToUnitControllerCache
 import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
@@ -147,10 +146,8 @@ class HassDeviceManager :
                                     }.setLabel(LabelProcessor.generateLabelBuilder(device.name))
                                     .apply { metaConfigBuilder[ALIAS_KEY_HASS_DEVICE_ID] = device.id }
                                     .apply {
-                                        locationSynchronizer.tileConfigs
-                                            .find { location ->
-                                                location.metaConfig[ALIAS_KEY_HASS_AREA_ID] == device.areaId
-                                            }?.let { unitLocation ->
+                                        locationSynchronizer.findTileByAreaId(device.areaId)
+                                            ?.let { unitLocation ->
                                                 placementConfigBuilder.locationId = unitLocation.id
                                             }
                                     }.build()
@@ -180,10 +177,8 @@ class HassDeviceManager :
                                                     metaConfigBuilder[ALIAS_KEY_HASS_ENTITY_ID] = entity.entityId
                                                     // add location to unit
 //                                                    locationSynchronizer.find(areaId) -.
-                                                    locationSynchronizer.tileConfigs
-                                                        .find { location ->
-                                                            location.metaConfig[ALIAS_KEY_HASS_AREA_ID] == entity.areaId
-                                                        }?.let { unitLocation ->
+                                                    locationSynchronizer.findTileByAreaId(entity.areaId)
+                                                        ?.let { unitLocation ->
                                                             placementConfigBuilder.locationId = unitLocation.id
                                                         }
                                                 }.build()
@@ -233,20 +228,21 @@ class HassDeviceManager :
     override fun activate() {
         unitControllerRegistry.addObserver(synchronizationObserver)
 
-        HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, EVENT_TYPE_STATE) { event ->
-            LOGGER.info("new state event: $event")
+        HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.STATE_UPDATE) { event ->
+            LOGGER.trace("new state event: {}", event)
             listOf(event.data.newState).applyStateUpdates(systemSync = false)
         }
 
         LOGGER.info("Connect to bco...")
         Registries.waitUntilReady()
-        LOGGER.info("Login to bco...")
 
+        LOGGER.info("Login to bco...")
         BCOLogin.getSession().loginBCOUser()
+
+        locationSynchronizer.activate()
 
         super.activate()
 
-        locationSynchronizer.activate()
         unitFilter.trigger()
     }
 

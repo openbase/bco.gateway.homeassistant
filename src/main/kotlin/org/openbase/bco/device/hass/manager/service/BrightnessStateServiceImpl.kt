@@ -2,9 +2,12 @@ package org.openbase.bco.device.hass.manager.service
 
 import org.openbase.bco.dal.lib.layer.service.operation.BrightnessStateOperationService
 import org.openbase.bco.dal.lib.layer.unit.Unit
+import org.openbase.bco.device.hass.manager.dto.HassStateDto
 import org.openbase.bco.device.hass.manager.dto.service.BrightnessServiceDto
 import org.openbase.bco.device.hass.util.toHassBrightness
 import org.openbase.bco.device.hass.type.HassServiceType
+import org.openbase.bco.device.hass.util.isNotNull
+import org.openbase.bco.device.hass.util.isNull
 import org.openbase.jul.exception.NotAvailableException
 import org.openbase.type.domotic.action.ActionDescriptionType.ActionDescription
 import org.openbase.type.domotic.state.BrightnessStateType.BrightnessState
@@ -47,4 +50,11 @@ class BrightnessStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
     override fun getBrightnessState(): BrightnessState {
         return unit.brightnessState
     }
+}
+
+fun HassStateDto.isBrightnessState() = hue.isNull() && saturation.isNull() && brightness.isNotNull()
+
+fun HassStateDto.toBrightnessState(): BrightnessState.Builder = BrightnessState.newBuilder().apply {
+    brightness = this@toBrightnessState.brightness ?:
+        throw NotAvailableException("Brightness is not available for entity[$entityId].")
 }

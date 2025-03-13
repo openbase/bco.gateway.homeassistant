@@ -2,6 +2,7 @@ package org.openbase.bco.device.hass.manager.service
 
 import org.openbase.bco.dal.lib.layer.service.operation.ActivationStateOperationService
 import org.openbase.bco.dal.lib.layer.unit.Unit
+import org.openbase.bco.device.hass.manager.dto.HassStateDto
 import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.type.domotic.action.ActionDescriptionType.ActionDescription
 import org.openbase.type.domotic.state.ActivationStateType.ActivationState
@@ -23,4 +24,12 @@ class ActivationStateServiceImpl<ST>(
         )
 
     override fun getActivationState(): ActivationState = unit.activationState
+}
+
+fun HassStateDto.toActivationState(): ActivationState.Builder = ActivationState.newBuilder().apply {
+    value = when (state) {
+        HassStateDto.STATE_ON -> ActivationState.State.ACTIVE
+        HassStateDto.STATE_OFF -> ActivationState.State.INACTIVE
+        else -> ActivationState.State.UNKNOWN
+    }
 }

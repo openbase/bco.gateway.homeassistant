@@ -13,24 +13,34 @@ data class HassStateDto(
     val attributes: Map<String, Any>,
     val context: Map<String, String?>,
 ) {
-    val type get() : HassDomainType =
-        entityId.split(".").first().toHassDomainType()
+    val type
+        get() : HassDomainType =
+            entityId.split(".").first().toHassDomainType()
     val name get() = entityId.split(".").last()
 
-    private val hsColor: Pair<Double, Double>? get() =
-        attributes["hs_color"]
-            ?.toString()
-            ?.replace("[", "")
-            ?.replace("]", "")
-            ?.split(",")
-            ?.let { it[0].toDouble() to it[1].toDouble() }
+    private val hsColor: Pair<Double, Double>?
+        get() =
+            attributes["hs_color"]
+                ?.toString()
+                ?.replace("[", "")
+                ?.replace("]", "")
+                ?.split(",")
+                ?.let { it[0].toDouble() to it[1].toDouble() }
 
-    val hue: Double? get() =
-        hsColor?.first
+    val hue: Double?
+        get() =
+            hsColor?.first
 
-    val saturation: Double? get() =
-        hsColor?.second
+    val saturation: Double?
+        get() =
+            hsColor?.second
 
-    val brightness: Double? get() =
-       (attributes["brightness"] as? Double)
+    val brightness: Double?
+        get() =
+            (attributes["brightness"] as? Double)
+
+    companion object {
+        const val STATE_ON: String = "on"
+        const val STATE_OFF: String = "off"
+    }
 }

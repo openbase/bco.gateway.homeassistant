@@ -2,6 +2,7 @@ package org.openbase.bco.device.hass.manager.service
 
 import org.openbase.bco.dal.lib.layer.service.operation.PowerStateOperationService
 import org.openbase.bco.dal.lib.layer.unit.Unit
+import org.openbase.bco.device.hass.manager.dto.HassStateDto
 import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.jul.exception.NotAvailableException
 import org.openbase.type.domotic.action.ActionDescriptionType.ActionDescription
@@ -48,3 +49,12 @@ class PowerStateServiceImpl<ST>(
     @Throws(NotAvailableException::class)
     override fun getPowerState(): PowerState = unit.powerState
 }
+
+fun HassStateDto.toPowerState(): PowerState.Builder =
+    PowerState.newBuilder().apply {
+        value = when (state) {
+            HassStateDto.STATE_ON -> PowerState.State.ON
+            HassStateDto.STATE_OFF -> PowerState.State.OFF
+            else -> PowerState.State.UNKNOWN
+        }
+    }

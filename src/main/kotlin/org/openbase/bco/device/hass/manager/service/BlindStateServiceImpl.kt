@@ -3,7 +3,6 @@ package org.openbase.bco.device.hass.manager.service
 import org.openbase.bco.dal.lib.layer.service.operation.BlindStateOperationService
 import org.openbase.bco.dal.lib.layer.unit.Unit
 import org.openbase.bco.device.hass.manager.dto.HassStateDto
-import org.openbase.bco.device.hass.manager.dto.service.BlindServiceDto
 import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.jul.exception.NotAvailableException
 import org.openbase.type.domotic.action.ActionDescriptionType.ActionDescription
@@ -44,10 +43,6 @@ class BlindStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
                     else -> HassServiceType.UNKNOWN
                 },
             state = blindState,
-            serviceData = BlindServiceDto(
-                entityId = entityId,
-                position = (blindState.openingRatio * 100).toInt(),
-            )
         )
 
     @Throws(NotAvailableException::class)
@@ -57,11 +52,14 @@ class BlindStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
 fun HassStateDto.toBlindState(): BlindState.Builder {
     return  BlindState.newBuilder().apply {
         value = when (state) {
-            HassStateDto.STATE_OPEN -> BlindState.State.UP
+            HassStateDto.STATE_OPENING,
+            HassStateDto.STATE_CLOSING,
             HassStateDto.STATE_CLOSED -> BlindState.State.DOWN
+            HassStateDto.STATE_STOPPED -> BlindState.State.STOP
+            HassStateDto.STATE_OPEN -> BlindState.State.UP
             else -> BlindState.State.STOP
         }
-        openingRatio = position?.let { it / 100.0 }
-            ?: throw NotAvailableException("Position not available for entity[$entityId].")
+        openingRatio = 1 - (position?.let { it / 100.0 }
+            ?: throw NotAvailableException("Position not available for entity[$entityId]."))
     }
 }

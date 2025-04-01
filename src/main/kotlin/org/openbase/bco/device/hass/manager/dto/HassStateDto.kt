@@ -41,7 +41,7 @@ data class HassStateDto(
 
     val position: Int?
         get() =
-            (attributes["current_position"] as? Int)
+            (attributes["current_position"] as? Double)?.toInt()
 
     companion object {
         const val STATE_ON: String = "on"
@@ -49,5 +49,8 @@ data class HassStateDto(
 
         const val STATE_OPEN = "open"
         const val STATE_CLOSED = "closed"
+        const val STATE_OPENING = "opening"
+        const val STATE_CLOSING = "closing"
+        const val STATE_STOPPED = "stopped"
     }
 }

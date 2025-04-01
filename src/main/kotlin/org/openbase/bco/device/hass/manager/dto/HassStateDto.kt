@@ -39,8 +39,15 @@ data class HassStateDto(
         get() =
             (attributes["brightness"] as? Double)
 
+    val position: Int?
+        get() =
+            (attributes["current_position"] as? Int)
+
     companion object {
         const val STATE_ON: String = "on"
         const val STATE_OFF: String = "off"
+
+        const val STATE_OPEN = "open"
+        const val STATE_CLOSED = "closed"
     }
 }

@@ -24,5 +24,7 @@ fun HassStateDto.toServiceType() : ServiceType = when (type) {
         ServiceType.UNKNOWN
     }
 
+    HassDomainType.COVER -> ServiceType.BLIND_STATE_SERVICE
+
     else -> ServiceType.UNKNOWN
 }

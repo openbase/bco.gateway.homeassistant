@@ -39,9 +39,9 @@ data class HassStateDto(
         get() =
             (attributes["brightness"] as? Double)
 
-    val position: Int?
+    val position: Double?
         get() =
-            (attributes["current_position"] as? Double)?.toInt()
+            (attributes["current_position"] as? Double)
 
     companion object {
         const val STATE_ON: String = "on"

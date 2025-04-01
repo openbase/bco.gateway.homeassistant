@@ -6,7 +6,7 @@ data class BlindServiceDto(
     @SerializedName("entity_id")
     val entityId: String,
     /**
-     * The position of the blind. 0 is closed, 100 is open.
+     * The position of the blind. 0 is open, 100 is closed.
      */
-    val position: Int,
+    val position: Double,
 ) : ServiceDto

@@ -55,6 +55,7 @@ class HassWebsocketConnection(
     private val requestMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock()
     private val connectionStateLock: ReentrantReadWriteLock = ReentrantReadWriteLock()
     private val connectionStateCondition: Condition = connectionStateLock.writeLock().newCondition()
+    private val subscriptionsLock = ReentrantReadWriteLock()
     private val subscriptions: MutableList<WSSubscription> = emptyList<WSSubscription>().toMutableList()
 
 
@@ -72,10 +73,12 @@ class HassWebsocketConnection(
 
                 if (value == ConnectionState.State.CONNECTED) {
                     GlobalCachedExecutorService.execute {
-                        subscriptions.forEach { subscription ->
-                            sendSubscriptionRequest(subscription)
-                                .await()
-                                .also { LOGGER.info("subscribe on: $subscription") }
+                        subscriptionsLock.read {
+                            subscriptions.forEach { subscription ->
+                                sendSubscriptionRequest(subscription)
+                                    .await()
+                                    .also { LOGGER.info("subscribe on: $subscription") }
+                            }
                         }
                     }
                 }
@@ -98,18 +101,20 @@ class HassWebsocketConnection(
     fun subscribe(
         subscription: WSSubscription,
     ) {
-        subscriptions
-            .find { it == subscription}
-            ?.let { LOGGER.error("Already subscribed to ${subscription.commandType}") }
-            ?: subscriptions.add(subscription).also {
-                connectionStateLock.read {
-                    if (connectionState == ConnectionState.State.CONNECTED) {
-                        sendSubscriptionRequest(subscription)
-                            .await()
-                            .also { LOGGER.info("subscribe on: $subscription") }
+        subscriptionsLock.write {
+            subscriptions
+                .find { it == subscription}
+                ?.let { LOGGER.error("Already subscribed to ${subscription.commandType}") }
+                ?: subscriptions.add(subscription).also {
+                    connectionStateLock.read {
+                        if (connectionState == ConnectionState.State.CONNECTED) {
+                            sendSubscriptionRequest(subscription)
+                                .await()
+                                .also { LOGGER.info("subscribe on: $subscription") }
+                        }
                     }
                 }
-            }
+        }
     }
 
     override fun activate() {
@@ -206,7 +211,11 @@ class HassWebsocketConnection(
                 }
                 "event" -> {
                     JsonUtils.gson.fromJson(jsonResult, SubscriptionEvent::class.java).also { result ->
-                        subscriptions.find { it.eventType?.eventTypeName == result.event.eventType }?.eventProcessor?.invoke(result.event)
+                        subscriptionsLock.read {
+                            subscriptions.find { it.eventType?.eventTypeName == result.event.eventType }?.eventProcessor?.invoke(
+                                result.event
+                            )
+                        }
                     }
                     return
                 }

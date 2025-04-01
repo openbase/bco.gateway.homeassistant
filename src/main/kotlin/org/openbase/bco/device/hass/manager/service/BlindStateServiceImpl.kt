@@ -57,7 +57,7 @@ fun HassStateDto.toBlindState(): BlindState.Builder {
             HassStateDto.STATE_CLOSED -> BlindState.State.DOWN
             HassStateDto.STATE_STOPPED -> BlindState.State.STOP
             HassStateDto.STATE_OPEN -> BlindState.State.UP
-            else -> BlindState.State.STOP
+            else -> BlindState.State.UNKNOWN
         }
         openingRatio = 1 - (position?.let { it / 100.0 }
             ?: throw NotAvailableException("Position not available for entity[$entityId]."))

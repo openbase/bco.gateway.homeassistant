@@ -25,6 +25,8 @@ fun HassStateDto.toServiceType() : ServiceType = when (type) {
         ServiceType.UNKNOWN
     }
 
+    HassDomainType.BUTTON -> ServiceType.BUTTON_STATE_SERVICE
+
     HassDomainType.EVENT -> if (isButtonState()) {
         ServiceType.BUTTON_STATE_SERVICE
     } else {

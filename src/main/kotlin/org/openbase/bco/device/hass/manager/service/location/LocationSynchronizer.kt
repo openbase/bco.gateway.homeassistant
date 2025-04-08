@@ -32,8 +32,8 @@ class LocationSynchronizer: Activatable {
         }
     var areaIdToMapping: Map<String, Pair<HassAreaDto, UnitConfig>> = mapOf()
     var tileIdToMapping: Map<String, Pair<HassAreaDto, UnitConfig>> = mapOf()
-    var areas: List<HassAreaDto> = areaToTiles.map { (area, _) -> area }
-    var tiles: List<UnitConfig> = areaToTiles.map { (_, tile) -> tile }
+    val areas: List<HassAreaDto> get() = areaToTiles.map { (area, _) -> area }
+    val tiles: List<UnitConfig> get() = areaToTiles.map { (_, tile) -> tile }
 
     fun findTileByAreaId(areaId: String?) = areaId?.let {areaIdToMapping[areaId]?.let { (area, _) -> area } }
     fun findZoneByFloorId(floorId: String?) = floorId?.let { floorIdToMapping[floorId]?.let { (area, _) -> area } }
@@ -45,8 +45,8 @@ class LocationSynchronizer: Activatable {
         }
     var floorIdToMapping: Map<String, Pair<HassFloorDto, UnitConfig>> = mapOf()
     var zoneIdToMapping: Map<String, Pair<HassFloorDto, UnitConfig>> = mapOf()
-    var floors: List<HassFloorDto> = floorToZones.map { (floor, _) -> floor }
-    var zones: List<UnitConfig> = floorToZones.map { (_, zone) -> zone }
+    val floors: List<HassFloorDto> get() = floorToZones.map { (floor, _) -> floor }
+    val zones: List<UnitConfig> get() = floorToZones.map { (_, zone) -> zone }
 
     override fun activate() {
         active = true
@@ -60,12 +60,12 @@ class LocationSynchronizer: Activatable {
 
             HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.AREA_UPDATE) { event ->
                 LOGGER.info("new area update: $event")
-//                syncAll()
+                syncAll()
             }
 
             HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.FLOOR_UPDATE) { event ->
                 LOGGER.info("new floor update: $event")
-//                syncAll()
+                syncAll()
             }
 
             syncAll()
@@ -102,9 +102,7 @@ class LocationSynchronizer: Activatable {
                 floor to UnitConfig
                     .newBuilder()
                     .setUnitType(UnitType.LOCATION)
-                    .apply {
-                        locationConfigBuilder.locationType = LocationType.ZONE
-                    }
+                    .apply { locationConfigBuilder.locationType = LocationType.ZONE }
                     .setLabel(LabelProcessor.generateLabelBuilder(floor.name))
                     .apply { metaConfigBuilder[ALIAS_KEY_HASS_FLOOR_ID] = floor.id }
                     .build()

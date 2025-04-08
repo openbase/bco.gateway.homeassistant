@@ -15,11 +15,14 @@ class BatteryStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
 fun HassStateDto.toBatteryState(): BatteryState.Builder {
     return BatteryState.newBuilder().apply {
         value = when(state.toInt()) {
-            in 0..20 -> BatteryState.State.CRITICAL
+            in 0..0 -> BatteryState.State.INSUFFICIENT
+            in 1..20 -> BatteryState.State.CRITICAL
             in 21..50 -> BatteryState.State.LOW
             in 51..100 -> BatteryState.State.OK
             else -> BatteryState.State.UNKNOWN
         }
+    }.apply {
+        level = state.toDouble() / 100
     }
 }
 

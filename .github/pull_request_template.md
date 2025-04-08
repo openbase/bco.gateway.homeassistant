@@ -8,7 +8,6 @@ Changes proposed in this pull request:
 * 
 
 ### :test_tube: Test Procedure
-
 * Start bco
 * Start hass device manager
 * Test

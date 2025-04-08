@@ -46,9 +46,7 @@ class TargetTemperatureStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
         )
 
     @Throws(NotAvailableException::class)
-    override fun getTargetTemperatureState(): TemperatureState {
-        return unit.targetTemperatureState
-    }
+    override fun getTargetTemperatureState(): TemperatureState = unit.targetTemperatureState
 }
 
 fun HassStateDto.toTargetTemperatureState(): TemperatureState.Builder {

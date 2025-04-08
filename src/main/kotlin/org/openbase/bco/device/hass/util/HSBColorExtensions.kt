@@ -8,6 +8,6 @@ fun Double.toHassSaturation(): Double = this * 100
 
 fun Double.toBCOSaturation(): Double = this / 100
 
-fun Double.toHassBrightness(): Double = this * 255 + 1
+fun Double.toHassBrightness(): Double = this * 255
 
-fun Double.toBCOBrightness(): Double = (this - 1) / 255
+fun Double.toBCOBrightness(): Double = (this / 255)

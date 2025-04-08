@@ -10,21 +10,16 @@ import org.openbase.bco.device.hass.manager.dto.HassStateDto.Companion.STATE_BUT
 import org.openbase.bco.device.hass.manager.dto.HassStateDto.Companion.STATE_BUTTON_LONG_RELEASE
 import org.openbase.bco.device.hass.manager.dto.HassStateDto.Companion.STATE_BUTTON_REPEAT
 import org.openbase.bco.device.hass.manager.dto.HassStateDto.Companion.STATE_BUTTON_SHORT_RELEASE
-import org.openbase.bco.device.hass.manager.service.ButtonStateService.Companion.EVENT_TYPE
 import org.openbase.type.domotic.state.ButtonStateType.ButtonState
 
 class ButtonStateService<ST>(unit: ST) : HassService<ST>(unit),
  ButtonStateProviderService where ST : ButtonStateProviderService, ST : Unit<*> {
-     companion object {
-         const val EVENT_TYPE = "event_type"
-     }
-
      override fun getButtonState(): ButtonState = unit.buttonState
 }
 
 fun HassStateDto.toButtonState(): ButtonState.Builder {
     return ButtonState.newBuilder().apply {
-        value = when (attributes[EVENT_TYPE]) {
+        value = when (attributes[HassStateAttributes.EVENT_TYPE.id]) {
             STATE_BUTTON_INITIAL_PRESS -> ButtonState.State.PRESSED
             STATE_BUTTON_REPEAT -> ButtonState.State.DOUBLE_PRESSED
             STATE_BUTTON_SHORT_RELEASE -> ButtonState.State.RELEASED

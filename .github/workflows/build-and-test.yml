@@ -1,0 +1,90 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+      - beta
+      - "epic/**"
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  build:
+    name: "Build"
+    timeout-minutes: 10
+
+    if: github.event.pull_request.draft == false
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout Branch"
+        uses: actions/checkout@v4
+
+      - name: "Setup Java"
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+          cache: 'gradle'
+
+      - name: Setup Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('versions.properties') }}-${{ github.sha }}
+
+      - name: "prepare libs for build"
+        run: ./prepare.sh
+
+      - name: "build backend"
+        run: ./gradlew --build-cache build -x test
+
+      - name: Upload build reports
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() || contains(github.event.pull_request.labels.*.name, 'force reports') }}
+        with:
+          name: Build Reports
+          path: "**/build/reports"
+
+  test:
+    name: "Test"
+    timeout-minutes: 120
+
+    if: github.event.pull_request.draft == false
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout Branch"
+        uses: actions/checkout@v4
+
+      - name: "Setup Java"
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+          cache: 'gradle'
+
+      - name: Setup Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('versions.properties') }}-${{ github.sha }}
+
+      - name: "prepare libs for tests"
+        run: ./prepare.sh
+
+      - name: "test backend"
+        run: ./gradlew --build-cache check
+
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() || contains(github.event.pull_request.labels.*.name, 'force reports') }}
+        with:
+          name: Test Reports
+          path: "**/build/reports"

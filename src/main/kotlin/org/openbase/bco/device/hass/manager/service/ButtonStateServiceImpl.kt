@@ -10,6 +10,7 @@ import org.openbase.bco.device.hass.manager.dto.HassStateDto.Companion.STATE_BUT
 import org.openbase.bco.device.hass.manager.dto.HassStateDto.Companion.STATE_BUTTON_LONG_RELEASE
 import org.openbase.bco.device.hass.manager.dto.HassStateDto.Companion.STATE_BUTTON_REPEAT
 import org.openbase.bco.device.hass.manager.dto.HassStateDto.Companion.STATE_BUTTON_SHORT_RELEASE
+import org.openbase.bco.device.hass.manager.dto.deviceClass
 import org.openbase.type.domotic.state.ButtonStateType.ButtonState
 
 class ButtonStateService<ST>(unit: ST) : HassService<ST>(unit),
@@ -31,4 +32,4 @@ fun HassStateDto.toButtonState(): ButtonState.Builder {
 }
 
 fun HassStateDto.isButtonState(): Boolean =
-    attributes[HassStateAttributes.DEVICE_CLASS.id] == HassDeviceClass.BUTTON.id
+    attributes.deviceClass() == HassDeviceClass.BUTTON.id

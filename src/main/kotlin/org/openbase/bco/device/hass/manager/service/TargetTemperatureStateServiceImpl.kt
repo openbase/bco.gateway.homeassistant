@@ -4,6 +4,7 @@ import org.openbase.bco.dal.lib.layer.service.operation.TargetTemperatureStateOp
 import org.openbase.bco.dal.lib.layer.unit.Unit
 import org.openbase.bco.device.hass.manager.dto.HassStateDto
 import org.openbase.bco.device.hass.manager.dto.service.TargetTemperatureStateDto
+import org.openbase.bco.device.hass.manager.dto.temperature
 import org.openbase.bco.device.hass.type.HassServiceType
 import org.openbase.jul.exception.NotAvailableException
 import org.openbase.type.domotic.action.ActionDescriptionType.ActionDescription
@@ -52,10 +53,6 @@ class TargetTemperatureStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
 
 fun HassStateDto.toTargetTemperatureState(): TemperatureState.Builder {
     return  TemperatureState.newBuilder().apply {
-        temperature = state.toDouble()
+        temperature = attributes.temperature()
     }
 }
-
-// TODO:
-// 1. Unit type mapping in unit template registry
-// 2. Register tado temperature controller -> device class registry

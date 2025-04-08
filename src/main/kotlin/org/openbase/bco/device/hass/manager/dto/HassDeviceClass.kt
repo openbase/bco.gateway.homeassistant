@@ -4,4 +4,5 @@ enum class HassDeviceClass(
     val id: String,
 ) {
     MOTION("motion"),
+    BATTERY("battery"),
 }

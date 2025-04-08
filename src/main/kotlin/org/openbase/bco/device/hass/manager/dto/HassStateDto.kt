@@ -43,10 +43,10 @@ data class HassStateDto(
         const val STATE_ON: String = "on"
         const val STATE_OFF: String = "off"
 
-        const val BUTTON_INITIAL_PRESS = "initial_press"
-        const val BUTTON_REPEAT = "repeat"
-        const val BUTTON_SHORT_RELEASE = "short_release"
-        const val BUTTON_LONG_PRESS = "long_press"
-        const val BUTTON_LONG_RELEASE = "long_release"
+        const val STATE_BUTTON_INITIAL_PRESS = "initial_press"
+        const val STATE_BUTTON_REPEAT = "repeat"
+        const val STATE_BUTTON_SHORT_RELEASE = "short_release"
+        const val STATE_BUTTON_LONG_PRESS = "long_press"
+        const val STATE_BUTTON_LONG_RELEASE = "long_release"
     }
 }

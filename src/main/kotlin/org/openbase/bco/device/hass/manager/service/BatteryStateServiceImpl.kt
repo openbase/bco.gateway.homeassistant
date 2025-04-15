@@ -19,4 +19,4 @@ fun HassStateDto.toBatteryState(): BatteryState.Builder {
 }
 
 fun HassStateDto.isBatterySensor(): Boolean =
-    attributes[HassStateAttributes.DEVICE_CLASS.id] == HassDeviceClass.BATTERY.id
+    deviceClass == HassDeviceClass.BATTERY.id

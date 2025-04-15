@@ -50,7 +50,6 @@ import org.openbase.jul.schedule.RecurrenceEventFilter
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.openbase.type.domotic.unit.device.DeviceClassType.DeviceClass
-import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig.LocationType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.collections.filter
@@ -115,7 +114,11 @@ class HassDeviceManager :
                                     }
                             }.map { (hassDevice, deviceClass) -> hassDevice to deviceClass!! }
                             .onEach { (hassDevice, deviceClass) ->
-                                println("found compatible device: $hassDevice served by ${LabelProcessor.getBestMatch(deviceClass.label)}")
+                                LOGGER.debug(
+                                    "found compatible device: {} served by {}",
+                                    hassDevice,
+                                    LabelProcessor.getBestMatch(deviceClass.label)
+                                )
                             }.associateBy { (hassDevice, _) -> hassDevice.id }
 
                     val deviceIdToEntity: Map<String, List<HassEntityDto>> =
@@ -130,6 +133,9 @@ class HassDeviceManager :
                             .getUnitConfigsByUnitType(UnitType.DEVICE)
                             .filter { it.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_DEVICE_ID } }
                             .associateBy { it.metaConfig[ALIAS_KEY_HASS_DEVICE_ID] }
+
+                    val entityIdToDeviceClass: Map<String, String?> =
+                        HassCommunicator.instance.getStates().associate { it.entityId to it.deviceClass }
 
                     val dalUnitConfigs =
                         HassCommunicator.instance
@@ -160,14 +166,15 @@ class HassDeviceManager :
                             }.flatMap { deviceConfig ->
                                 deviceConfig.deviceConfig.unitIdList.map { dalUnitId ->
                                     val unit = Registries.getUnitRegistry().getUnitConfigById(dalUnitId)
-                                    val entityType =
-                                        unit.unitType
-                                            .let { Registries.getTemplateRegistry().getUnitTemplateByType(it) }
-                                            .metaConfig.entryList
-                                            .associate { it.key to it.value!! }[HASS_ENTITY_TYPE]
+                                    val metaConfig = unit.unitType
+                                        .let { Registries.getTemplateRegistry().getUnitTemplateByType(it) }
+                                        .metaConfig
+                                    val entityType = metaConfig[HASS_ENTITY_TYPE]
+                                    val entityDeviceClass = metaConfig[HASS_ENTITY_DEVICE_CLASS]
 
                                     deviceIdToEntity[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]
-                                        ?.find { it.type == entityType }
+                                        ?.filter { entityIdToDeviceClass[it.entityId] == entityDeviceClass }
+                                        ?.find {  it.type == entityType }
                                         ?.let { entity ->
                                             unit
                                                 .toBuilder()
@@ -278,6 +285,7 @@ class HassDeviceManager :
         const val ALIAS_KEY_HASS_DEVICE_ID = "HASS_DEVICE_ID"
         const val HASS_GATEWAY_CLASS_ID = "96dd4c43-92de-48b6-ba16-f9bafefc3c44"
         const val HASS_ENTITY_TYPE = "HASS_ENTITY_TYPE"
+        const val HASS_ENTITY_DEVICE_CLASS = "HASS_ENTITY_DEVICE_CLASS"
         const val ALIAS_KEY_HASS_ENTITY_ID = "HASS_ENTITY_ID"
         const val ALIAS_KEY_HASS_AREA_ID = "HASS_AREA_ID"
 

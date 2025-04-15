@@ -18,6 +18,8 @@ data class HassStateDto(
             entityId.split(".").first().toHassDomainType()
     val name get() = entityId.split(".").last()
 
+    val deviceClass: String? get() = attributes[HassStateAttributes.DEVICE_CLASS.id] as? String
+
     private val hsColor: Pair<Double, Double>?
         get() =
             attributes["hs_color"]

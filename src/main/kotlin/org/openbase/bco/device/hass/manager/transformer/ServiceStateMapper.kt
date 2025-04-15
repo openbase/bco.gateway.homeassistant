@@ -14,6 +14,7 @@ fun HassStateDto.toServiceState(): Message.Builder? = this
             COLOR_STATE_SERVICE -> toColorState()
             MOTION_STATE_SERVICE -> toMotionState()
             TARGET_TEMPERATURE_STATE_SERVICE -> toTargetTemperatureState()
+            USER_TRANSIT_STATE_SERVICE -> toUserTransitState()
             else -> null
         }
     }

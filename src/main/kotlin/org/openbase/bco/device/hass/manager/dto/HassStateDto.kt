@@ -42,5 +42,8 @@ data class HassStateDto(
     companion object {
         const val STATE_ON: String = "on"
         const val STATE_OFF: String = "off"
+
+        const val STATE_HOME: String = "home"
+        const val STATE_AWAY: String = "not_home"
     }
 }

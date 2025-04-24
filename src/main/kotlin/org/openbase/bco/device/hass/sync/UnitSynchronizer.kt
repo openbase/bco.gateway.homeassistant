@@ -75,7 +75,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     override fun activate() {
         GlobalScope.launch {
             activationMutex.withLock {
-                if (isActive) return@withLock
+                if (this@UnitSynchronizer.isActive) return@withLock
 
                 CoroutineScope(SupervisorJob() + Dispatchers.IO)
                     .also { coroutineScope = it }

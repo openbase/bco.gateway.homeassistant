@@ -3,9 +3,11 @@ package org.openbase.bco.device.hass.sync.strategy
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
+import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_BCO_ICON
 import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_FLOOR_ID
 import org.openbase.bco.device.hass.manager.dto.HassFloorDto
 import org.openbase.bco.device.hass.manager.dto.HassFloorInputDto
+import org.openbase.bco.device.hass.util.get
 import org.openbase.bco.device.hass.util.set
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.unit.lib.UnitRegistry
@@ -34,9 +36,12 @@ class ZoneSyncStrategy(
             .apply { metaConfigBuilder[ALIAS_KEY_HASS_FLOOR_ID] = hassDto.id }
             .build()
 
-    override fun buildHassInputDto(unitConfig: UnitConfig): HassFloorInputDto {
-        TODO("Not yet implemented")
-    }
+    override fun buildHassInputDto(unitConfig: UnitConfig): HassFloorInputDto = HassFloorInputDto(
+        id = unitConfig.metaConfig[ALIAS_KEY_HASS_FLOOR_ID],
+        name = LabelProcessor.getBestMatch(unitConfig.label),
+        icon = unitConfig.metaConfig[ALIAS_KEY_BCO_ICON],
+        aliases = unitConfig.label.entryList.flatMap { it.valueList },
+    )
 
     override fun saveHassDtos(dtos: List<HassFloorInputDto>): List<HassFloorDto> =
         hassCommunicator.saveFloors(dtos)

@@ -24,13 +24,15 @@ data class HassFloorDto(
     val name: String,
     val icon: String,
     val aliases: List<String>,
+    val level: String,
 ): HassDto, Mergeable<HassFloorInputDto, HassFloorDto>, InputDtoProvider<HassFloorInputDto> {
 
     override fun merge(input: HassFloorInputDto): HassFloorDto = copy(
-        id = input.id?: id,
-        name = input.name?: name,
-        icon = input.icon?: icon,
-        aliases = input.aliases?: aliases,
+        id = input.id ?: id,
+        name = input.name ?: name,
+        icon = input.icon ?: icon,
+        aliases = input.aliases ?: aliases,
+        level = input.level ?: level,
     )
 
     override fun toInputDto(): HassFloorInputDto = HassFloorInputDto(
@@ -38,5 +40,6 @@ data class HassFloorDto(
         name = name,
         icon = icon,
         aliases = aliases,
+        level = level,
     )
 }

@@ -289,6 +289,8 @@ class HassDeviceManager :
         const val ALIAS_KEY_HASS_ENTITY_ID = "HASS_ENTITY_ID"
         const val ALIAS_KEY_HASS_AREA_ID = "HASS_AREA_ID"
 
+        const val ALIAS_KEY_BCO_ICON = "ICON"
+
         private val LOGGER: Logger = LoggerFactory.getLogger(HassDeviceManager::class.java)
     }
 }

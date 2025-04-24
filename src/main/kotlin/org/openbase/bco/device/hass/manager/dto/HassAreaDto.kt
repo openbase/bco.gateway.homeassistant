@@ -23,7 +23,9 @@ data class HassAreaDto(
     @SerializedName("floor_id")
     val floorId: String,
 
-    val icon: String,
+    val icon: String?,
+
+    val picture: String?,
 
     /**
      * Labels are mainly tags where one can cluster different areas together.
@@ -36,12 +38,12 @@ data class HassAreaDto(
 ): HassDto, Mergeable<HassAreaInputDto, HassAreaDto>, InputDtoProvider<HassAreaInputDto> {
 
     override fun merge(input: HassAreaInputDto): HassAreaDto = copy(
-        id = input.id?: id,
-        name = input.name?: name,
-        floorId = input.floorId?: floorId,
-        icon = input.icon?: icon,
-        labels = input.labels?: labels,
-        aliases = input.aliases?: aliases,
+        id = input.id ?: id,
+        name = input.name ?: name,
+        floorId = input.floorId ?: floorId,
+        icon = input.icon ?: icon,
+        labels = input.labels ?: labels,
+        aliases = input.aliases ?: aliases,
     )
 
     override fun toInputDto(): HassAreaInputDto = HassAreaInputDto(
@@ -51,5 +53,6 @@ data class HassAreaDto(
         icon = icon,
         labels = labels,
         aliases = aliases,
+        picture = picture
     )
 }

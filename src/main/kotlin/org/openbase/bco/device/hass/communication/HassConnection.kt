@@ -385,11 +385,9 @@ abstract class HassConnection : Shutdownable, TokenProvider {
         Registries.getClassRegistry().gatewayClasses.find { contains(it.label, HASS_GATEWAY_CLASS_LABEL) }
 
 
-    fun subscribe(
-        subscription: WSSubscription,
-    ) = webSocketConnection.subscribe(subscription)
+    fun subscribe(subscription: WSSubscription) = webSocketConnection.subscribe(subscription)
 
-    fun unsubscribe(subscription: WSSubscription) { TODO() }
+    fun unsubscribe(subscription: WSSubscription) = webSocketConnection.unsubscribe(subscription)
 
     companion object {
 

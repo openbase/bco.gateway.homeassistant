@@ -126,16 +126,19 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
         strategy.queryHassDtos()
             .map { hassDto -> hassDto to hassDto.toUnitConfig() }
             .map { (hassDto, unitConfig) ->
-                cache.getUnitIdByDtoId(hassDto.id)
-                    .tryOrNull { unitRegistry.getUnitConfigById(it) }
-                    ?.toBuilder()
-                    ?.mergeFromWithoutRepeatedFields(unitConfig)
-                    ?.build()
-                    ?: unitConfig
+                hassDto to (
+                        cache.getUnitIdByDtoId(hassDto.id)
+                        .tryOrNull { unitRegistry.getUnitConfigById(it) }
+                        ?.toBuilder()
+                        ?.mergeFromWithoutRepeatedFields(unitConfig)
+                        ?.build()
+                        ?: unitConfig
+                )
             }
-            // todo: do only on change!
-            // todo: fill cache
-            .map { unitConfig -> unitRegistry.saveUnitConfig(unitConfig) }
+            .filter { (_, unitConfig) -> unitConfig != cache.getUnitConfigById(unitConfig.id) }
+            .mapSecond { unitConfig -> unitRegistry.saveUnitConfig(unitConfig) }
+            .mapSecond { future -> future.get() }
+            .let { cache.putAll(it) }
     }
 
     private fun syncBCOtoHass() {

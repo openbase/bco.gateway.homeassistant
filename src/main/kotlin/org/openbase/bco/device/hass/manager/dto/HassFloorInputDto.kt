@@ -8,5 +8,5 @@ data class HassFloorInputDto(
     val name: String? = null,
     val icon: String? = null,
     val aliases: List<String>? = null,
-    val level: String? = null,
+    val level: Int? = null,
 ): HassInputDto

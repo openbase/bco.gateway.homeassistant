@@ -24,7 +24,7 @@ data class HassFloorDto(
     val name: String,
     val icon: String,
     val aliases: List<String>,
-    val level: String,
+    val level: Int,
 ): HassDto, Mergeable<HassFloorInputDto, HassFloorDto>, InputDtoProvider<HassFloorInputDto> {
 
     override fun merge(input: HassFloorInputDto): HassFloorDto = copy(

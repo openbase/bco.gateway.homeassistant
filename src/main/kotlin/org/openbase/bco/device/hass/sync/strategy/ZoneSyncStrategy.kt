@@ -41,6 +41,7 @@ class ZoneSyncStrategy(
         name = LabelProcessor.getBestMatch(unitConfig.label),
         icon = unitConfig.metaConfig[ALIAS_KEY_BCO_ICON],
         aliases = unitConfig.label.entryList.flatMap { it.valueList },
+        level = 0,
     )
 
     override fun saveHassDtos(dtos: List<HassFloorInputDto>): List<HassFloorDto> =

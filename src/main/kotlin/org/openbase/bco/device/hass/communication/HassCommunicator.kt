@@ -99,10 +99,7 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.map { gson.fromJson(it, HassAreaDto::class.java) }
             .orEmpty()
 
-    fun saveAreas(areas: List<HassAreaInputDto>): List<HassAreaDto> =
-        areas.map { saveArea(it) }
-
-    private fun saveArea(area: HassAreaInputDto): HassAreaDto =
+    fun saveArea(area: HassAreaInputDto): HassAreaDto =
         (area.id?.let {
             UPDATE_AREA_WS_REQUEST
         } ?: CREATE_AREA_WS_REQUEST).let { wsCommand ->
@@ -132,10 +129,7 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.map { gson.fromJson(it, HassFloorDto::class.java) }
             .orEmpty()
 
-    fun saveFloors(floors: List<HassFloorInputDto>): List<HassFloorDto> =
-        floors.map { saveFloor(it) }
-
-    private fun saveFloor(floor: HassFloorInputDto): HassFloorDto =
+    fun saveFloor(floor: HassFloorInputDto): HassFloorDto =
         (floor.id?.let {
             UPDATE_FLOOR_WS_REQUEST
         } ?: CREATE_FLOOR_WS_REQUEST).let { wsCommand ->

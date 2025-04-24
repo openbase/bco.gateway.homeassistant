@@ -44,8 +44,8 @@ class ZoneSyncStrategy(
         level = 0,
     )
 
-    override fun saveHassDtos(dtos: List<HassFloorInputDto>): List<HassFloorDto> =
-        hassCommunicator.saveFloors(dtos)
+    override fun saveHassDto(dto: HassFloorInputDto): HassFloorDto =
+        hassCommunicator.saveFloor(dto)
 
     override fun queryHassDtos(): List<HassFloorDto> =
         hassCommunicator.getFloors()

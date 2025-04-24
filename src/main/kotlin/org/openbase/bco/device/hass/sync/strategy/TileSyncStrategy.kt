@@ -44,8 +44,8 @@ class TileSyncStrategy(
         aliases = unitConfig.label.entryList.flatMap { it.valueList },
     )
 
-    override fun saveHassDtos(dtos: List<HassAreaInputDto>): List<HassAreaDto> =
-        hassCommunicator.saveAreas(dtos)
+    override fun saveHassDto(dtos: HassAreaInputDto): HassAreaDto =
+        hassCommunicator.saveArea(dtos)
 
     override fun queryHassDtos(): List<HassAreaDto> =
         HassCommunicator.instance

@@ -14,7 +14,7 @@ interface UnitSyncStrategy<HASS_DTO: HassDto, HASS_INPUT_DTO: HassInputDto> {
     fun buildUnitConfig(hassDto: HASS_DTO): UnitConfig
     fun buildHassInputDto(unitConfig: UnitConfig): HASS_INPUT_DTO
 
-    fun saveHassDtos(dtos: List<HASS_INPUT_DTO>): List<HASS_DTO>
+    fun saveHassDto(dto: HASS_INPUT_DTO): HASS_DTO
 
     fun queryHassDtos(): List<HASS_DTO>
 

@@ -25,11 +25,12 @@ import org.openbase.bco.device.hass.action.ServiceActionExecutor
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.device.hass.manager.cache.HassIdToUnitControllerCache
-import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
-import org.openbase.bco.device.hass.manager.dto.HassEntityDto
-import org.openbase.bco.device.hass.manager.dto.HassStateDto
-import org.openbase.bco.device.hass.manager.service.location.LocationSynchronizer
+import org.openbase.bco.device.hass.manager.dto.*
 import org.openbase.bco.device.hass.manager.unit.HassGatewayControllerFactory
+import org.openbase.bco.device.hass.sync.DtoCache
+import org.openbase.bco.device.hass.sync.UnitSynchronizer
+import org.openbase.bco.device.hass.sync.strategy.TileSyncStrategy
+import org.openbase.bco.device.hass.sync.strategy.ZoneSyncStrategy
 import org.openbase.bco.device.hass.util.await
 import org.openbase.bco.device.hass.util.get
 import org.openbase.bco.device.hass.util.isNotNull
@@ -52,7 +53,6 @@ import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.openbase.type.domotic.unit.device.DeviceClassType.DeviceClass
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.collections.filter
 
 class HassDeviceManager :
     DeviceManagerImpl(HassGatewayControllerFactory(), false),
@@ -73,7 +73,13 @@ class HassDeviceManager :
 
     private var supportedEntities = listOf<HassEntityDto>()
 
-    private val locationSynchronizer = LocationSynchronizer()
+    private val tileAreaCache: DtoCache<HassAreaDto> = DtoCache()
+    private val zoneFloorCache: DtoCache<HassFloorDto> = DtoCache()
+
+    private val synchronizer = listOf (
+        UnitSynchronizer(strategy = TileSyncStrategy(), cache = tileAreaCache),
+        UnitSynchronizer(strategy = ZoneSyncStrategy(), cache = zoneFloorCache),
+    )
 
     init {
         // the sync observer triggers a lot when the device manager is initially activated and all unit controllers are created
@@ -152,7 +158,7 @@ class HassDeviceManager :
                                     }.setLabel(LabelProcessor.generateLabelBuilder(device.name))
                                     .apply { metaConfigBuilder[ALIAS_KEY_HASS_DEVICE_ID] = device.id }
                                     .apply {
-                                        locationSynchronizer.findTileByAreaId(device.areaId)
+                                        tileAreaCache.getUnitConfigByDtoId(device.areaId)
                                             ?.let { unitLocation ->
                                                 placementConfigBuilder.locationId = unitLocation.id
                                             }
@@ -183,8 +189,7 @@ class HassDeviceManager :
                                                     addAlias(entity.entityId)
                                                     metaConfigBuilder[ALIAS_KEY_HASS_ENTITY_ID] = entity.entityId
                                                     // add location to unit
-//                                                    locationSynchronizer.find(areaId) -.
-                                                    locationSynchronizer.findTileByAreaId(entity.areaId)
+                                                    tileAreaCache.getUnitConfigByDtoId(entity.areaId)
                                                         ?.let { unitLocation ->
                                                             placementConfigBuilder.locationId = unitLocation.id
                                                         }
@@ -246,7 +251,7 @@ class HassDeviceManager :
         LOGGER.info("Login to bco...")
         BCOLogin.getSession().loginBCOUser()
 
-        locationSynchronizer.activate()
+        synchronizer.map { it.activate() }
 
         super.activate()
 
@@ -275,7 +280,7 @@ class HassDeviceManager :
     @Throws(CouldNotPerformException::class, InterruptedException::class)
     override fun deactivate() {
         unitControllerRegistry.removeObserver(synchronizationObserver)
-        locationSynchronizer.deactivate()
+        synchronizer.map { deactivate() }
         super.deactivate()
     }
 

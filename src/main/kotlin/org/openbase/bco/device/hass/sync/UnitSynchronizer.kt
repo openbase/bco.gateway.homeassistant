@@ -12,6 +12,8 @@ import org.openbase.bco.device.hass.manager.dto.HassInputDto
 import org.openbase.bco.device.hass.sync.strategy.UnitSyncStrategy
 import org.openbase.bco.device.hass.type.InputDtoProvider
 import org.openbase.bco.device.hass.util.Mergeable
+import org.openbase.bco.device.hass.util.isNotNull
+import org.openbase.bco.device.hass.util.mapSecond
 import org.openbase.bco.device.hass.util.saveUnitConfig
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.unit.lib.UnitRegistry
@@ -24,6 +26,7 @@ import org.slf4j.LoggerFactory
 
 class UnitSynchronizer<HASS_DTO, HASS_INPUT_DTO : HassInputDto>(
     val strategy: UnitSyncStrategy<HASS_DTO, HASS_INPUT_DTO>,
+    val cache: DtoCache<HASS_DTO> = DtoCache(),
     val hassCommunicator: HassCommunicator = HassCommunicator.instance,
     val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ) : Activatable where
@@ -36,9 +39,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     private val activationMutex = Mutex()
     private var observer = listOf<AutoCloseable>()
 
-    val dtoCache = mutableMapOf<String, HASS_DTO>()
-    var unitIdToDtoCache: Map<String, HASS_DTO> = emptyMap()
-    var dtoIdToUnitIdCache: Map<String, String> = emptyMap()
+
 
     private val bcoToHassSyncTrigger = MutableSharedFlow<kotlin.Unit>(
         replay = 0,
@@ -52,6 +53,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
+    @OptIn(FlowPreview::class)
     private fun initTrigger(scope: CoroutineScope) {
         scope.launch {
             bcoToHassSyncTrigger
@@ -124,7 +126,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
         strategy.queryHassDtos()
             .map { hassDto -> hassDto to hassDto.toUnitConfig() }
             .map { (hassDto, unitConfig) ->
-                dtoIdToUnitIdCache[hassDto.id]
+                cache.getUnitIdByDtoId(hassDto.id)
                     .tryOrNull { unitRegistry.getUnitConfigById(it) }
                     ?.toBuilder()
                     ?.mergeFromWithoutRepeatedFields(unitConfig)
@@ -132,6 +134,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                     ?: unitConfig
             }
             // todo: do only on change!
+            // todo: fill cache
             .map { unitConfig -> unitRegistry.saveUnitConfig(unitConfig) }
     }
 
@@ -140,11 +143,13 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
             .getUnitConfigsByUnitType(strategy.unitType)
             .filter(strategy.unitFilter)
             .map { unitConfig -> unitConfig to unitConfig.toHassInputDto() }
-            .mapNotNull { (unitConfig, input) -> unitIdToDtoCache[unitConfig.id]?.merge(input) }
-            .filter { hassDto -> hassDto != dtoCache[hassDto.id] }
-            .map { it.toInputDto() }
-            .let { strategy.saveHassDtos(it) }
-            .let { dtoCache.putAll(it.associateBy { it.id }) }
+            .map { (unitConfig, inputDto) -> unitConfig to cache.getDtoByUnitId(unitConfig.id)?.merge(inputDto) }
+            .filter { (_, hassDto) -> hassDto.isNotNull() }
+            .mapSecond { inputDto -> inputDto!!}
+            .filter { (_, hassDto) -> hassDto != cache.getDtoById(hassDto.id) }
+            .mapSecond { hassDto -> hassDto.toInputDto() }
+            .mapSecond { inputDto -> strategy.saveHassDto(inputDto) }
+            .let { cache.putAll(it) }
     }
 
     private fun HASS_DTO.toUnitConfig(): UnitConfig = strategy.buildUnitConfig(this)

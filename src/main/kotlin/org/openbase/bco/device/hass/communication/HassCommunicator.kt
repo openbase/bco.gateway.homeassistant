@@ -4,14 +4,9 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
-import org.openbase.bco.device.hass.manager.dto.HassEntityDto
 import org.openbase.bco.device.hass.communication.websocket.WSSubscription
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
-import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
-import org.openbase.bco.device.hass.manager.dto.HassAreaDto
-import org.openbase.bco.device.hass.manager.dto.HassFloorDto
-import org.openbase.bco.device.hass.manager.dto.HassServiceDto
-import org.openbase.bco.device.hass.manager.dto.HassStateDto
+import org.openbase.bco.device.hass.manager.dto.*
 import org.openbase.bco.device.hass.util.await
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InitializationException
@@ -21,7 +16,6 @@ import org.openbase.jul.iface.Shutdownable
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
-import kotlin.collections.orEmpty
 
 class HassCommunicator private constructor() : HassConnection() {
 
@@ -108,6 +102,8 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.map { gson.fromJson(it, HassAreaDto::class.java) }
             .orEmpty()
 
+    fun saveAreas(areas: List<HassAreaInputDto>): List<HassAreaDto> = TODO()
+
     // ==========================================================================================================================================
     // Floors
     // ==========================================================================================================================================
@@ -116,6 +112,7 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.asJsonArray
             ?.map { gson.fromJson(it, HassFloorDto::class.java) }
             .orEmpty()
+    fun saveFloors(floors: List<HassFloorInputDto>): List<HassFloorDto> = TODO()
 
     @Throws(CouldNotPerformException::class)
     override fun testConnection() {

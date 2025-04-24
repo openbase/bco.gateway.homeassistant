@@ -8,18 +8,17 @@ import okhttp3.Request
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
-import org.openbase.bco.device.hass.jp.JPHassHost
-import org.openbase.bco.device.hass.jp.JpHassPort
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.HassCommunicator.HassEventType
 import org.openbase.bco.device.hass.communication.TokenProvider
 import org.openbase.bco.device.hass.communication.websocket.command.CommandResult
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
-import org.openbase.bco.device.hass.type.HassDomainType
-import org.openbase.bco.device.hass.util.toRequest
+import org.openbase.bco.device.hass.jp.JPHassHost
+import org.openbase.bco.device.hass.jp.JpHassPort
 import org.openbase.bco.device.hass.util.JsonUtils
 import org.openbase.bco.device.hass.util.await
 import org.openbase.bco.device.hass.util.isNull
+import org.openbase.bco.device.hass.util.toRequest
 import org.openbase.jps.core.JPService
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.iface.Activatable
@@ -30,7 +29,6 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
-import kotlin.concurrent.withLock
 import kotlin.concurrent.write
 
 data class WSSubscription (
@@ -57,7 +55,6 @@ class HassWebsocketConnection(
     private val connectionStateCondition: Condition = connectionStateLock.writeLock().newCondition()
     private val subscriptionsLock = ReentrantReadWriteLock()
     private val subscriptions: MutableList<WSSubscription> = emptyList<WSSubscription>().toMutableList()
-
 
     @Volatile
     var connectionState: ConnectionState.State = ConnectionState.State.UNKNOWN

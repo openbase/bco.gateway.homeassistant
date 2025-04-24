@@ -54,5 +54,11 @@ data class HassStateDto(
         const val STATE_OPENING = "opening"
         const val STATE_CLOSING = "closing"
         const val STATE_STOPPED = "stopped"
+
+        const val STATE_BUTTON_INITIAL_PRESS = "initial_press"
+        const val STATE_BUTTON_REPEAT = "repeat"
+        const val STATE_BUTTON_SHORT_RELEASE = "short_release"
+        const val STATE_BUTTON_LONG_PRESS = "long_press"
+        const val STATE_BUTTON_LONG_RELEASE = "long_release"
     }
 }

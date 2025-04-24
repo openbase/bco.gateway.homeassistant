@@ -13,6 +13,7 @@ class DtoCache<HASS_DTO: HassDto> {
     fun getDtoById(dtoId: String) = dtoCache[dtoId]
     fun getUnitIdByDtoId(dtoId: String) = dtoIdToUnitIdCache[dtoId]
 
+    fun putAll(dtos: List<Pair<HASS_DTO, UnitConfig>>) = putAll(dtos.map { (unitConfig, dto) -> dto to unitConfig })
     fun putAll(dtos: List<Pair<UnitConfig, HASS_DTO>>) = dtos.forEach { (unitConfig, dto) ->
         dtoCache[dto.id] = dto
         unitIdToDtoCache[unitConfig.id] = dto
@@ -22,4 +23,6 @@ class DtoCache<HASS_DTO: HassDto> {
     fun getUnitConfigByDtoId(dtoId: String?): UnitConfig? =
         dtoIdToUnitIdCache[dtoId]
             ?.let { unitId -> unitConfigCache[unitId] }
+
+    fun getUnitConfigById(unitId: String): UnitConfig? = unitConfigCache[unitId]
 }

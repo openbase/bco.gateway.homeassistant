@@ -9,6 +9,7 @@ enum class HassDeviceClass(
     ATMOSPHERIC_PRESSURE("atmospheric_pressure"),
     AWNING("awning"),
     BATTERY("battery"),
+    BUTTON("button"),
     BATTERY_CHARGING("battery_charging"),
     BLOOD_GLUCOSE_CONCENTRATION("blood_glucose_concentration"),
     BLIND("blind"),

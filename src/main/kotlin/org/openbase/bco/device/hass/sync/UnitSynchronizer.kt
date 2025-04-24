@@ -135,6 +135,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
             .filter { (_, unitConfig) -> unitConfig != cache.getUnitConfigById(unitConfig.id) }
             .mapSecond { unitConfig -> unitRegistry.saveUnitConfig(unitConfig) }
             .mapSecond { future -> future.get() }
+            .map { (unitConfig, dto) -> dto to unitConfig }
             .let { cache.putAll(it) }
     }
 

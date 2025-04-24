@@ -44,5 +44,11 @@ data class HassStateDto(
     companion object {
         const val STATE_ON: String = "on"
         const val STATE_OFF: String = "off"
+
+        const val STATE_BUTTON_INITIAL_PRESS = "initial_press"
+        const val STATE_BUTTON_REPEAT = "repeat"
+        const val STATE_BUTTON_SHORT_RELEASE = "short_release"
+        const val STATE_BUTTON_LONG_PRESS = "long_press"
+        const val STATE_BUTTON_LONG_RELEASE = "long_release"
     }
 }

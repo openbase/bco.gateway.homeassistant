@@ -39,8 +39,6 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     private val activationMutex = Mutex()
     private var observer = listOf<AutoCloseable>()
 
-
-
     private val bcoToHassSyncTrigger = MutableSharedFlow<kotlin.Unit>(
         replay = 0,
         extraBufferCapacity = 1,
@@ -80,7 +78,6 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                 CoroutineScope(SupervisorJob() + Dispatchers.IO)
                     .also { coroutineScope = it }
                     .let { initTrigger(it) }
-
 
                 if (!hassCommunicator.isConnected) {
                     LOGGER.info("Waiting for hass connection...")

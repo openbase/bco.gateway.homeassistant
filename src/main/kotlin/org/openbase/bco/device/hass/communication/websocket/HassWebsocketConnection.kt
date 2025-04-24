@@ -114,6 +114,16 @@ class HassWebsocketConnection(
         }
     }
 
+    fun unsubscribe(
+        subscription: WSSubscription,
+    ) {
+        subscriptionsLock.write {
+            subscriptions
+                .find { it == subscription}
+                ?.let { subscriptions.remove(it) }
+        }
+    }
+
     override fun activate() {
         active = true
         val request = Request.Builder()

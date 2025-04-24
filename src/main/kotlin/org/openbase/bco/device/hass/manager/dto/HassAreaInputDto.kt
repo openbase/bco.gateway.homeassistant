@@ -1,5 +1,7 @@
 package org.openbase.bco.device.hass.manager.dto
 
+import com.google.gson.annotations.SerializedName
+
 /**
  * The original area entity looks like:
  * "aliases": [],
@@ -13,17 +15,20 @@ package org.openbase.bco.device.hass.manager.dto
  * "modified_at": 1723284728.415601
  */
 data class HassAreaInputDto(
+    @SerializedName("area_id")
     val id: String?,
     val name: String?,
+    @SerializedName("floor_id")
     val floorId: String?,
     val icon: String?,
+    val picture: String?,
 
     /**
      * Labels are mainly tags where one can cluster different areas together.
      */
     val labels: List<String>?,
     /**
-     * Mainly other labels that are assosiated with the area.
+     * Mainly other labels that are associated with the area.
      */
     val aliases: List<String>?,
 ): HassInputDto

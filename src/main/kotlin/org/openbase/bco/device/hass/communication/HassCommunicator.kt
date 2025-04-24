@@ -1,9 +1,6 @@
 package org.openbase.bco.device.hass.communication
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonElement
-import com.google.gson.JsonParser
-import com.google.gson.JsonSyntaxException
+import com.google.gson.*
 import org.openbase.bco.device.hass.communication.websocket.WSSubscription
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.device.hass.manager.dto.*
@@ -102,7 +99,29 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.map { gson.fromJson(it, HassAreaDto::class.java) }
             .orEmpty()
 
-    fun saveAreas(areas: List<HassAreaInputDto>): List<HassAreaDto> = TODO()
+    fun saveAreas(areas: List<HassAreaInputDto>): List<HassAreaDto> =
+        areas.map { saveArea(it) }
+
+    private fun saveArea(area: HassAreaInputDto): HassAreaDto =
+        (area.id?.let {
+            UPDATE_AREA_WS_REQUEST
+        } ?: CREATE_AREA_WS_REQUEST).let { wsCommand ->
+            sendWSCommand(wsCommand, gson.toJsonTree(area).asJsonObject).await()
+                ?.asJsonObject
+                ?.let { gson.fromJson(it, HassAreaDto::class.java) }
+                ?: throw CouldNotPerformException("Could not save area[$area]")
+        }
+
+    fun deleteArea(areaId: String): HassAreaDto =
+        sendWSCommand(
+            DELETE_AREA_WS_REQUEST,
+            JsonObject().apply {
+                addProperty("area_id", areaId)
+            }
+        ).await()
+            ?.asJsonObject
+            ?.let { gson.fromJson(it, HassAreaDto::class.java) }
+            ?: throw CouldNotPerformException("Could not delete area[$areaId]")
 
     // ==========================================================================================================================================
     // Floors
@@ -112,7 +131,30 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.asJsonArray
             ?.map { gson.fromJson(it, HassFloorDto::class.java) }
             .orEmpty()
-    fun saveFloors(floors: List<HassFloorInputDto>): List<HassFloorDto> = TODO()
+
+    fun saveFloors(floors: List<HassFloorInputDto>): List<HassFloorDto> =
+        floors.map { saveFloor(it) }
+
+    private fun saveFloor(floor: HassFloorInputDto): HassFloorDto =
+        (floor.id?.let {
+            UPDATE_FLOOR_WS_REQUEST
+        } ?: CREATE_FLOOR_WS_REQUEST).let { wsCommand ->
+            sendWSCommand(wsCommand, gson.toJsonTree(floor).asJsonObject).await()
+                ?.asJsonObject
+                ?.let { gson.fromJson(it, HassFloorDto::class.java) }
+                ?: throw CouldNotPerformException("Could not save floor[$floor]")
+        }
+
+    fun deleteFloor(floorId: String): HassFloorDto =
+        sendWSCommand(
+            DELETE_FLOOR_WS_REQUEST,
+            JsonObject().apply {
+                addProperty("floor_id", floorId)
+            }
+        ).await()
+            ?.asJsonObject
+            ?.let { gson.fromJson(it, HassFloorDto::class.java) }
+            ?: throw CouldNotPerformException("Could not delete area[$floorId]")
 
     @Throws(CouldNotPerformException::class)
     override fun testConnection() {
@@ -181,6 +223,13 @@ class HassCommunicator private constructor() : HassConnection() {
         const val FLOOR_WS_REQUEST: String = "config/floor_registry/list"
         const val ENTITIES_WS_REQUEST: String = "config/entity_registry/list"
         const val CALL_SERVICE_WS_REQUEST = "call_service"
+
+        const val CREATE_AREA_WS_REQUEST = "config/area_registry/create"
+        const val UPDATE_AREA_WS_REQUEST = "config/area_registry/update"
+        const val DELETE_AREA_WS_REQUEST = "config/area_registry/delete"
+        const val CREATE_FLOOR_WS_REQUEST = "config/floor_registry/create"
+        const val UPDATE_FLOOR_WS_REQUEST = "config/floor_registry/update"
+        const val DELETE_FLOOR_WS_REQUEST = "config/floor_registry/delete"
 
         private val LOGGER: Logger = LoggerFactory.getLogger(HassCommunicator::class.java)
 

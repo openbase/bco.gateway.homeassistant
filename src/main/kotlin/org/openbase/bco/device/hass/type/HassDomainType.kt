@@ -44,6 +44,7 @@ enum class HassDomainType(
     HUMIDITY("humidity"),
     VOLUME("volume"),
     UNKNOWN("unknown"),
+    EVENT("event"),
     ;
 
     companion object {

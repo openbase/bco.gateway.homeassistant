@@ -11,10 +11,7 @@ import org.openbase.bco.device.hass.manager.dto.HassDto
 import org.openbase.bco.device.hass.manager.dto.HassInputDto
 import org.openbase.bco.device.hass.sync.strategy.UnitSyncStrategy
 import org.openbase.bco.device.hass.type.InputDtoProvider
-import org.openbase.bco.device.hass.util.Mergeable
-import org.openbase.bco.device.hass.util.isNotNull
-import org.openbase.bco.device.hass.util.mapSecond
-import org.openbase.bco.device.hass.util.saveUnitConfig
+import org.openbase.bco.device.hass.util.*
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.unit.lib.UnitRegistry
 import org.openbase.jul.exception.tryOrNull
@@ -114,6 +111,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     private fun syncAll() {
         syncHassToBCO()
         syncBCOtoHass()
+        cache.confirmInit()
     }
 
     private fun triggerHassToBCOSync() = hassToBCOSyncTrigger.tryEmit(Unit)
@@ -133,8 +131,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                 )
             }
             .filter { (_, unitConfig) -> unitConfig != cache.getUnitConfigById(unitConfig.id) }
-            .mapSecond { unitConfig -> unitRegistry.saveUnitConfig(unitConfig) }
-            .mapSecond { future -> future.get() }
+            .mapSecond { unitConfig -> unitRegistry.saveUnitConfig(unitConfig).await() }
             .map { (unitConfig, dto) -> dto to unitConfig }
             .let { cache.putAll(it) }
     }

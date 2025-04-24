@@ -22,7 +22,7 @@ data class HassFloorDto(
     @SerializedName("floor_id")
     override val id: String,
     val name: String,
-    val icon: String,
+    val icon: String? = null,
     val aliases: List<String>,
     val level: Int,
 ): HassDto, Mergeable<HassFloorInputDto, HassFloorDto>, InputDtoProvider<HassFloorInputDto> {

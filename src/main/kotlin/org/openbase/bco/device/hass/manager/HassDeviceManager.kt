@@ -98,6 +98,10 @@ class HassDeviceManager :
                         return
                     }
 
+                    // wait for caches to be loaded
+                    tileAreaCache.waitUntilReady()
+                    zoneFloorCache.waitUntilReady()
+
                     val notIdentifiedDevices = mutableListOf<HassDeviceDto>()
                     val deviceClasses = Registries.getClassRegistry(true).deviceClasses
                     val deviceClassMapping: Map<String, Pair<HassDeviceDto, DeviceClass>> =

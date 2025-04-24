@@ -3,6 +3,7 @@ package org.openbase.bco.device.hass.manager.transformer
 import org.openbase.bco.device.hass.manager.dto.HassStateDto
 import org.openbase.bco.device.hass.manager.service.isBatterySensor
 import org.openbase.bco.device.hass.manager.service.isBrightnessState
+import org.openbase.bco.device.hass.manager.service.isButtonState
 import org.openbase.bco.device.hass.manager.service.isColorableLight
 import org.openbase.bco.device.hass.manager.service.isMotionSensor
 import org.openbase.bco.device.hass.type.HassDomainType
@@ -27,6 +28,14 @@ fun HassStateDto.toServiceType() : ServiceType = when (type) {
 
     HassDomainType.BINARY_SENSOR -> if (isMotionSensor()) {
         ServiceType.MOTION_STATE_SERVICE
+    } else {
+        ServiceType.UNKNOWN
+    }
+
+    HassDomainType.BUTTON -> ServiceType.BUTTON_STATE_SERVICE
+
+    HassDomainType.EVENT -> if (isButtonState()) {
+        ServiceType.BUTTON_STATE_SERVICE
     } else {
         ServiceType.UNKNOWN
     }

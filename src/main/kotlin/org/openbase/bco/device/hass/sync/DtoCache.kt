@@ -10,6 +10,7 @@ class DtoCache<HASS_DTO: HassDto> {
 
     private val lock = ReentrantReadWriteLock()
     private val writeCondition = lock.writeLock().newCondition()
+
     private val dtoCache = mutableMapOf<String, HASS_DTO>()
     private val unitConfigCache = mutableMapOf<String, UnitConfig>()
     private var unitIdToDtoCache = mutableMapOf<String, HASS_DTO>()
@@ -17,11 +18,41 @@ class DtoCache<HASS_DTO: HassDto> {
 
     private var initialized = false
 
+    val dtos: List<HASS_DTO> get() = dtoCache.values.toList()
+
     fun putAll(dtos: List<Pair<UnitConfig, HASS_DTO>>) = lock.write {
         dtos.forEach { (unitConfig, dto) ->
             dtoCache[dto.id] = dto
+            unitConfigCache[unitConfig.id] = unitConfig
             unitIdToDtoCache[unitConfig.id] = dto
             dtoIdToUnitIdCache[dto.id] = unitConfig.id
+        }
+    }
+
+    fun evictAll() = lock.write {
+        dtoCache.clear()
+        unitConfigCache.clear()
+        unitIdToDtoCache.clear()
+        dtoIdToUnitIdCache.clear()
+    }
+
+    fun evictAllByUnitConfigs(unitConfigs: List<UnitConfig>) = lock.write {
+        unitConfigs.forEach { unitConfig ->
+            unitConfigCache.remove(unitConfig.id)
+            unitIdToDtoCache.remove(unitConfig.id)?.let { dto ->
+                dtoCache.remove(dto.id)
+                dtoIdToUnitIdCache.remove(dto.id)
+            }
+        }
+    }
+
+    fun evictAllByDtos(dtos: List<HASS_DTO>) = lock.write {
+        dtos.forEach { dto ->
+            dtoCache.remove(dto.id)
+            dtoIdToUnitIdCache.remove(dto.id).let { unitId ->
+                unitConfigCache.remove(unitId)
+                unitIdToDtoCache.remove(unitId)
+            }
         }
     }
 

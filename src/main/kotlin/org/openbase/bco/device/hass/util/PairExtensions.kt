@@ -1,8 +1,11 @@
 package org.openbase.bco.device.hass.util
 
 
-fun <A, B, C> List<Pair<A, B>>.mapFirst(transform: (A) -> C): List<Pair<C, B>> =
-    map { (first, second) -> Pair(transform(first), second) }
+fun <A, B, C> List<Pair<A, B>>.mapFirst(transform: (Pair<A, B>) -> C): List<Pair<C, B>> =
+    map { transform(it) to it.second }
 
-fun <A, B, C> List<Pair<A, B>>.mapSecond(transform: (B) -> C): List<Pair<A, C>> =
-    map { (first, second) -> Pair(first, transform(second)) }
+fun <A, B, C> List<Pair<A, B>>.mapSecond(transform: (Pair<A, B>) -> C): List<Pair<A, C>> =
+    map { it.first to transform(it) }
+
+fun <A, B> List<Pair<A, B>>.mapInverted(): List<Pair<B, A>> =
+    map { (first, second) -> second to first }

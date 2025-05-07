@@ -26,6 +26,7 @@ class ZoneSyncStrategy(
     override val unitType: UnitType = UnitType.LOCATION
     override val unitFilter: (UnitConfig) -> Boolean = { it.locationConfig?.locationType == LocationType.ZONE }
 
+    override fun UnitConfig.toHassId(): String? = metaConfig[ALIAS_KEY_HASS_FLOOR_ID]
 
     override fun buildUnitConfig(hassDto: HassFloorDto): UnitConfig =
         UnitConfig
@@ -37,7 +38,7 @@ class ZoneSyncStrategy(
             .build()
 
     override fun buildHassInputDto(unitConfig: UnitConfig): HassFloorInputDto = HassFloorInputDto(
-        id = unitConfig.metaConfig[ALIAS_KEY_HASS_FLOOR_ID],
+        id = unitConfig.toHassId(),
         name = LabelProcessor.getBestMatch(unitConfig.label),
         icon = unitConfig.metaConfig[ALIAS_KEY_BCO_ICON],
         aliases = unitConfig.label.entryList.flatMap { it.valueList },
@@ -49,6 +50,9 @@ class ZoneSyncStrategy(
 
     override fun queryHassDtos(): List<HassFloorDto> =
         hassCommunicator.getFloors()
+
+    override fun deleteHassDto(dtoId: String): HassFloorDto =
+        hassCommunicator.deleteFloor(dtoId)
 
     override fun onDtoChanges(eventProcessor: (event: SubscriptionEvent.Event) -> Any): AutoCloseable =
         hassCommunicator.subscribe(

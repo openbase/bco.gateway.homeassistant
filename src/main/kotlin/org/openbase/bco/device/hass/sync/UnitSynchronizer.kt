@@ -20,6 +20,8 @@ import org.openbase.jul.iface.Activatable
 import org.openbase.type.domotic.state.ConnectionStateType
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.slf4j.LoggerFactory
+import java.time.Duration
+import kotlin.time.toKotlinDuration
 
 class UnitSynchronizer<HASS_DTO, HASS_INPUT_DTO : HassInputDto>(
     val strategy: UnitSyncStrategy<HASS_DTO, HASS_INPUT_DTO>,
@@ -32,7 +34,7 @@ HASS_DTO : Mergeable<HASS_INPUT_DTO, HASS_DTO>,
 HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
 
     private var coroutineScope: CoroutineScope? = null
-    private val debounceDuration = 500L
+    private val debounceDuration = Duration.ofSeconds(1).toKotlinDuration()
     private val activationMutex = Mutex()
     private var observer = listOf<AutoCloseable>()
 
@@ -53,16 +55,10 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
         scope.launch {
             bcoToHassSyncTrigger
                 .debounce(debounceDuration)
-                .collect {
-                    LOGGER.info("Debounced syncAll triggered")
-                    syncBCOtoHass()
-                }
+                .collect { syncBCOtoHass() }
             hassToBCOSyncTrigger
                 .debounce(debounceDuration)
-                .collect {
-                    LOGGER.info("Debounced syncAll triggered")
-                    syncHassToBCO()
-                }
+                .collect { syncHassToBCO() }
         }
     }
 
@@ -109,8 +105,8 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     override fun isActive(): Boolean = coroutineScope?.isActive == true
 
     private fun syncAll() {
-        syncHassToBCO()
-        syncBCOtoHass()
+        syncHassToBCO() // order important for sync!
+        syncBCOtoHass() // order important for sync!
         cache.confirmInit()
     }
 
@@ -118,37 +114,64 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     private fun triggerBCOToHassSync() = bcoToHassSyncTrigger.tryEmit(Unit)
 
     private fun syncHassToBCO() {
-        strategy.queryHassDtos()
-            .map { hassDto -> hassDto to hassDto.toUnitConfig() }
-            .map { (hassDto, unitConfig) ->
-                hassDto to (
-                        cache.getUnitIdByDtoId(hassDto.id)
-                        .tryOrNull { unitRegistry.getUnitConfigById(it) }
+        LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from hass to bco...")
+        val unitConfigs = getUnitConfigMap()
+        strategy.queryHassDtos().let { hassDtos ->
+            // handle add and update
+            hassDtos
+                .map { hassDto -> hassDto to hassDto.toUnitConfig() }
+                .mapSecond { (hassDto, unitConfig) ->
+                    cache.getUnitIdByDtoId(hassDto.id)
+                        .tryOrNull { unitConfigs[it] }
                         ?.toBuilder()
                         ?.mergeFromWithoutRepeatedFields(unitConfig)
                         ?.build()
                         ?: unitConfig
-                )
-            }
-            .filter { (_, unitConfig) -> unitConfig != cache.getUnitConfigById(unitConfig.id) }
-            .mapSecond { unitConfig -> unitRegistry.saveUnitConfig(unitConfig).await() }
-            .map { (unitConfig, dto) -> dto to unitConfig }
-            .let { cache.putAll(it) }
+                }
+                .filter { (_, unitConfig) -> unitConfig != cache.getUnitConfigById(unitConfig.id) }
+                .mapSecond { (_, unitConfig) -> unitRegistry.saveUnitConfig(unitConfig).await() }
+                .mapInverted()
+                .also{ cache.putAll(it) }
+                .map { (_, dto) -> dto.id }
+                .let { dtoIds ->
+                    // handle delete
+                    unitConfigs
+                        .filter { (_, unitConfig) -> strategy.run { unitConfig.toHassId() } !in dtoIds }
+                        .onEach { (_, unitConfig) -> unitRegistry.removeUnitConfig(unitConfig).await() }
+                        .map { (_, unitConfig) -> unitConfig }
+                        .also { unitConfigs -> cache.evictAllByUnitConfigs(unitConfigs)}
+                }
+        }
+        LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from hass to bco done.")
     }
 
     private fun syncBCOtoHass() {
-        unitRegistry
-            .getUnitConfigsByUnitType(strategy.unitType)
-            .filter(strategy.unitFilter)
+        LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from bco to hass...")
+        getUnitConfigMap().values
             .map { unitConfig -> unitConfig to unitConfig.toHassInputDto() }
             .map { (unitConfig, inputDto) -> unitConfig to cache.getDtoByUnitId(unitConfig.id)?.merge(inputDto) }
             .filter { (_, hassDto) -> hassDto.isNotNull() }
-            .mapSecond { inputDto -> inputDto!!}
+            .mapSecond { (_, hassDto) -> hassDto!! }
             .filter { (_, hassDto) -> hassDto != cache.getDtoById(hassDto.id) }
-            .mapSecond { hassDto -> hassDto.toInputDto() }
-            .mapSecond { inputDto -> strategy.saveHassDto(inputDto) }
-            .let { cache.putAll(it) }
+            .mapSecond { (_, hassDto) -> hassDto.toInputDto() }
+            .mapSecond { (_, inputDto) -> strategy.saveHassDto(inputDto) }
+            .also { cache.putAll(it) }
+            .map { (_, dto) -> dto }
+            .associateBy { it.id }
+            .let { dtos ->
+                cache.dtos
+                    .filter { dto -> dto.id !in dtos.keys }
+                    .onEach { dto -> strategy.deleteHassDto(dto.id) }
+                    .also { dtos -> cache.evictAllByDtos(dtos) }
+            }
+
+        LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from bco to hass done.")
     }
+
+    private fun getUnitConfigMap(): Map<String, UnitConfig> = unitRegistry
+        .getUnitConfigsByUnitType(strategy.unitType)
+        .filter(strategy.unitFilter)
+        .associateBy { it.id }
 
     private fun HASS_DTO.toUnitConfig(): UnitConfig = strategy.buildUnitConfig(this)
     private fun UnitConfig.toHassInputDto(): HASS_INPUT_DTO = strategy.buildHassInputDto(this)

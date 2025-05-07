@@ -35,7 +35,7 @@ class TileSyncStrategy(
             .build()
 
     override fun buildHassInputDto(unitConfig: UnitConfig): HassAreaInputDto = HassAreaInputDto(
-        id = unitConfig.metaConfig[ALIAS_KEY_HASS_AREA_ID],
+        id = unitConfig.toHassId(),
         name = LabelProcessor.getBestMatch(unitConfig.label),
         floorId = unitConfig.locationConfig?.locationType?.name,
         icon =  unitConfig.metaConfig[ALIAS_KEY_BCO_ICON],
@@ -44,12 +44,17 @@ class TileSyncStrategy(
         aliases = unitConfig.label.entryList.flatMap { it.valueList },
     )
 
+    override fun UnitConfig.toHassId(): String? = metaConfig[ALIAS_KEY_HASS_AREA_ID]
+
     override fun saveHassDto(dtos: HassAreaInputDto): HassAreaDto =
         hassCommunicator.saveArea(dtos)
 
     override fun queryHassDtos(): List<HassAreaDto> =
         HassCommunicator.instance
             .getAreas()
+
+    override fun deleteHassDto(dtoId: String): HassAreaDto =
+        hassCommunicator.deleteArea(dtoId)
 
     override fun onDtoChanges(eventProcessor: (event: SubscriptionEvent.Event) -> Any): AutoCloseable =
         hassCommunicator.subscribe(

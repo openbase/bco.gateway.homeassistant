@@ -11,6 +11,7 @@ import org.openbase.bco.device.hass.manager.dto.HassDto
 import org.openbase.bco.device.hass.manager.dto.HassInputDto
 import org.openbase.bco.device.hass.sync.strategy.UnitSyncStrategy
 import org.openbase.bco.device.hass.type.InputDtoProvider
+import org.openbase.bco.device.hass.type.Mergeable
 import org.openbase.bco.device.hass.util.*
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.unit.lib.UnitRegistry
@@ -117,7 +118,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
         LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from hass to bco...")
         val unitConfigs = getUnitConfigMap()
         strategy.queryHassDtos().let { hassDtos ->
-            // handle add and update
+            // handle: add and update
             hassDtos
                 .map { hassDto -> hassDto to hassDto.toUnitConfig() }
                 .mapSecond { (hassDto, unitConfig) ->
@@ -134,7 +135,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                 .also{ cache.putAll(it) }
                 .map { (_, dto) -> dto.id }
                 .let { dtoIds ->
-                    // handle delete
+                    // handle: delete
                     unitConfigs
                         .filter { (_, unitConfig) -> strategy.run { unitConfig.toHassId() } !in dtoIds }
                         .onEach { (_, unitConfig) -> unitRegistry.removeUnitConfig(unitConfig).await() }
@@ -159,6 +160,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
             .map { (_, dto) -> dto }
             .associateBy { it.id }
             .let { dtos ->
+                // handle: delete
                 cache.dtos
                     .filter { dto -> dto.id !in dtos.keys }
                     .onEach { dto -> strategy.deleteHassDto(dto.id) }

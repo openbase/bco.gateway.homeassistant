@@ -2,7 +2,7 @@ package org.openbase.bco.device.hass.manager.dto
 
 import com.google.gson.annotations.SerializedName
 import org.openbase.bco.device.hass.type.InputDtoProvider
-import org.openbase.bco.device.hass.util.Mergeable
+import org.openbase.bco.device.hass.type.Mergeable
 
 /**
  * The original area entity looks like:

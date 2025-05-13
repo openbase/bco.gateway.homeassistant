@@ -53,8 +53,8 @@ class TileSyncStrategy(
         HassCommunicator.instance
             .getAreas()
 
-    override fun deleteHassDto(dtoId: String): HassAreaDto =
-        hassCommunicator.deleteArea(dtoId)
+    override fun deleteHassDto(dto: HassAreaDto): HassAreaDto =
+        hassCommunicator.deleteArea(dto)
 
     override fun onDtoChanges(eventProcessor: (event: SubscriptionEvent.Event) -> Any): AutoCloseable =
         hassCommunicator.subscribe(

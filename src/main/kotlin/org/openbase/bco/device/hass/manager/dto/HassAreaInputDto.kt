@@ -17,7 +17,7 @@ import com.google.gson.annotations.SerializedName
 data class HassAreaInputDto(
     @SerializedName("area_id")
     val id: String?,
-    val name: String?,
+    override val name: String?,
     @SerializedName("floor_id")
     val floorId: String?,
     val icon: String?,

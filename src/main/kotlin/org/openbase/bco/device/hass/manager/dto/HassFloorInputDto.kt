@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 data class HassFloorInputDto(
     @SerializedName("floor_id")
     val id: String? = null,
-    val name: String? = null,
+    override val name: String? = null,
     val icon: String? = null,
     val aliases: List<String>? = null,
     val level: Int? = null,

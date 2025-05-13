@@ -109,16 +109,16 @@ class HassCommunicator private constructor() : HassConnection() {
                 ?: throw CouldNotPerformException("Could not save area[$area]")
         }
 
-    fun deleteArea(areaId: String): HassAreaDto =
-        sendWSCommand(
-            DELETE_AREA_WS_REQUEST,
-            JsonObject().apply {
-                addProperty("area_id", areaId)
+    fun deleteArea(area: HassAreaDto): HassAreaDto =
+        area
+            .also {
+                sendWSCommand(
+                    DELETE_AREA_WS_REQUEST,
+                    JsonObject().apply {
+                        addProperty("area_id", area.id)
+                    }
+                ).await()
             }
-        ).await()
-            ?.asJsonObject
-            ?.let { gson.fromJson(it, HassAreaDto::class.java) }
-            ?: throw CouldNotPerformException("Could not delete area[$areaId]")
 
     // ==========================================================================================================================================
     // Floors
@@ -139,16 +139,16 @@ class HassCommunicator private constructor() : HassConnection() {
                 ?: throw CouldNotPerformException("Could not save floor[$floor]")
         }
 
-    fun deleteFloor(floorId: String): HassFloorDto =
-        sendWSCommand(
-            DELETE_FLOOR_WS_REQUEST,
-            JsonObject().apply {
-                addProperty("floor_id", floorId)
+    fun deleteFloor(floor: HassFloorDto): HassFloorDto =
+        floor
+            .also {
+                sendWSCommand(
+                    DELETE_FLOOR_WS_REQUEST,
+                    JsonObject().apply {
+                        addProperty("floor_id", floor.id)
+                    }
+                ).await()
             }
-        ).await()
-            ?.asJsonObject
-            ?.let { gson.fromJson(it, HassFloorDto::class.java) }
-            ?: throw CouldNotPerformException("Could not delete area[$floorId]")
 
     @Throws(CouldNotPerformException::class)
     override fun testConnection() {
@@ -228,11 +228,13 @@ class HassCommunicator private constructor() : HassConnection() {
         private val LOGGER: Logger = LoggerFactory.getLogger(HassCommunicator::class.java)
 
         @get:Synchronized
-        var instance: HassCommunicator = HassCommunicator().also {
-            try {
-                Shutdownable.registerShutdownHook(it)
-            } catch (ex: InitializationException) {
-                ExceptionPrinter.printHistory("Could not create HassCommunicator", ex, LOGGER)
+        val instance: HassCommunicator by lazy {
+            HassCommunicator().also {
+                try {
+                    Shutdownable.registerShutdownHook(it)
+                } catch (ex: InitializationException) {
+                    ExceptionPrinter.printHistory("Could not create HassCommunicator", ex, LOGGER)
+                }
             }
         }
     }

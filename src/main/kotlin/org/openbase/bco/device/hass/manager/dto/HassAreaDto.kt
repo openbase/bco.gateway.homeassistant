@@ -19,7 +19,7 @@ import org.openbase.bco.device.hass.type.Mergeable
 data class HassAreaDto(
     @SerializedName("area_id")
     override val id: String,
-    val name: String,
+    override val name: String,
     @SerializedName("floor_id")
     val floorId: String,
 

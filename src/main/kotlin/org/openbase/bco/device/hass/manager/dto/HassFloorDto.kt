@@ -21,7 +21,7 @@ import org.openbase.bco.device.hass.type.Mergeable
 data class HassFloorDto(
     @SerializedName("floor_id")
     override val id: String,
-    val name: String,
+    override val name: String,
     val icon: String? = null,
     val aliases: List<String>,
     val level: Int,

@@ -51,8 +51,8 @@ class ZoneSyncStrategy(
     override fun queryHassDtos(): List<HassFloorDto> =
         hassCommunicator.getFloors()
 
-    override fun deleteHassDto(dtoId: String): HassFloorDto =
-        hassCommunicator.deleteFloor(dtoId)
+    override fun deleteHassDto(dto: HassFloorDto): HassFloorDto =
+        hassCommunicator.deleteFloor(dto)
 
     override fun onDtoChanges(eventProcessor: (event: SubscriptionEvent.Event) -> Any): AutoCloseable =
         hassCommunicator.subscribe(

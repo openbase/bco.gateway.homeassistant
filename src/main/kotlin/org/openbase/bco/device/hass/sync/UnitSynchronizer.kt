@@ -13,8 +13,9 @@ import org.openbase.bco.device.hass.sync.strategy.UnitSyncStrategy
 import org.openbase.bco.device.hass.type.InputDtoProvider
 import org.openbase.bco.device.hass.type.Mergeable
 import org.openbase.bco.device.hass.util.*
-import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.unit.lib.UnitRegistry
+import org.openbase.jul.exception.printer.ExceptionPrinter
+import org.openbase.jul.exception.printer.LogLevel
 import org.openbase.jul.exception.tryOrNull
 import org.openbase.jul.extension.protobuf.ProtoBufBuilderProcessor.mergeFromWithoutRepeatedFields
 import org.openbase.jul.iface.Activatable
@@ -27,8 +28,8 @@ import kotlin.time.toKotlinDuration
 class UnitSynchronizer<HASS_DTO, HASS_INPUT_DTO : HassInputDto>(
     val strategy: UnitSyncStrategy<HASS_DTO, HASS_INPUT_DTO>,
     val cache: DtoCache<HASS_DTO> = DtoCache(),
-    val hassCommunicator: HassCommunicator = HassCommunicator.instance,
-    val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
+    val hassCommunicator: HassCommunicator,
+    val unitRegistry: UnitRegistry,
 ) : Activatable where
 HASS_DTO : HassDto,
 HASS_DTO : Mergeable<HASS_INPUT_DTO, HASS_DTO>,
@@ -130,17 +131,42 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                         ?: unitConfig
                 }
                 .filter { (_, unitConfig) -> unitConfig != cache.getUnitConfigById(unitConfig.id) }
-                .mapSecond { (_, unitConfig) -> unitRegistry.saveUnitConfig(unitConfig).await() }
+                .mapSecondNotNull { (hassDto, unitConfig) ->
+                    LOGGER.info("Save unit ${unitConfig.label.bestMatch()} of corresponding hass dto ${hassDto.name}.")
+                    runCatching { unitRegistry.saveUnitConfig(unitConfig).await() }
+                        .getOrElse {
+                            ExceptionPrinter.printHistory(
+                                "Could not save unit ${unitConfig.label.bestMatch()} of corresponding hass dto ${hassDto.name}.",
+                                it,
+                                LOGGER,
+                                LogLevel.WARN,
+                            )
+                            null
+                        }
+                }
                 .mapInverted()
-                .also{ cache.putAll(it) }
+                .also { cache.putAll(it) }
                 .map { (_, dto) -> dto.id }
                 .let { dtoIds ->
                     // handle: delete
                     unitConfigs
-                        .filter { (_, unitConfig) -> strategy.run { unitConfig.toHassId() } !in dtoIds }
-                        .onEach { (_, unitConfig) -> unitRegistry.removeUnitConfig(unitConfig).await() }
+                        .map { (_, unitConfig) -> strategy.run { unitConfig.toHassId() } to unitConfig }
+                        .filterFirstNotNull()
+                        .filter { (dtoId, _) -> dtoId !in dtoIds }
+                        .onEach { (_, unitConfig) ->
+                            LOGGER.info("Remove unit ${unitConfig.label.bestMatch()} since no corresponding dto in hass exist.")
+                            runCatching { unitRegistry.removeUnitConfig(unitConfig).await() }
+                                .getOrElse {
+                                    ExceptionPrinter.printHistory(
+                                        "Could not remove unit ${unitConfig.label.bestMatch()}.bestMatch() where no corresponding dto in hass exist.",
+                                        it,
+                                        LOGGER,
+                                        LogLevel.WARN,
+                                    )
+                                }
+                        }
                         .map { (_, unitConfig) -> unitConfig }
-                        .also { unitConfigs -> cache.evictAllByUnitConfigs(unitConfigs)}
+                        .also { unitConfigs -> cache.evictAllByUnitConfigs(unitConfigs) }
                 }
         }
         LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from hass to bco done.")
@@ -155,7 +181,22 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
             .mapSecond { (_, hassDto) -> hassDto!! }
             .filter { (_, hassDto) -> hassDto != cache.getDtoById(hassDto.id) }
             .mapSecond { (_, hassDto) -> hassDto.toInputDto() }
-            .mapSecond { (_, inputDto) -> strategy.saveHassDto(inputDto) }
+            .mapSecondNotNull { (unitConfig, inputDto) ->
+
+                LOGGER.info("Save hass dto ${inputDto.name} of corresponding unit ${unitConfig.label.bestMatch()}.")
+                runCatching { strategy.saveHassDto(inputDto)  }
+                    .getOrElse {
+                        ExceptionPrinter.printHistory(
+                            "Could not save hass dto ${inputDto.name} of corresponding unit ${unitConfig.label.bestMatch()}.",
+                            it,
+                            LOGGER,
+                            LogLevel.WARN,
+                        )
+                        null
+                    }
+
+
+            }
             .also { cache.putAll(it) }
             .map { (_, dto) -> dto }
             .associateBy { it.id }
@@ -163,9 +204,20 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                 // handle: delete
                 cache.dtos
                     .filter { dto -> dto.id !in dtos.keys }
-                    .onEach { dto -> strategy.deleteHassDto(dto.id) }
-                    .also { dtos -> cache.evictAllByDtos(dtos) }
+                    .onEach { dto ->
+                        LOGGER.info("Delete hass dto ${dto.name} since no corresponding unit in bco exist.")
+                        runCatching { strategy.deleteHassDto(dto) }
+                            .getOrElse {
+                                ExceptionPrinter.printHistory(
+                                    "Could not delete hass dto ${dto.name} where no corresponding unit in bco exist.",
+                                    it,
+                                    LOGGER,
+                                    LogLevel.WARN,
+                                )
+                            }
+                    }
             }
+            .also { dtos -> cache.evictAllByDtos(dtos) }
 
         LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from bco to hass done.")
     }

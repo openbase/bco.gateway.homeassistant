@@ -244,7 +244,9 @@ class HassWebsocketConnection(
                         LOGGER.info("Unknown Event: $jsonResult")
                     }
                 } else {
-                    requestMap.remove(result.id)?.completeExceptionally(CouldNotPerformException("Request[${jsonResult.asString}] canceled by home assistant possibly because of an invalid request!"))
+                    requestMap
+                        .remove(result.id)
+                        ?.completeExceptionally(CouldNotPerformException("Request[$jsonResult] canceled by home assistant possibly because of an invalid request!"))
                 }
             }
         }

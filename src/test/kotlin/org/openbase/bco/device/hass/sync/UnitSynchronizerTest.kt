@@ -54,6 +54,13 @@ class UnitSynchronizerTest {
                 name = LabelProcessor.getBestMatch(uniConfigSlot.captured.label),
             )
         }
+        mockkStatic(UnitRegistry::saveUnitConfig)
+        val saveUnitConfigSlot = slot<UnitConfig>()
+        every {
+            unitRegistry.saveUnitConfig(
+                capture(saveUnitConfigSlot),
+            )
+        } answers { CompletableFuture.completedFuture(saveUnitConfigSlot.captured) }
     }
 
     data class TestHassDto(
@@ -76,23 +83,11 @@ class UnitSynchronizerTest {
         override val name: String? = null,
     ): HassInputDto
 
-    @Test
-    fun `a new hass location should be registered at bco`() {
-        val unitConfigs = listOf(
-            UnitConfig.newBuilder()
-                .setUnitType(UnitType.LOCATION)
-                .setLabel(LabelProcessor.generateLabelBuilder("Office"))
-                .apply { locationConfigBuilder.locationType = LocationType.TILE }
-                .build(),
-        )
-
-        val hassDtos = listOf(
-            TestHassDto(
-                id = "kitchen",
-                name = "Kitchen",
-            ),
-        )
-
+    fun prepareSynchronizer(
+        unitConfigs: List<UnitConfig>,
+        hassDtos: List<TestHassDto>,
+        block: (UnitSynchronizer<TestHassDto, TestHassDtoInput>, DtoCache<TestHassDto>) -> Unit,
+    ) {
         tileSyncStrategy.run {
             unitConfigs.forEach { unitConfig ->
                 every { unitConfig.toHassId() } answers { unitConfig.metaConfig[ALIAS_KEY_HASS_AREA_ID] }
@@ -104,16 +99,6 @@ class UnitSynchronizerTest {
         every { unitRegistry.getUnitConfigsByUnitType(UnitType.LOCATION) } returns unitConfigs
         every { tileSyncStrategy.queryHassDtos() } returns hassDtos
 
-
-        mockkStatic(UnitRegistry::saveUnitConfig)
-
-        val saveUnitConfigSlot = slot<UnitConfig>()
-        every {
-            unitRegistry.saveUnitConfig(
-                capture(saveUnitConfigSlot),
-            )
-        } answers { CompletableFuture.completedFuture(saveUnitConfigSlot.captured) }
-
         val synchronizer = UnitSynchronizer(
             cache = cache,
             strategy = tileSyncStrategy,
@@ -122,12 +107,35 @@ class UnitSynchronizerTest {
         )
 
         synchronizer.activate()
-
-        Thread.sleep(1000)
-
-        onDtoChangesCallbackSlot.captured.invoke(mockk<SubscriptionEvent.Event>())
-
-        verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+        cache.waitUntilReady()
+        block(synchronizer, cache)
         synchronizer.deactivate()
+    }
+
+    @Test
+    fun `a new hass location should be registered at bco`() {
+        prepareSynchronizer(
+            unitConfigs = listOf(
+                UnitConfig.newBuilder()
+                    .setUnitType(UnitType.LOCATION)
+                    .setLabel(LabelProcessor.generateLabelBuilder("Office"))
+                    .apply { locationConfigBuilder.locationType = LocationType.TILE }
+                    .build(),
+            ),
+            hassDtos = listOf(
+                TestHassDto(
+                    id = "kitchen",
+                    name = "Kitchen",
+                ),
+            )
+        ) { synchronizer, cache ->
+            // trigger change
+            onDtoChangesCallbackSlot.captured.invoke(mockk<SubscriptionEvent.Event>())
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+
+            // no further changes should be triggered
+            onDtoChangesCallbackSlot.captured.invoke(mockk<SubscriptionEvent.Event>())
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+        }
     }
 }

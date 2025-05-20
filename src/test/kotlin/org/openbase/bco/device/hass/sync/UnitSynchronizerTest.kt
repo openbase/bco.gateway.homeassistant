@@ -20,6 +20,7 @@ import org.openbase.jul.extension.type.processing.LabelProcessor
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig.LocationType
+import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 class UnitSynchronizerTest {
@@ -33,6 +34,9 @@ class UnitSynchronizerTest {
     private val hassDtoSlot = slot<TestHassDto>()
     private val uniConfigSlot = slot<UnitConfig>()
     private val onDtoChangesCallbackSlot = slot<(event: SubscriptionEvent.Event) -> Any>()
+
+    private var unitConfigDB = listOf<UnitConfig>()
+    private var hassDtoDB = listOf<TestHassDto>()
 
     init {
         every { hassCommunicator.isConnected } returns true
@@ -52,17 +56,28 @@ class UnitSynchronizerTest {
         }
         every { tileSyncStrategy.buildHassInputDto(capture(uniConfigSlot)) } answers {
             TestHassDtoInput(
-                id = uniConfigSlot.captured.id,
+                id = uniConfigSlot.captured.metaConfig[ALIAS_KEY_HASS_AREA_ID],
                 name = LabelProcessor.getBestMatch(uniConfigSlot.captured.label),
             )
         }
         mockkStatic(UnitRegistry::saveUnitConfig)
+
+        val saveHassDtoSlot  = slot<TestHassDtoInput>()
+        every { tileSyncStrategy.saveHassDto(capture(saveHassDtoSlot)) } answers {
+            saveHassDtoSlot.captured.toDto()
+                .also { hassDtoDB = hassDtoDB.plus(it) }
+                .also { saveHassDtoSlot.clear() }
+        }
         val saveUnitConfigSlot = slot<UnitConfig>()
         every {
             unitRegistry.saveUnitConfig(
                 capture(saveUnitConfigSlot),
             )
-        } answers { CompletableFuture.completedFuture(saveUnitConfigSlot.captured) }
+        } answers {
+            CompletableFuture.completedFuture(saveUnitConfigSlot.captured)
+                .also { unitConfigDB = unitConfigDB.plus(saveUnitConfigSlot.captured) }
+                .also { saveUnitConfigSlot.clear() }
+        }
     }
 
     data class TestHassDto(
@@ -84,6 +99,11 @@ class UnitSynchronizerTest {
         val id: String? = null,
         override val name: String? = null,
     ): HassInputDto
+
+    private fun TestHassDtoInput.toDto(): TestHassDto = TestHassDto(
+        id = id ?: UUID.randomUUID().toString(),
+        name = name ?: "",
+    )
 
     fun openSynchronizerSession(
         block: (UnitSynchronizer<TestHassDto, TestHassDtoInput>, DtoCache<TestHassDto>) -> Unit,
@@ -112,12 +132,15 @@ class UnitSynchronizerTest {
             }
         }
 
+        unitConfigDB = unitConfigs.orEmpty()
+        hassDtoDB = hassDtos.orEmpty()
+
         unitConfigs?.let {
-            every { unitRegistry.getUnitConfigsByUnitType(UnitType.LOCATION) } returns unitConfigs
+            every { unitRegistry.getUnitConfigsByUnitType(UnitType.LOCATION) } answers { unitConfigDB }
         }
 
         hassDtos?.let {
-            every { tileSyncStrategy.queryHassDtos() } returns hassDtos
+            every { tileSyncStrategy.queryHassDtos() } answers { hassDtoDB }
         }
 
         if(hassDtos.isNotNull() && onDtoChangesCallbackSlot.isCaptured) {
@@ -156,7 +179,6 @@ class UnitSynchronizerTest {
                 )
             )
 
-            Thread.sleep(5000)
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
             verify(exactly = 0) { hassCommunicator.saveArea(any()) }
@@ -203,17 +225,12 @@ class UnitSynchronizerTest {
                         .apply { locationConfigBuilder.locationType = LocationType.TILE }
                         .build(),
                 ),
-                hassDtos = listOf(
-                    TestHassDto(
-                        id = "kitchen",
-                        name = "Kitchen",
-                    ),
-                )
+                hassDtos = listOf()
             )
-            cache.dtos.size shouldBe 2
-            cache.units.size shouldBe 2
+            cache.dtos.size shouldBe 1
+            cache.units.size shouldBe 1
             verify(exactly = 1) { hassCommunicator.saveArea(any()) }
-            verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
 
             // no further changes should be triggered
             changeContext(
@@ -224,17 +241,12 @@ class UnitSynchronizerTest {
                         .apply { locationConfigBuilder.locationType = LocationType.TILE }
                         .build(),
                 ),
-                hassDtos = listOf(
-                    TestHassDto(
-                        id = "kitchen",
-                        name = "Kitchen",
-                    ),
-                )
+                hassDtos = listOf()
             )
-            cache.dtos.size shouldBe 2
-            cache.units.size shouldBe 2
+            cache.dtos.size shouldBe 1
+            cache.units.size shouldBe 1
             verify(exactly = 1) { hassCommunicator.saveArea(any()) }
-            verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
         }
     }
 }

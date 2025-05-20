@@ -19,6 +19,7 @@ class DtoCache<HASS_DTO: HassDto> {
     private var initialized = false
 
     val dtos: List<HASS_DTO> get() = dtoCache.values.toList()
+    val units: List<UnitConfig> get() = unitConfigCache.values.toList()
 
     fun putAll(dtos: List<Pair<UnitConfig, HASS_DTO>>) = lock.write {
         dtos.forEach { (unitConfig, dto) ->

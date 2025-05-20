@@ -58,8 +58,10 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
             bcoToHassSyncTrigger
                 .debounce(debounceDuration)
                 .collect { syncBCOtoHass() }
+        }
+        scope.launch {
             hassToBCOSyncTrigger
-                .debounce(debounceDuration)
+                .debounce (debounceDuration)
                 .collect { syncHassToBCO() }
         }
     }
@@ -112,9 +114,16 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
         cache.confirmInit()
     }
 
-    private fun triggerHassToBCOSync() = hassToBCOSyncTrigger.tryEmit(Unit)
-    private fun triggerBCOToHassSync() = bcoToHassSyncTrigger.tryEmit(Unit)
-
+    private fun triggerHassToBCOSync() = hassToBCOSyncTrigger.tryEmit(Unit).also {
+        if (it == false) {
+            LOGGER.warn("Failed to trigger sync from hass to bco.")
+        }
+    }
+    private fun triggerBCOToHassSync() = bcoToHassSyncTrigger.tryEmit(Unit).also {
+        if (it == false) {
+            LOGGER.warn("Failed to trigger sync from hass to bco.")
+        }
+    }
     private fun syncHassToBCO() {
         LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from hass to bco...")
         val unitConfigs = getUnitConfigMap()

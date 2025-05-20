@@ -1,6 +1,7 @@
 package org.openbase.bco.device.hass.sync
 
 import io.mockk.*
+import org.amshove.kluent.shouldBe
 import org.junit.jupiter.api.Test
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
@@ -11,6 +12,7 @@ import org.openbase.bco.device.hass.sync.strategy.UnitSyncStrategy
 import org.openbase.bco.device.hass.type.InputDtoProvider
 import org.openbase.bco.device.hass.type.Mergeable
 import org.openbase.bco.device.hass.util.get
+import org.openbase.bco.device.hass.util.isNotNull
 import org.openbase.bco.device.hass.util.saveUnitConfig
 import org.openbase.bco.device.hass.util.set
 import org.openbase.bco.registry.unit.lib.UnitRegistry
@@ -83,22 +85,10 @@ class UnitSynchronizerTest {
         override val name: String? = null,
     ): HassInputDto
 
-    fun prepareSynchronizer(
-        unitConfigs: List<UnitConfig>,
-        hassDtos: List<TestHassDto>,
+    fun openSynchronizerSession(
         block: (UnitSynchronizer<TestHassDto, TestHassDtoInput>, DtoCache<TestHassDto>) -> Unit,
     ) {
-        tileSyncStrategy.run {
-            unitConfigs.forEach { unitConfig ->
-                every { unitConfig.toHassId() } answers { unitConfig.metaConfig[ALIAS_KEY_HASS_AREA_ID] }
-            }
-        }
-
         val cache = DtoCache<TestHassDto>()
-
-        every { unitRegistry.getUnitConfigsByUnitType(UnitType.LOCATION) } returns unitConfigs
-        every { tileSyncStrategy.queryHassDtos() } returns hassDtos
-
         val synchronizer = UnitSynchronizer(
             cache = cache,
             strategy = tileSyncStrategy,
@@ -112,29 +102,138 @@ class UnitSynchronizerTest {
         synchronizer.deactivate()
     }
 
+    fun changeContext(
+        unitConfigs: List<UnitConfig>?,
+        hassDtos: List<TestHassDto>?,
+    ) {
+        tileSyncStrategy.run {
+            unitConfigs?.forEach { unitConfig ->
+                every { unitConfig.toHassId() } answers { unitConfig.metaConfig[ALIAS_KEY_HASS_AREA_ID] }
+            }
+        }
+
+        unitConfigs?.let {
+            every { unitRegistry.getUnitConfigsByUnitType(UnitType.LOCATION) } returns unitConfigs
+        }
+
+        hassDtos?.let {
+            every { tileSyncStrategy.queryHassDtos() } returns hassDtos
+        }
+
+        if(hassDtos.isNotNull() && onDtoChangesCallbackSlot.isCaptured) {
+            onDtoChangesCallbackSlot.captured.invoke(mockk<SubscriptionEvent.Event>())
+        }
+
+        if(unitConfigs.isNotNull() && onUnitChangesCallbackSlot.isCaptured) {
+            onUnitChangesCallbackSlot.captured.invoke()
+        }
+    }
+
     @Test
     fun `a new hass location should be registered at bco`() {
-        prepareSynchronizer(
-            unitConfigs = listOf(
-                UnitConfig.newBuilder()
-                    .setUnitType(UnitType.LOCATION)
-                    .setLabel(LabelProcessor.generateLabelBuilder("Office"))
-                    .apply { locationConfigBuilder.locationType = LocationType.TILE }
-                    .build(),
-            ),
-            hassDtos = listOf(
-                TestHassDto(
-                    id = "kitchen",
-                    name = "Kitchen",
-                ),
-            )
-        ) { synchronizer, cache ->
+
+        changeContext(
+            unitConfigs = listOf(),
+            hassDtos = listOf()
+        )
+
+        openSynchronizerSession { synchronizer, cache ->
+
+            cache.dtos.size shouldBe 0
+            cache.units.size shouldBe 0
+
+            verify(exactly = 0) { hassCommunicator.saveArea(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+
             // trigger change
-            onDtoChangesCallbackSlot.captured.invoke(mockk<SubscriptionEvent.Event>())
+            changeContext(
+                unitConfigs = listOf(),
+                hassDtos = listOf(
+                    TestHassDto(
+                        id = "kitchen",
+                        name = "Kitchen",
+                    ),
+                )
+            )
+
+            Thread.sleep(5000)
+            cache.dtos.size shouldBe 1
+            cache.units.size shouldBe 1
+            verify(exactly = 0) { hassCommunicator.saveArea(any()) }
             verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
 
             // no further changes should be triggered
-            onDtoChangesCallbackSlot.captured.invoke(mockk<SubscriptionEvent.Event>())
+            changeContext(
+                unitConfigs = listOf(),
+                hassDtos = listOf(
+                    TestHassDto(
+                        id = "kitchen",
+                        name = "Kitchen",
+                    ),
+                )
+            )
+            cache.dtos.size shouldBe 1
+            cache.units.size shouldBe 1
+            verify(exactly = 0) { hassCommunicator.saveArea(any()) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+        }
+    }
+
+    @Test
+    fun `a new bco location should be registered at bco`() {
+        changeContext(
+            unitConfigs = listOf(),
+            hassDtos = listOf()
+        )
+
+        openSynchronizerSession { synchronizer, cache ->
+
+            cache.dtos.size shouldBe 0
+            cache.units.size shouldBe 0
+
+            verify(exactly = 0) { hassCommunicator.saveArea(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+
+            // trigger change
+            changeContext(
+                unitConfigs = listOf(
+                    UnitConfig.newBuilder()
+                        .setUnitType(UnitType.LOCATION)
+                        .setLabel(LabelProcessor.generateLabelBuilder("Office"))
+                        .apply { locationConfigBuilder.locationType = LocationType.TILE }
+                        .build(),
+                ),
+                hassDtos = listOf(
+                    TestHassDto(
+                        id = "kitchen",
+                        name = "Kitchen",
+                    ),
+                )
+            )
+            cache.dtos.size shouldBe 2
+            cache.units.size shouldBe 2
+            verify(exactly = 1) { hassCommunicator.saveArea(any()) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+
+            // no further changes should be triggered
+            changeContext(
+                unitConfigs = listOf(
+                    UnitConfig.newBuilder()
+                        .setUnitType(UnitType.LOCATION)
+                        .setLabel(LabelProcessor.generateLabelBuilder("Office"))
+                        .apply { locationConfigBuilder.locationType = LocationType.TILE }
+                        .build(),
+                ),
+                hassDtos = listOf(
+                    TestHassDto(
+                        id = "kitchen",
+                        name = "Kitchen",
+                    ),
+                )
+            )
+            cache.dtos.size shouldBe 2
+            cache.units.size shouldBe 2
+            verify(exactly = 1) { hassCommunicator.saveArea(any()) }
             verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
         }
     }

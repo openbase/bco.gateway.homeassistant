@@ -1,9 +1,6 @@
 package org.openbase.bco.device.hass.sync
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.openbase.bco.device.hass.communication.HassCommunicator
@@ -19,12 +16,9 @@ import org.openbase.jul.exception.printer.LogLevel
 import org.openbase.jul.exception.tryOrNull
 import org.openbase.jul.extension.protobuf.ProtoBufBuilderProcessor.mergeFromWithoutRepeatedFields
 import org.openbase.jul.iface.Activatable
-import org.openbase.jul.schedule.RecurrenceEventFilter
 import org.openbase.type.domotic.state.ConnectionStateType
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.slf4j.LoggerFactory
-import java.time.Duration
-import kotlin.time.toKotlinDuration
 
 class UnitSynchronizer<HASS_DTO, HASS_INPUT_DTO : HassInputDto>(
     val strategy: UnitSyncStrategy<HASS_DTO, HASS_INPUT_DTO>,
@@ -37,48 +31,17 @@ HASS_DTO : Mergeable<HASS_INPUT_DTO, HASS_DTO>,
 HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
 
     private var coroutineScope: CoroutineScope? = null
-//    private val debounceDuration = Duration.ofSeconds(1).toKotlinDuration()
     private val activationMutex = Mutex()
     private var observer = listOf<AutoCloseable>()
 
     private val bcoToHassSyncDebounceFilter = DebounceFilter<Unit> { syncBCOtoHass() }
     private val hassToBCOSyncDebounceFilter = DebounceFilter<Unit> { syncHassToBCO() }
 
-//    private val bcoToHassSyncTrigger = MutableSharedFlow<kotlin.Unit>(
-//        replay = 0,
-//        extraBufferCapacity = 1,
-//        onBufferOverflow = BufferOverflow.DROP_OLDEST
-//    )
-//
-//    private val hassToBCOSyncTrigger = MutableSharedFlow<kotlin.Unit>(
-//        replay = 0,
-//        extraBufferCapacity = 1,
-//        onBufferOverflow = BufferOverflow.DROP_OLDEST
-//    )
-
-//    @OptIn(FlowPreview::class)
-//    private fun initTrigger(scope: CoroutineScope) {
-//        scope.launch {
-//            bcoToHassSyncTrigger
-////                .debounce(debounceDuration)
-//                .collect { syncBCOtoHass() }
-//        }
-//        scope.launch {
-//            hassToBCOSyncTrigger
-////                .debounce (debounceDuration)
-//                .collect { syncHassToBCO() }
-//        }
-//    }
-
     @OptIn(DelicateCoroutinesApi::class)
     override fun activate() {
         GlobalScope.launch {
             activationMutex.withLock {
                 if (this@UnitSynchronizer.isActive) return@withLock
-
-//                CoroutineScope(SupervisorJob() + Dispatchers.IO)
-//                    .also { coroutineScope = it }
-//                    .let { initTrigger(it) }
 
                 if (!hassCommunicator.isConnected) {
                     LOGGER.info("Waiting for hass connection...")
@@ -117,17 +80,6 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
         syncBCOtoHass() // order important for sync!
         cache.confirmInit()
     }
-
-//    private fun triggerHassToBCOSync() = hassToBCOSyncTrigger.tryEmit(Unit).also {
-//        if (it == false) {
-//            LOGGER.warn("Failed to trigger sync from hass to bco.")
-//        }
-//    }
-//    private fun triggerBCOToHassSync() = bcoToHassSyncTrigger.tryEmit(Unit).also {
-//        if (it == false) {
-//            LOGGER.warn("Failed to trigger sync from hass to bco.")
-//        }
-//    }
 
     private fun syncHassToBCO() {
         LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from hass to bco...")
@@ -189,37 +141,47 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
         LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from hass to bco done.")
     }
 
+    inner class SyncObject(
+        val unitConfig: UnitConfig,
+    ) {
+        val incomingInputDto: HASS_INPUT_DTO = unitConfig.toHassInputDto()
+        var hassDto: HASS_DTO? = cache.getDtoByUnitId(unitConfig.id)?.merge(incomingInputDto)
+        val inputDto: HASS_INPUT_DTO = hassDto?.toInputDto() ?: incomingInputDto
+        val changed: Boolean = hassDto?.let { hassDto != cache.getDtoById(it.id) } ?: true
+        var skipped: Boolean = false
+    }
+
     private fun syncBCOtoHass() {
         LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from bco to hass...")
         getUnitConfigMap().values
-            .map { unitConfig -> unitConfig to unitConfig.toHassInputDto() }
-            .map { (unitConfig, inputDto) -> Triple(unitConfig, inputDto, cache.getDtoByUnitId(unitConfig.id)?.merge(inputDto)) }
-            .let { pairs ->
-                pairs
-                    .filter { (_, _, hassDto) -> hassDto == null || hassDto != cache.getDtoById(hassDto.id) }
-                    .map { (unitConfig, inputDto, hassDto) -> unitConfig to (hassDto?.toInputDto() ?: inputDto) }
-                    .mapSecondNotNull { (unitConfig, inputDto) ->
-
-                        LOGGER.info("Save hass dto ${inputDto.name} of corresponding unit ${unitConfig.label.bestMatch()}.")
-                        runCatching { strategy.saveHassDto(inputDto) }
-                            .getOrElse {
-                                ExceptionPrinter.printHistory(
-                                    "Could not save hass dto ${inputDto.name} of corresponding unit ${unitConfig.label.bestMatch()}.",
-                                    it,
-                                    LOGGER,
-                                    LogLevel.WARN,
-                                )
-                                null
-                            }
+            .map { unitConfig -> SyncObject(unitConfig = unitConfig)}
+            .onEach { sync ->
+                if(sync.changed) {
+                    LOGGER.info("Save hass dto ${sync.inputDto.name} of corresponding unit ${sync.unitConfig.label.bestMatch()}.")
+                    runCatching { strategy
+                        .saveHassDto(sync.inputDto)
+                        .also { hassDto -> sync.hassDto = hassDto }
+                        .also { hassDto -> cache.put(sync.unitConfig, hassDto) }
                     }
-                    .also { cache.putAll(it) }
+                        .getOrElse {
+                            ExceptionPrinter.printHistory(
+                                "Could not save hass dto ${sync.inputDto.name} of corresponding unit ${sync.unitConfig.label.bestMatch()}.",
+                                it,
+                                LOGGER,
+                                LogLevel.WARN,
+                            )
+                            sync
+                            sync.skipped = true
+                        }
+                }
             }
-            .map { (_, dto) -> dto }
-            .associateBy { it.id }
-            .let { dtos ->
+            .associateBy { it.hassDto?.id }
+            .takeIf { it.keys.contains(null).not() }
+            ?.let { syncs ->
+
                 // handle: delete
                 cache.dtos
-                    .filter { dto -> dto.id !in dtos.keys }
+                    .filter { dto -> dto.id !in syncs.keys }
                     .onEach { dto ->
                         LOGGER.info("Delete hass dto ${dto.name} since no corresponding unit in bco exist.")
                         runCatching { strategy.deleteHassDto(dto) }
@@ -229,11 +191,10 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                                     it,
                                     LOGGER,
                                     LogLevel.WARN,
-                                )
-                            }
-                    }
+                                ) } }
+                    .also { dtos -> cache.evictAllByDtos(dtos) }
             }
-            .also { dtos -> cache.evictAllByDtos(dtos) }
+
 
         LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from bco to hass done.")
     }

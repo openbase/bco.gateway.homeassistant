@@ -22,12 +22,14 @@ class DtoCache<HASS_DTO: HassDto> {
     val units: List<UnitConfig> get() = unitConfigCache.values.toList()
 
     fun putAll(dtos: List<Pair<UnitConfig, HASS_DTO>>) = lock.write {
-        dtos.forEach { (unitConfig, dto) ->
+        dtos.forEach { (unitConfig, dto) -> put(unitConfig = unitConfig, dto = dto) }
+    }
+
+    fun put(unitConfig: UnitConfig, dto: HASS_DTO) = lock.write {
             dtoCache[dto.id] = dto
             unitConfigCache[unitConfig.id] = unitConfig
             unitIdToDtoCache[unitConfig.id] = dto
             dtoIdToUnitIdCache[dto.id] = unitConfig.id
-        }
     }
 
     fun evictAll() = lock.write {

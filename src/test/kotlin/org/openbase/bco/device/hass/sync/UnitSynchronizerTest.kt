@@ -20,13 +20,13 @@ import org.openbase.jul.extension.type.processing.LabelProcessor
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig.LocationType
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CompletableFuture
 
 class UnitSynchronizerTest {
-    private val  hassCommunicator: HassCommunicator = mockk()
+    private val hassCommunicator: HassCommunicator = mockk()
 
-    private val  unitRegistry: UnitRegistry = mockk()
+    private val unitRegistry: UnitRegistry = mockk()
 
     private val tileSyncStrategy: UnitSyncStrategy<TestHassDto, TestHassDtoInput> = mockk()
 
@@ -165,7 +165,7 @@ class UnitSynchronizerTest {
             cache.dtos.size shouldBe 0
             cache.units.size shouldBe 0
 
-            verify(exactly = 0) { hassCommunicator.saveArea(any()) }
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
 
             // trigger change
@@ -181,7 +181,7 @@ class UnitSynchronizerTest {
 
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
-            verify(exactly = 0) { hassCommunicator.saveArea(any()) }
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
 
             // no further changes should be triggered
@@ -196,13 +196,14 @@ class UnitSynchronizerTest {
             )
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
-            verify(exactly = 0) { hassCommunicator.saveArea(any()) }
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
         }
     }
 
     @Test
     fun `a new bco location should be registered at bco`() {
+
         changeContext(
             unitConfigs = listOf(),
             hassDtos = listOf()
@@ -213,7 +214,7 @@ class UnitSynchronizerTest {
             cache.dtos.size shouldBe 0
             cache.units.size shouldBe 0
 
-            verify(exactly = 0) { hassCommunicator.saveArea(any()) }
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
 
             // trigger change
@@ -229,7 +230,7 @@ class UnitSynchronizerTest {
             )
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
-            verify(exactly = 1) { hassCommunicator.saveArea(any()) }
+            verify(exactly = 1) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
 
             // no further changes should be triggered
@@ -245,7 +246,7 @@ class UnitSynchronizerTest {
             )
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
-            verify(exactly = 1) { hassCommunicator.saveArea(any()) }
+            verify(exactly = 1) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
         }
     }

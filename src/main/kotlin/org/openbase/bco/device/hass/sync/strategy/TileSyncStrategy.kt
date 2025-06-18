@@ -46,8 +46,8 @@ class TileSyncStrategy(
 
     override fun UnitConfig.toHassId(): String? = metaConfig[ALIAS_KEY_HASS_AREA_ID]
 
-    override fun saveHassDto(dtos: HassAreaInputDto): HassAreaDto =
-        hassCommunicator.saveArea(dtos)
+    override fun saveHassDto(dto: HassAreaInputDto): HassAreaDto =
+        hassCommunicator.saveArea(dto)
 
     override fun queryHassDtos(): List<HassAreaDto> =
         HassCommunicator.instance

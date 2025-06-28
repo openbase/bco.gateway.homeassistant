@@ -11,10 +11,7 @@ import org.openbase.bco.device.hass.manager.dto.HassInputDto
 import org.openbase.bco.device.hass.sync.strategy.UnitSyncStrategy
 import org.openbase.bco.device.hass.type.InputDtoProvider
 import org.openbase.bco.device.hass.type.Mergeable
-import org.openbase.bco.device.hass.util.get
-import org.openbase.bco.device.hass.util.isNotNull
-import org.openbase.bco.device.hass.util.saveUnitConfig
-import org.openbase.bco.device.hass.util.set
+import org.openbase.bco.device.hass.util.*
 import org.openbase.bco.registry.unit.lib.UnitRegistry
 import org.openbase.jul.extension.type.processing.LabelProcessor
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
@@ -74,9 +71,15 @@ class UnitSynchronizerTest {
                 capture(saveUnitConfigSlot),
             )
         } answers {
-            CompletableFuture.completedFuture(saveUnitConfigSlot.captured)
-                .also { unitConfigDB = unitConfigDB.plus(saveUnitConfigSlot.captured) }
+            saveUnitConfigSlot.captured
+                .let { unitConfig ->
+                    unitConfig
+                        .toBuilder()
+                        .setId(unitConfig.id.ifBlank { unitConfig.label.bestMatch() })
+                        .build() }
+                .also { unitConfigDB = unitConfigDB.plus(it) }
                 .also { saveUnitConfigSlot.clear() }
+                .let { CompletableFuture.completedFuture(it) }
         }
     }
 
@@ -221,6 +224,7 @@ class UnitSynchronizerTest {
             changeContext(
                 unitConfigs = listOf(
                     UnitConfig.newBuilder()
+                        .setId("Office")
                         .setUnitType(UnitType.LOCATION)
                         .setLabel(LabelProcessor.generateLabelBuilder("Office"))
                         .apply { locationConfigBuilder.locationType = LocationType.TILE }
@@ -237,6 +241,7 @@ class UnitSynchronizerTest {
             changeContext(
                 unitConfigs = listOf(
                     UnitConfig.newBuilder()
+                        .setId("Office")
                         .setUnitType(UnitType.LOCATION)
                         .setLabel(LabelProcessor.generateLabelBuilder("Office"))
                         .apply { locationConfigBuilder.locationType = LocationType.TILE }
@@ -250,4 +255,78 @@ class UnitSynchronizerTest {
             verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
         }
     }
+
+    @Test
+    fun `entities should be synchronized in both directions`() {
+
+        changeContext(
+            unitConfigs = listOf(),
+            hassDtos = listOf()
+        )
+
+        openSynchronizerSession { synchronizer, cache ->
+
+            cache.dtos.size shouldBe 0
+            cache.units.size shouldBe 0
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+
+            // trigger change
+            changeContext(
+                unitConfigs = listOf(
+                    UnitConfig.newBuilder()
+                        .setId("Office")
+                        .setUnitType(UnitType.LOCATION)
+                        .setLabel(LabelProcessor.generateLabelBuilder("Office"))
+                        .apply { locationConfigBuilder.locationType = LocationType.TILE }
+                        .build(),
+                ),
+                hassDtos = listOf(
+                    TestHassDto(
+                        id = "kitchen",
+                        name = "Kitchen",
+                    ),
+                )
+            )
+            cache.dtos.size shouldBe 2
+            cache.units.size shouldBe 2
+            verify(exactly = 1) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+
+            // no further changes should be triggered
+            changeContext(
+                unitConfigs = listOf(
+                    UnitConfig.newBuilder()
+                        .setId("Office")
+                        .setUnitType(UnitType.LOCATION)
+                        .setLabel(LabelProcessor.generateLabelBuilder("Office"))
+                        .apply { locationConfigBuilder.locationType = LocationType.TILE }
+                        .build(),
+                ),
+                hassDtos = listOf(
+                    TestHassDto(
+                        id = "kitchen",
+                        name = "Kitchen",
+                    ),
+                )
+            )
+            cache.dtos.size shouldBe 2
+            cache.units.size shouldBe 2
+            verify(exactly = 1) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+        }
+    }
 }
+
+/**
+ * bco register -> hass
+ * hass register -> bco
+ * both register -> both
+ * bco update -> hass
+ * hass update -> bco
+ * both update -> both
+ * bco delete -> hass
+ * hass delete -> bco
+ * both delete -> both
+ */

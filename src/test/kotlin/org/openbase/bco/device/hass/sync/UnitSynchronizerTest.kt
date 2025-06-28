@@ -186,6 +186,7 @@ class UnitSynchronizerTest {
             cache.units.size shouldBe 1
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "Kitchen" }) }
 
             // no further changes should be triggered
             changeContext(
@@ -234,7 +235,7 @@ class UnitSynchronizerTest {
             )
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
-            verify(exactly = 1) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 1) { tileSyncStrategy.saveHassDto(match { it.name == "Office" }) }
             verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
 
             // no further changes should be triggered
@@ -291,8 +292,8 @@ class UnitSynchronizerTest {
             )
             cache.dtos.size shouldBe 2
             cache.units.size shouldBe 2
-            verify(exactly = 1) { tileSyncStrategy.saveHassDto(any()) }
-            verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 1) { tileSyncStrategy.saveHassDto(match { it.name == "Office" }) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "Kitchen" }) }
 
             // no further changes should be triggered
             changeContext(

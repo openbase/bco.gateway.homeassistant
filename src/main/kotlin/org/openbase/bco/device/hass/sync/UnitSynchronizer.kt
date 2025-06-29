@@ -122,6 +122,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                         .map { (_, unitConfig) -> strategy.run { unitConfig.toHassId() } to unitConfig }
                         .filterFirstNotNull()
                         .filter { (dtoId, _) -> dtoId !in dtoIds }
+                        .filterNot { (_, unitConfig) -> unitConfig.locationConfig.root }
                         .onEach { (_, unitConfig) ->
                             LOGGER.info("Remove unit ${unitConfig.label.bestMatch()} since no corresponding dto in hass exist.")
                             runCatching { unitRegistry.removeUnitConfig(unitConfig).await() }
@@ -142,7 +143,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     }
 
     inner class SyncObject(
-        val unitConfig: UnitConfig,
+        var unitConfig: UnitConfig,
     ) {
         val incomingInputDto: HASS_INPUT_DTO = unitConfig.toHassInputDto()
         var hassDto: HASS_DTO? = cache.getDtoByUnitId(unitConfig.id)?.merge(incomingInputDto)
@@ -161,6 +162,14 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                     runCatching { strategy
                         .saveHassDto(sync.inputDto)
                         .also { hassDto -> sync.hassDto = hassDto }
+                        .also { hassDto ->
+                            strategy.run {
+                                sync.unitConfig =
+                                    unitRegistry
+                                        .saveUnitConfig(sync.unitConfig.link(hassDto).build())
+                                        .await()
+                            }
+                        }
                         .also { hassDto -> cache.put(sync.unitConfig, hassDto) }
                     }
                         .getOrElse {

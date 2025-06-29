@@ -4,9 +4,10 @@ import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_BCO_ICON
-import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_AREA_ID
+import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_TYPE
 import org.openbase.bco.device.hass.manager.dto.HassAreaDto
 import org.openbase.bco.device.hass.manager.dto.HassAreaInputDto
+import org.openbase.bco.device.hass.type.HassType
 import org.openbase.bco.device.hass.util.get
 import org.openbase.bco.device.hass.util.set
 import org.openbase.bco.registry.remote.Registries
@@ -24,6 +25,7 @@ class TileSyncStrategy(
     private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ): UnitSyncStrategy<HassAreaDto, HassAreaInputDto> {
     override val unitType: UnitType = UnitType.LOCATION
+    override val hassType: HassType = HassType.AREA
     override val unitFilter: (UnitConfig) -> Boolean = { it.locationConfig?.locationType == LocationType.TILE }
     override fun buildUnitConfig(hassDto: HassAreaDto): UnitConfig =
         UnitConfig
@@ -31,7 +33,8 @@ class TileSyncStrategy(
             .setUnitType(UnitType.LOCATION)
             .apply { locationConfigBuilder.locationType = LocationType.TILE }
             .setLabel(LabelProcessor.generateLabelBuilder(hassDto.name))
-            .apply { metaConfigBuilder[ALIAS_KEY_HASS_AREA_ID] = hassDto.id }
+            .link(hassDto)
+            .apply { metaConfigBuilder[ALIAS_KEY_HASS_TYPE] = hassType.name }
             .build()
 
     override fun buildHassInputDto(unitConfig: UnitConfig): HassAreaInputDto = HassAreaInputDto(
@@ -43,8 +46,6 @@ class TileSyncStrategy(
         labels = null,
         aliases = unitConfig.label.entryList.flatMap { it.valueList },
     )
-
-    override fun UnitConfig.toHassId(): String? = metaConfig[ALIAS_KEY_HASS_AREA_ID]
 
     override fun saveHassDto(dto: HassAreaInputDto): HassAreaDto =
         hassCommunicator.saveArea(dto)

@@ -4,9 +4,9 @@ import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_BCO_ICON
-import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_FLOOR_ID
 import org.openbase.bco.device.hass.manager.dto.HassFloorDto
 import org.openbase.bco.device.hass.manager.dto.HassFloorInputDto
+import org.openbase.bco.device.hass.type.HassType
 import org.openbase.bco.device.hass.util.get
 import org.openbase.bco.device.hass.util.set
 import org.openbase.bco.registry.remote.Registries
@@ -24,17 +24,17 @@ class ZoneSyncStrategy(
     private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ): UnitSyncStrategy<HassFloorDto, HassFloorInputDto>{
     override val unitType: UnitType = UnitType.LOCATION
+    override val hassType: HassType = HassType.FLOOR
     override val unitFilter: (UnitConfig) -> Boolean = { it.locationConfig?.locationType == LocationType.ZONE }
-
-    override fun UnitConfig.toHassId(): String? = metaConfig[ALIAS_KEY_HASS_FLOOR_ID]
 
     override fun buildUnitConfig(hassDto: HassFloorDto): UnitConfig =
         UnitConfig
             .newBuilder()
-            .setUnitType(UnitType.LOCATION)
+            .setUnitType(unitType)
             .apply { locationConfigBuilder.locationType = LocationType.ZONE }
             .setLabel(LabelProcessor.generateLabelBuilder(hassDto.name))
-            .apply { metaConfigBuilder[ALIAS_KEY_HASS_FLOOR_ID] = hassDto.id }
+            .link(hassDto)
+            .apply { hassDto.icon?.let { metaConfigBuilder[ALIAS_KEY_BCO_ICON] = it } }
             .build()
 
     override fun buildHassInputDto(unitConfig: UnitConfig): HassFloorInputDto = HassFloorInputDto(

@@ -5,7 +5,7 @@ import org.amshove.kluent.shouldBe
 import org.junit.jupiter.api.Test
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
-import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_AREA_ID
+import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_ID
 import org.openbase.bco.device.hass.manager.dto.HassDto
 import org.openbase.bco.device.hass.manager.dto.HassInputDto
 import org.openbase.bco.device.hass.sync.strategy.UnitSyncStrategy
@@ -48,16 +48,37 @@ class UnitSynchronizerTest {
                 .setUnitType(UnitType.LOCATION)
                 .apply { locationConfigBuilder.locationType = LocationType.TILE }
                 .setLabel(LabelProcessor.generateLabelBuilder(hassDtoSlot.captured.name))
-                .apply { metaConfigBuilder[ALIAS_KEY_HASS_AREA_ID] = hassDtoSlot.captured.id }
+                .also { unitConfig -> tileSyncStrategy.run { unitConfig.link(hassDtoSlot.captured) } }
+                .apply { metaConfigBuilder[ALIAS_KEY_HASS_ID] = hassDtoSlot.captured.id }
                 .build()
         }
         every { tileSyncStrategy.buildHassInputDto(capture(uniConfigSlot)) } answers {
             TestHassDtoInput(
-                id = uniConfigSlot.captured.metaConfig[ALIAS_KEY_HASS_AREA_ID],
+                id = uniConfigSlot.captured.metaConfig[ALIAS_KEY_HASS_ID],
                 name = LabelProcessor.getBestMatch(uniConfigSlot.captured.label),
             )
         }
         mockkStatic(UnitRegistry::saveUnitConfig)
+        // Mock the extension functions
+        every {
+            tileSyncStrategy.run { any<UnitConfig>().link(any()) }
+        } answers {
+            val unitConfig = firstArg<UnitConfig>()
+            val hassDto = secondArg<TestHassDto>()
+            unitConfig.toBuilder().apply {
+                metaConfigBuilder[ALIAS_KEY_HASS_ID] = hassDto.id
+            }
+        }
+
+        every {
+            tileSyncStrategy.run { any<UnitConfig.Builder>().link(any()) }
+        } answers {
+            val builder = firstArg<UnitConfig.Builder>()
+            val hassDto = secondArg<TestHassDto>()
+            builder.apply {
+                metaConfigBuilder[ALIAS_KEY_HASS_ID] = hassDto.id
+            }
+        }
 
         val saveHassDtoSlot  = slot<TestHassDtoInput>()
         every { tileSyncStrategy.saveHassDto(capture(saveHassDtoSlot)) } answers {
@@ -131,7 +152,7 @@ class UnitSynchronizerTest {
     ) {
         tileSyncStrategy.run {
             unitConfigs?.forEach { unitConfig ->
-                every { unitConfig.toHassId() } answers { unitConfig.metaConfig[ALIAS_KEY_HASS_AREA_ID] }
+                every { unitConfig.toHassId() } answers { unitConfig.metaConfig[ALIAS_KEY_HASS_ID] }
             }
         }
 
@@ -169,7 +190,9 @@ class UnitSynchronizerTest {
             cache.units.size shouldBe 0
 
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
             verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
 
             // trigger change
             changeContext(
@@ -185,8 +208,10 @@ class UnitSynchronizerTest {
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
             verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
             verify(exactly = 1) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "Kitchen" }) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
 
             // no further changes should be triggered
             changeContext(
@@ -201,7 +226,9 @@ class UnitSynchronizerTest {
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
             verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
         }
     }
 
@@ -219,7 +246,9 @@ class UnitSynchronizerTest {
             cache.units.size shouldBe 0
 
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
             verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
 
             // trigger change
             changeContext(
@@ -236,7 +265,9 @@ class UnitSynchronizerTest {
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
             verify(exactly = 1) { tileSyncStrategy.saveHassDto(match { it.name == "Office" }) }
-            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
 
             // no further changes should be triggered
             changeContext(
@@ -253,7 +284,9 @@ class UnitSynchronizerTest {
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
             verify(exactly = 1) { tileSyncStrategy.saveHassDto(any()) }
-            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
         }
     }
 
@@ -271,7 +304,9 @@ class UnitSynchronizerTest {
             cache.units.size shouldBe 0
 
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
             verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
 
             // trigger change
             changeContext(
@@ -293,7 +328,11 @@ class UnitSynchronizerTest {
             cache.dtos.size shouldBe 2
             cache.units.size shouldBe 2
             verify(exactly = 1) { tileSyncStrategy.saveHassDto(match { it.name == "Office" }) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 2) { unitRegistry.saveUnitConfig(any()) }
             verify(exactly = 1) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "Kitchen" }) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "Office" }) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
 
             // no further changes should be triggered
             changeContext(
@@ -315,7 +354,9 @@ class UnitSynchronizerTest {
             cache.dtos.size shouldBe 2
             cache.units.size shouldBe 2
             verify(exactly = 1) { tileSyncStrategy.saveHassDto(any()) }
-            verify(exactly = 1) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 2) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
         }
     }
 }

@@ -293,13 +293,13 @@ class HassDeviceManager :
 
     companion object {
         const val ALIAS_KEY_HASS_DEVICE_MODEL = "HASS_DEVICE_MODEL"
-        const val ALIAS_KEY_HASS_FLOOR_ID = "HASS_FLOOR_ID"
+        const val ALIAS_KEY_HASS_ID = "HASS_ID"
+        const val ALIAS_KEY_HASS_TYPE = "HASS_TYPE"
         const val ALIAS_KEY_HASS_DEVICE_ID = "HASS_DEVICE_ID"
         const val HASS_GATEWAY_CLASS_ID = "96dd4c43-92de-48b6-ba16-f9bafefc3c44"
         const val HASS_ENTITY_TYPE = "HASS_ENTITY_TYPE"
         const val HASS_ENTITY_DEVICE_CLASS = "HASS_ENTITY_DEVICE_CLASS"
         const val ALIAS_KEY_HASS_ENTITY_ID = "HASS_ENTITY_ID"
-        const val ALIAS_KEY_HASS_AREA_ID = "HASS_AREA_ID"
 
         const val ALIAS_KEY_BCO_ICON = "ICON"
 

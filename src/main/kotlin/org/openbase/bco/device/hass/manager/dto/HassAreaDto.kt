@@ -21,7 +21,7 @@ data class HassAreaDto(
     override val id: String,
     override val name: String,
     @SerializedName("floor_id")
-    val floorId: String,
+    val floorId: String?,
 
     val icon: String?,
 

@@ -7,6 +7,8 @@ import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KE
 import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_TYPE
 import org.openbase.bco.device.hass.manager.dto.HassAreaDto
 import org.openbase.bco.device.hass.manager.dto.HassAreaInputDto
+import org.openbase.bco.device.hass.manager.dto.HassFloorDto
+import org.openbase.bco.device.hass.sync.DtoCache
 import org.openbase.bco.device.hass.type.HassType
 import org.openbase.bco.device.hass.util.get
 import org.openbase.bco.device.hass.util.set
@@ -21,6 +23,7 @@ import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig.LocationType
 
 class TileSyncStrategy(
+    private val cache: DtoCache<HassFloorDto>,
     private val hassCommunicator: HassCommunicator = HassCommunicator.instance,
     private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ): UnitSyncStrategy<HassAreaDto, HassAreaInputDto> {
@@ -40,7 +43,7 @@ class TileSyncStrategy(
     override fun buildHassInputDto(unitConfig: UnitConfig): HassAreaInputDto = HassAreaInputDto(
         id = unitConfig.toHassId(),
         name = LabelProcessor.getBestMatch(unitConfig.label),
-        floorId = unitConfig.locationConfig?.locationType?.name,
+        floorId = cache.getDtoByUnitId(unitConfig.placementConfig.locationId)?.id,
         icon =  unitConfig.metaConfig[ALIAS_KEY_BCO_ICON],
         picture = null,
         labels = null,

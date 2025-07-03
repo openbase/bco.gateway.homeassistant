@@ -115,7 +115,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                         .mapInverted()
                         .also { cache.putAll(it) }
                 }
-                .map { (_, dto) -> dto.id }
+                .map { (dto, _) -> dto.id }
                 .let { dtoIds ->
                     // handle: delete
                     unitConfigs

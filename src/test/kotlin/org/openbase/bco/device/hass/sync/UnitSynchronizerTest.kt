@@ -484,7 +484,6 @@ class UnitSynchronizerTest {
 
             // trigger change
             changeContext(
-                unitConfigs = listOf(),
                 hassDtos = listOf(
                     TestHassDto(
                         id = "kitchen",
@@ -499,13 +498,12 @@ class UnitSynchronizerTest {
             cache.dtos.size shouldBe 2
             cache.units.size shouldBe 2
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
-            verify(exactly = 1) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
             verify(exactly = 5) { unitRegistry.saveUnitConfig(any()) }
             verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
 
             // no further changes should be triggered
             changeContext(
-                unitConfigs = listOf(),
                 hassDtos = listOf(
                     TestHassDto(
                         id = "kitchen",
@@ -520,7 +518,7 @@ class UnitSynchronizerTest {
             cache.dtos.size shouldBe 2
             cache.units.size shouldBe 2
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
-            verify(exactly = 1) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
             verify(exactly = 5) { unitRegistry.saveUnitConfig(any()) }
             verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
         }

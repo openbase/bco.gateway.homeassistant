@@ -72,7 +72,7 @@ class HassDeviceManager :
 
     private val synchronizer = listOf (
         UnitSynchronizer(
-            strategy = TileSyncStrategy(),
+            strategy = TileSyncStrategy(zoneFloorCache),
             cache = tileAreaCache,
             hassCommunicator = HassCommunicator.instance,
             unitRegistry = Registries.getUnitRegistry(),

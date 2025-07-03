@@ -4,6 +4,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.openbase.bco.device.hass.communication.HassCommunicator
+import org.openbase.bco.device.hass.manager.HassDeviceManager
 import org.openbase.bco.device.hass.manager.dto.HassDto
 import org.openbase.bco.device.hass.manager.dto.HassInputDto
 import org.openbase.bco.device.hass.sync.strategy.UnitSyncStrategy
@@ -13,7 +14,6 @@ import org.openbase.bco.device.hass.util.*
 import org.openbase.bco.registry.unit.lib.UnitRegistry
 import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
-import org.openbase.jul.exception.tryOrNull
 import org.openbase.jul.extension.protobuf.ProtoBufBuilderProcessor.mergeFromWithoutRepeatedFields
 import org.openbase.jul.iface.Activatable
 import org.openbase.type.domotic.state.ConnectionStateType
@@ -82,15 +82,20 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     }
 
     private fun syncHassToBCO() {
+
         LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from hass to bco...")
         val unitConfigs = getUnitConfigMap()
+        val unitConfigByDtoId = unitConfigs.values.associateBy { it.metaConfig[HassDeviceManager.ALIAS_KEY_HASS_ID] }
+
         strategy.queryHassDtos().let { hassDtos ->
             // handle: add and update
             hassDtos
                 .map { hassDto -> hassDto to hassDto.toUnitConfig() }
                 .mapSecond { (hassDto, unitConfig) ->
-                    cache.getUnitIdByDtoId(hassDto.id)
-                        .tryOrNull { unitConfigs[it] }
+                    run {
+                        cache.getUnitConfigByDtoId(hassDto.id)
+                            ?: unitConfigByDtoId[hassDto.id]
+                    }
                         ?.toBuilder()
                         ?.mergeFromWithoutRepeatedFields(unitConfig)
                         ?.build()
@@ -115,7 +120,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                         .mapInverted()
                         .also { cache.putAll(it) }
                 }
-                .map { (_, dto) -> dto.id }
+                .map { (dto, _) -> dto.id }
                 .let { dtoIds ->
                     // handle: delete
                     unitConfigs
@@ -144,9 +149,13 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
 
     inner class SyncObject(
         var unitConfig: UnitConfig,
+        val hassDtoMap: Map<String, HASS_DTO>
     ) {
         val incomingInputDto: HASS_INPUT_DTO = unitConfig.toHassInputDto()
-        var hassDto: HASS_DTO? = cache.getDtoByUnitId(unitConfig.id)?.merge(incomingInputDto)
+        var hassDto: HASS_DTO? = run {
+            cache.getDtoByUnitId(unitConfig.id)
+                ?: hassDtoMap[unitConfig.metaConfig[HassDeviceManager.ALIAS_KEY_HASS_ID]]
+        }?.merge(incomingInputDto)
         val inputDto: HASS_INPUT_DTO = hassDto?.toInputDto() ?: incomingInputDto
         val changed: Boolean = hassDto?.let { hassDto != cache.getDtoById(it.id) } ?: true
         var skipped: Boolean = false
@@ -154,23 +163,25 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
 
     private fun syncBCOtoHass() {
         LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from bco to hass...")
+        val hassDtoMap: Map<String, HASS_DTO> = strategy.queryHassDtos().associateBy { it.id }
         getUnitConfigMap().values
-            .map { unitConfig -> SyncObject(unitConfig = unitConfig)}
+            .map { unitConfig -> SyncObject(unitConfig = unitConfig, hassDtoMap = hassDtoMap) }
             .onEach { sync ->
-                if(sync.changed) {
+                if (sync.changed) {
                     LOGGER.info("Save hass dto ${sync.inputDto.name} of corresponding unit ${sync.unitConfig.label.bestMatch()}.")
-                    runCatching { strategy
-                        .saveHassDto(sync.inputDto)
-                        .also { hassDto -> sync.hassDto = hassDto }
-                        .also { hassDto ->
-                            strategy.run {
-                                sync.unitConfig =
-                                    unitRegistry
-                                        .saveUnitConfig(sync.unitConfig.link(hassDto).build())
-                                        .await()
+                    runCatching {
+                        strategy
+                            .saveHassDto(sync.inputDto)
+                            .also { hassDto -> sync.hassDto = hassDto }
+                            .also { hassDto ->
+                                strategy.run {
+                                    sync.unitConfig =
+                                        unitRegistry
+                                            .saveUnitConfig(sync.unitConfig.link(hassDto).build())
+                                            .await()
+                                }
                             }
-                        }
-                        .also { hassDto -> cache.put(sync.unitConfig, hassDto) }
+                            .also { hassDto -> cache.put(sync.unitConfig, hassDto) }
                     }
                         .getOrElse {
                             ExceptionPrinter.printHistory(
@@ -185,7 +196,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                 }
             }
             .associateBy { it.hassDto?.id }
-            .takeIf { it.keys.contains(null).not() }
+            .takeIf { it.keys.contains(null).not() } // todo: what is this
             ?.let { syncs ->
 
                 // handle: delete
@@ -200,7 +211,9 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                                     it,
                                     LOGGER,
                                     LogLevel.WARN,
-                                ) } }
+                                )
+                            }
+                    }
                     .also { dtos -> cache.evictAllByDtos(dtos) }
             }
 

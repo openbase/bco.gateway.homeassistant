@@ -413,7 +413,7 @@ class UnitSynchronizerTest {
                     UnitConfig.newBuilder()
                         .setId("Kitchen")
                         .setUnitType(UnitType.LOCATION)
-                        .setLabel(LabelProcessor.generateLabelBuilder("Office"))
+                        .setLabel(LabelProcessor.generateLabelBuilder("Kitchen"))
                         .apply { locationConfigBuilder.locationType = LocationType.TILE }
                         .apply {
                             metaConfigBuilder.addEntry(
@@ -455,7 +455,6 @@ class UnitSynchronizerTest {
     fun `a removed hass location should be removed at bco`() {
 
         changeContext(
-            unitConfigs = listOf(),
             hassDtos = listOf(
                 TestHassDto(
                     id = "kitchen",
@@ -484,7 +483,6 @@ class UnitSynchronizerTest {
 
             // trigger change
             changeContext(
-                unitConfigs = listOf(),
                 hassDtos = listOf(
                     TestHassDto(
                         id = "kitchen",

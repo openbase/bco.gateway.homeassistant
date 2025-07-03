@@ -402,7 +402,7 @@ class UnitSynchronizerTest {
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
 
-            verify(exactly = 0) { tileSyncStrategy.saveHassDto(c) }
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
             verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
             verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }

@@ -5,6 +5,7 @@ import org.amshove.kluent.shouldBe
 import org.junit.jupiter.api.Test
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
+import org.openbase.bco.device.hass.manager.HassDeviceManager
 import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_ID
 import org.openbase.bco.device.hass.manager.dto.HassDto
 import org.openbase.bco.device.hass.manager.dto.HassInputDto
@@ -14,6 +15,7 @@ import org.openbase.bco.device.hass.type.Mergeable
 import org.openbase.bco.device.hass.util.*
 import org.openbase.bco.registry.unit.lib.UnitRegistry
 import org.openbase.jul.extension.type.processing.LabelProcessor
+import org.openbase.type.configuration.EntryType
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig.LocationType
@@ -356,6 +358,95 @@ class UnitSynchronizerTest {
             verify(exactly = 1) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
             verify(exactly = 2) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+        }
+    }
+    @Test
+    fun `a fully synced system should not further trigger any sync actions`() {
+
+        changeContext(
+            unitConfigs = listOf(
+                UnitConfig.newBuilder()
+                    .setId("Kitchen")
+                    .setUnitType(UnitType.LOCATION)
+                    .setLabel(LabelProcessor.generateLabelBuilder("Kitchen"))
+                    .apply { locationConfigBuilder.locationType = LocationType.TILE }
+                    .apply {
+                        metaConfigBuilder.addEntry(
+                            EntryType.Entry.newBuilder()
+                                .setKey(ALIAS_KEY_HASS_ID)
+                                .setKey("kitchen")
+                                .build()
+                        )
+                    }
+                    .apply {
+                        metaConfigBuilder.addEntry(
+                            EntryType.Entry.newBuilder()
+                                .setKey(HassDeviceManager.ALIAS_KEY_HASS_TYPE)
+                                .setKey("AREA")
+                                .build()
+                        )
+                    }
+                    .build(),
+            ),
+            hassDtos = listOf(
+                TestHassDto(
+                    id = "kitchen",
+                    name = "Kitchen",
+                ),
+            )
+        )
+
+        openSynchronizerSession { synchronizer, cache ->
+
+            cache.dtos.size shouldBe 1
+            cache.units.size shouldBe 1
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(c) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+
+            // trigger change
+            changeContext(
+                unitConfigs = listOf(
+                    UnitConfig.newBuilder()
+                        .setId("Kitchen")
+                        .setUnitType(UnitType.LOCATION)
+                        .setLabel(LabelProcessor.generateLabelBuilder("Office"))
+                        .apply { locationConfigBuilder.locationType = LocationType.TILE }
+                        .apply {
+                            metaConfigBuilder.addEntry(
+                                EntryType.Entry.newBuilder()
+                                    .setKey(ALIAS_KEY_HASS_ID)
+                                    .setKey("kitchen")
+                                    .build()
+                            )
+                        }
+                        .apply {
+                            metaConfigBuilder.addEntry(
+                                EntryType.Entry.newBuilder()
+                                    .setKey(HassDeviceManager.ALIAS_KEY_HASS_TYPE)
+                                    .setKey("AREA")
+                                    .build()
+                            )
+                        }
+                        .build(),
+                ),
+                hassDtos = listOf(
+                    TestHassDto(
+                        id = "kitchen",
+                        name = "Kitchen",
+                    ),
+                )
+            )
+            cache.dtos.size shouldBe 1
+            cache.units.size shouldBe 1
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
             verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
         }
     }

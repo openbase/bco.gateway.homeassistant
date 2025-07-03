@@ -233,7 +233,7 @@ class UnitSynchronizerTest {
     }
 
     @Test
-    fun `a new bco location should be registered at bco`() {
+    fun `a new bco location should be registered at hass`() {
 
         changeContext(
             unitConfigs = listOf(),
@@ -356,6 +356,81 @@ class UnitSynchronizerTest {
             verify(exactly = 1) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
             verify(exactly = 2) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+        }
+    }
+
+    @Test
+    fun `a removed hass location should be removed at bco`() {
+
+        changeContext(
+            unitConfigs = listOf(),
+            hassDtos = listOf(
+                TestHassDto(
+                    id = "kitchen",
+                    name = "Kitchen",
+                ),
+                TestHassDto(
+                    id = "restroom",
+                    name = "Restroom",
+                ),
+                TestHassDto(
+                    id = "dungeon",
+                    name = "Dungeon",
+                )
+            )
+        )
+
+        openSynchronizerSession { synchronizer, cache ->
+
+            cache.dtos.size shouldBe 3
+            cache.units.size shouldBe 3
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 3) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+
+            // trigger change
+            changeContext(
+                unitConfigs = listOf(),
+                hassDtos = listOf(
+                    TestHassDto(
+                        id = "kitchen",
+                        name = "Kitchen",
+                    ),
+                    TestHassDto(
+                        id = "dungeon",
+                        name = "Dungeon",
+                    )
+                )
+            )
+            cache.dtos.size shouldBe 2
+            cache.units.size shouldBe 2
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 1) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 5) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+
+            // no further changes should be triggered
+            changeContext(
+                unitConfigs = listOf(),
+                hassDtos = listOf(
+                    TestHassDto(
+                        id = "kitchen",
+                        name = "Kitchen",
+                    ),
+                    TestHassDto(
+                        id = "dungeon",
+                        name = "Dungeon",
+                    )
+                )
+            )
+            cache.dtos.size shouldBe 2
+            cache.units.size shouldBe 2
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 1) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 5) { unitRegistry.saveUnitConfig(any()) }
             verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
         }
     }

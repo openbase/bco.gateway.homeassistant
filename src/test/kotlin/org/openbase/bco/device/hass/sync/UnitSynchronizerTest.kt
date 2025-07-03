@@ -149,8 +149,8 @@ class UnitSynchronizerTest {
     }
 
     fun changeContext(
-        unitConfigs: List<UnitConfig>?,
-        hassDtos: List<TestHassDto>?,
+        unitConfigs: List<UnitConfig>? = null,
+        hassDtos: List<TestHassDto>? = null,
     ) {
         tileSyncStrategy.run {
             unitConfigs?.forEach { unitConfig ->

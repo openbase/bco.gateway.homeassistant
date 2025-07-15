@@ -161,7 +161,10 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                 ?: hassDtoMap[unitConfig.metaConfig[HassDeviceManager.ALIAS_KEY_HASS_ID]]
         }?.merge(incomingInputDto)
         val inputDto: HASS_INPUT_DTO = hassDto?.toInputDto() ?: incomingInputDto
-        val changed: Boolean = hassDto?.let { hassDto != cache.getDtoById(it.id) } ?: true
+        val changed: Boolean = hassDto?.let {
+            hassDto != (cache.getDtoById(it.id)
+                ?: hassDtoMap[unitConfig.metaConfig[HassDeviceManager.ALIAS_KEY_HASS_ID]])
+        } ?: true
         var skipped: Boolean = false
     }
 

@@ -375,7 +375,7 @@ class UnitSynchronizerTest {
                         metaConfigBuilder.addEntry(
                             EntryType.Entry.newBuilder()
                                 .setKey(ALIAS_KEY_HASS_ID)
-                                .setKey("kitchen")
+                                .setValue("kitchen")
                                 .build()
                         )
                     }
@@ -383,7 +383,7 @@ class UnitSynchronizerTest {
                         metaConfigBuilder.addEntry(
                             EntryType.Entry.newBuilder()
                                 .setKey(HassDeviceManager.ALIAS_KEY_HASS_TYPE)
-                                .setKey("AREA")
+                                .setValue("AREA")
                                 .build()
                         )
                     }
@@ -419,7 +419,7 @@ class UnitSynchronizerTest {
                             metaConfigBuilder.addEntry(
                                 EntryType.Entry.newBuilder()
                                     .setKey(ALIAS_KEY_HASS_ID)
-                                    .setKey("kitchen")
+                                    .setValue("kitchen")
                                     .build()
                             )
                         }
@@ -427,7 +427,7 @@ class UnitSynchronizerTest {
                             metaConfigBuilder.addEntry(
                                 EntryType.Entry.newBuilder()
                                     .setKey(HassDeviceManager.ALIAS_KEY_HASS_TYPE)
-                                    .setKey("AREA")
+                                    .setValue("AREA")
                                     .build()
                             )
                         }

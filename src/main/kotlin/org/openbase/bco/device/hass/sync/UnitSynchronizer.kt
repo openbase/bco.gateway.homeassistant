@@ -105,17 +105,21 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                     pairs
                         .filter { (_, unitConfig) -> unitConfig != cache.getUnitConfigById(unitConfig.id) }
                         .mapSecondNotNull { (hassDto, unitConfig) ->
-                            LOGGER.info("Save unit ${unitConfig.label.bestMatch()} of corresponding hass dto ${hassDto.name}.")
-                            runCatching { unitRegistry.saveUnitConfig(unitConfig).await() }
-                                .getOrElse {
-                                    ExceptionPrinter.printHistory(
-                                        "Could not save unit ${unitConfig.label.bestMatch()} of corresponding hass dto ${hassDto.name}.",
-                                        it,
-                                        LOGGER,
-                                        LogLevel.WARN,
-                                    )
-                                    null
-                                }
+                            if(unitConfigByDtoId[hassDto.id] != unitConfig) {
+                                LOGGER.info("Save unit ${unitConfig.label.bestMatch()} of corresponding hass dto ${hassDto.name}.")
+                                runCatching { unitRegistry.saveUnitConfig(unitConfig).await() }
+                                    .getOrElse {
+                                        ExceptionPrinter.printHistory(
+                                            "Could not save unit ${unitConfig.label.bestMatch()} of corresponding hass dto ${hassDto.name}.",
+                                            it,
+                                            LOGGER,
+                                            LogLevel.WARN,
+                                        )
+                                        null
+                                    }
+                            } else {
+                                unitConfig
+                            }
                         }
                         .mapInverted()
                         .also { cache.putAll(it) }

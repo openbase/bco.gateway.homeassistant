@@ -30,34 +30,44 @@ HASS_DTO : HassDto,
 HASS_DTO : Mergeable<HASS_INPUT_DTO, HASS_DTO>,
 HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
 
-    private var coroutineScope: CoroutineScope? = null
     private val activationMutex = Mutex()
     private var observer = listOf<AutoCloseable>()
 
     private val bcoToHassSyncDebounceFilter = DebounceFilter<Unit> { syncBCOtoHass() }
     private val hassToBCOSyncDebounceFilter = DebounceFilter<Unit> { syncHassToBCO() }
 
+    private var active = false
+
     @OptIn(DelicateCoroutinesApi::class)
     override fun activate() {
         GlobalScope.launch {
-            activationMutex.withLock {
-                if (this@UnitSynchronizer.isActive) return@withLock
+            try {
+                activationMutex.withLock {
+                    if (this@UnitSynchronizer.isActive) return@withLock
 
-                if (!hassCommunicator.isConnected) {
-                    LOGGER.info("Waiting for hass connection...")
-                    hassCommunicator.waitForConnectionState(ConnectionStateType.ConnectionState.State.CONNECTED)
+                    active = true
+
+                    if (!hassCommunicator.isConnected) {
+                        LOGGER.info("Waiting for hass connection...")
+                        hassCommunicator.waitForConnectionState(ConnectionStateType.ConnectionState.State.CONNECTED)
+                    }
+
+                    strategy.onDtoChanges() {
+                        hassToBCOSyncDebounceFilter.trigger()
+                    }.also { observer += it }
+
+                    strategy.onUnitChanges() {
+                        bcoToHassSyncDebounceFilter.trigger()
+                    }.also { observer += it }
+
+                    LOGGER.info("Activated ${strategy.name}")
+                    syncAll()
+
+
                 }
-
-                strategy.onDtoChanges() {
-                    hassToBCOSyncDebounceFilter.trigger()
-                }.also { observer += it }
-
-                strategy.onUnitChanges() {
-                    bcoToHassSyncDebounceFilter.trigger()
-                }.also { observer += it }
-
-                LOGGER.info("Activated ${strategy.name}")
-                syncAll()
+            } catch (e: Exception) {
+                active = false
+                throw e
             }
         }
     }
@@ -67,13 +77,12 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
         GlobalScope.launch {
             activationMutex.withLock {
                 observer.forEach(AutoCloseable::close)
-                coroutineScope?.cancel()
-                coroutineScope = null
+                active = false
             }
         }
     }
 
-    override fun isActive(): Boolean = coroutineScope?.isActive == true
+    override fun isActive(): Boolean = active
 
     private fun syncAll() {
         syncHassToBCO() // order important for sync!
@@ -105,7 +114,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                     pairs
                         .filter { (_, unitConfig) -> unitConfig != cache.getUnitConfigById(unitConfig.id) }
                         .mapSecondNotNull { (hassDto, unitConfig) ->
-                            if(unitConfigByDtoId[hassDto.id] != unitConfig) {
+                            if (unitConfigByDtoId[hassDto.id] != unitConfig) {
                                 LOGGER.info("Save unit ${unitConfig.label.bestMatch()} of corresponding hass dto ${hassDto.name}.")
                                 runCatching { unitRegistry.saveUnitConfig(unitConfig).await() }
                                     .getOrElse {
@@ -137,7 +146,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                             runCatching { unitRegistry.removeUnitConfig(unitConfig).await() }
                                 .getOrElse {
                                     ExceptionPrinter.printHistory(
-                                        "Could not remove unit ${unitConfig.label.bestMatch()}.bestMatch() where no corresponding dto in hass exist.",
+                                        "Could not remove unit ${unitConfig.label.bestMatch()} where no corresponding dto in hass exist.",
                                         it,
                                         LOGGER,
                                         LogLevel.WARN,

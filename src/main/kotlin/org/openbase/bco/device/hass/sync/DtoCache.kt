@@ -2,6 +2,8 @@ package org.openbase.bco.device.hass.sync
 
 import org.openbase.bco.device.hass.manager.dto.HassDto
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
@@ -16,7 +18,9 @@ class DtoCache<HASS_DTO: HassDto> {
     private var unitIdToDtoCache = mutableMapOf<String, HASS_DTO>()
     private var dtoIdToUnitIdCache = mutableMapOf<String, String>()
 
-    private var initialized = false
+    @Volatile
+    var initialized = false
+        private set
 
     val dtos: List<HASS_DTO> get() = dtoCache.values.toList()
     val units: List<UnitConfig> get() = unitConfigCache.values.toList()
@@ -66,10 +70,10 @@ class DtoCache<HASS_DTO: HassDto> {
         }
     }
 
-    fun waitUntilReady() =
+    fun waitUntilReady(duration: Duration) =
         lock.write {
             if (!initialized) {
-                writeCondition.await()
+                writeCondition.await(duration.toMillis(), TimeUnit.MILLISECONDS)
             }
         }
 

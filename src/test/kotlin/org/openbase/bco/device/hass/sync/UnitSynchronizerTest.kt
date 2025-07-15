@@ -19,6 +19,7 @@ import org.openbase.type.configuration.EntryType
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig.LocationType
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
@@ -34,8 +35,8 @@ class UnitSynchronizerTest {
     private val uniConfigSlot = slot<UnitConfig>()
     private val onDtoChangesCallbackSlot = slot<(event: SubscriptionEvent.Event) -> Any>()
 
-    private var unitConfigDB = listOf<UnitConfig>()
-    private var hassDtoDB = listOf<TestHassDto>()
+    private val unitConfigDB = mutableListOf<UnitConfig>()
+    private val hassDtoDB = mutableListOf<TestHassDto>()
 
     init {
         every { hassCommunicator.isConnected } returns true
@@ -85,7 +86,7 @@ class UnitSynchronizerTest {
         val saveHassDtoSlot  = slot<TestHassDtoInput>()
         every { tileSyncStrategy.saveHassDto(capture(saveHassDtoSlot)) } answers {
             saveHassDtoSlot.captured.toDto()
-                .also { hassDtoDB = hassDtoDB.plus(it) }
+                .also { hassDtoDB.add(it) }
                 .also { saveHassDtoSlot.clear() }
         }
         val saveUnitConfigSlot = slot<UnitConfig>()
@@ -100,10 +101,28 @@ class UnitSynchronizerTest {
                         .toBuilder()
                         .setId(unitConfig.id.ifBlank { unitConfig.label.bestMatch() })
                         .build() }
-                .also { unitConfigDB = unitConfigDB.plus(it) }
+                .also { unitConfigDB.add(it) }
                 .also { saveUnitConfigSlot.clear() }
                 .let { CompletableFuture.completedFuture(it) }
         }
+
+        val deleteHassDtoSlot = slot<TestHassDto>()
+        every { tileSyncStrategy.deleteHassDto(capture(deleteHassDtoSlot)) } answers {
+            deleteHassDtoSlot.captured
+                .also { hassDtoDB.remove(it) }
+                .also { deleteHassDtoSlot.clear() }
+        }
+
+        val deleteUnitConfigSlot = slot<UnitConfig>()
+        every { unitRegistry.removeUnitConfig(capture(deleteUnitConfigSlot)) } answers {
+            deleteUnitConfigSlot.captured
+                .also { unitConfigDB.remove(it) }
+                .also { deleteUnitConfigSlot.clear() }
+                .let { CompletableFuture.completedFuture(it) }
+        }
+
+        every { unitRegistry.getUnitConfigsByUnitType(UnitType.LOCATION) } answers { unitConfigDB }
+        every { tileSyncStrategy.queryHassDtos() } answers { hassDtoDB }
     }
 
     data class TestHassDto(
@@ -143,7 +162,13 @@ class UnitSynchronizerTest {
         )
 
         synchronizer.activate()
-        cache.waitUntilReady()
+
+        // wait until cache is initialized
+        while (!cache.initialized) {
+            cache.waitUntilReady(duration = Duration.ofMillis(10))
+            synchronizer.isActive shouldBe true
+        }
+
         block(synchronizer, cache)
         synchronizer.deactivate()
     }
@@ -152,29 +177,40 @@ class UnitSynchronizerTest {
         unitConfigs: List<UnitConfig>? = null,
         hassDtos: List<TestHassDto>? = null,
     ) {
-        tileSyncStrategy.run {
-            unitConfigs?.forEach { unitConfig ->
-                every { unitConfig.toHassId() } answers { unitConfig.metaConfig[ALIAS_KEY_HASS_ID] }
-            }
-        }
-
-        unitConfigDB = unitConfigs.orEmpty()
-        hassDtoDB = hassDtos.orEmpty()
-
         unitConfigs?.let {
-            every { unitRegistry.getUnitConfigsByUnitType(UnitType.LOCATION) } answers { unitConfigDB }
+            unitConfigDB.clear()
+            unitConfigDB.addAll(unitConfigs)
         }
 
         hassDtos?.let {
-            every { tileSyncStrategy.queryHassDtos() } answers { hassDtoDB }
+            hassDtoDB.clear()
+            hassDtoDB.addAll(hassDtos)
+        }
+
+        tileSyncStrategy.run {
+            unitConfigDB.forEach { unitConfig ->
+                every { unitConfig.toHassId() } answers { unitConfig.metaConfig[ALIAS_KEY_HASS_ID] }
+            }
         }
 
         if(hassDtos.isNotNull() && onDtoChangesCallbackSlot.isCaptured) {
             onDtoChangesCallbackSlot.captured.invoke(mockk<SubscriptionEvent.Event>())
         }
 
+        tileSyncStrategy.run {
+            unitConfigDB.forEach { unitConfig ->
+                every { unitConfig.toHassId() } answers { unitConfig.metaConfig[ALIAS_KEY_HASS_ID] }
+            }
+        }
+
         if(unitConfigs.isNotNull() && onUnitChangesCallbackSlot.isCaptured) {
             onUnitChangesCallbackSlot.captured.invoke()
+        }
+
+        tileSyncStrategy.run {
+            unitConfigDB.forEach { unitConfig ->
+                every { unitConfig.toHassId() } answers { unitConfig.metaConfig[ALIAS_KEY_HASS_ID] }
+            }
         }
     }
 
@@ -475,6 +511,8 @@ class UnitSynchronizerTest {
 
             cache.dtos.size shouldBe 3
             cache.units.size shouldBe 3
+            unitConfigDB.size shouldBe 3
+            hassDtoDB.size shouldBe 3
 
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
@@ -494,12 +532,16 @@ class UnitSynchronizerTest {
                     )
                 )
             )
+
             cache.dtos.size shouldBe 2
             cache.units.size shouldBe 2
+            unitConfigDB.size shouldBe 2
+            hassDtoDB.size shouldBe 2
+
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
-            verify(exactly = 5) { unitRegistry.saveUnitConfig(any()) }
-            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+            verify(exactly = 3) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 1) { unitRegistry.removeUnitConfig(any()) }
 
             // no further changes should be triggered
             changeContext(
@@ -514,12 +556,16 @@ class UnitSynchronizerTest {
                     )
                 )
             )
+
             cache.dtos.size shouldBe 2
             cache.units.size shouldBe 2
+            unitConfigDB.size shouldBe 2
+            hassDtoDB.size shouldBe 2
+
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
-            verify(exactly = 5) { unitRegistry.saveUnitConfig(any()) }
-            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+            verify(exactly = 3) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 1) { unitRegistry.removeUnitConfig(any()) }
         }
     }
 }

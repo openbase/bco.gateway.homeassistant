@@ -571,13 +571,13 @@ class UnitSynchronizerTest {
 }
 
 /**
- * bco register -> hass
- * hass register -> bco
- * both register -> both
- * bco update -> hass
- * hass update -> bco
+ * OK bco register -> hass
+ * OK hass register -> bco
+ * OK both register -> both
+ * FAILED bco update -> hass
+ * FAILED hass update -> bco
  * both update -> both
  * bco delete -> hass
- * hass delete -> bco
+ * OK hass delete -> bco
  * both delete -> both
  */

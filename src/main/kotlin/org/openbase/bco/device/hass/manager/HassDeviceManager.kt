@@ -25,26 +25,32 @@ import org.openbase.bco.device.hass.action.ServiceActionExecutor
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.device.hass.manager.cache.HassIdToUnitControllerCache
-import org.openbase.bco.device.hass.manager.dto.HassAreaDto
-import org.openbase.bco.device.hass.manager.dto.HassEntityDto
-import org.openbase.bco.device.hass.manager.dto.HassFloorDto
-import org.openbase.bco.device.hass.manager.dto.HassStateDto
+import org.openbase.bco.device.hass.manager.dto.*
 import org.openbase.bco.device.hass.manager.unit.HassGatewayControllerFactory
 import org.openbase.bco.device.hass.sync.DtoCache
 import org.openbase.bco.device.hass.sync.UnitSynchronizer
 import org.openbase.bco.device.hass.sync.strategy.TileSyncStrategy
 import org.openbase.bco.device.hass.sync.strategy.ZoneSyncStrategy
+import org.openbase.bco.device.hass.util.await
+import org.openbase.bco.device.hass.util.get
+import org.openbase.bco.device.hass.util.isNotNull
+import org.openbase.bco.device.hass.util.set
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
 import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.jul.exception.ExceptionProcessor
 import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
+import org.openbase.jul.extension.protobuf.ProtoBufBuilderProcessor.mergeFromWithoutRepeatedFields
+import org.openbase.jul.extension.type.processing.LabelProcessor
 import org.openbase.jul.iface.Launchable
 import org.openbase.jul.iface.VoidInitializable
 import org.openbase.jul.pattern.Observer
 import org.openbase.jul.pattern.provider.DataProvider
 import org.openbase.jul.schedule.RecurrenceEventFilter
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
+import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
+import org.openbase.type.domotic.unit.device.DeviceClassType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -102,136 +108,136 @@ class HassDeviceManager :
                         return
                     }
 //
-//                    // wait for caches to be loaded
-//                    tileAreaCache.waitUntilReady()
-//                    zoneFloorCache.waitUntilReady()
-//
-//                    val notIdentifiedDevices = mutableListOf<HassDeviceDto>()
-//                    val deviceClasses = Registries.getClassRegistry(true).deviceClasses
-//                    val deviceClassMapping: Map<String, Pair<HassDeviceDto, DeviceClass>> =
-//                        HassCommunicator.instance
-//                            .getDevices()
-//                            .filter { !it.model.isNullOrBlank() }
-//                            .map { hassDevice ->
-//                                hassDevice to
-//                                    deviceClasses
-//                                        .find { deviceClass ->
-//                                            deviceClass.productNumber == hassDevice.model ||
-//                                                deviceClass.metaConfig[ALIAS_KEY_HASS_DEVICE_MODEL] == hassDevice.model
-//                                        }
-//                            }.filter { (hassDevice, deviceClass) ->
-//                                (deviceClass.isNotNull())
-//                                    .also {
-//                                        if (!it) {
-//                                            notIdentifiedDevices.add(hassDevice)
-//                                        }
-//                                    }
-//                            }.map { (hassDevice, deviceClass) -> hassDevice to deviceClass!! }
-//                            .onEach { (hassDevice, deviceClass) ->
-//                                LOGGER.debug(
-//                                    "found compatible device: {} served by {}",
-//                                    hassDevice,
-//                                    LabelProcessor.getBestMatch(deviceClass.label)
-//                                )
-//                            }.associateBy { (hassDevice, _) -> hassDevice.id }
-//
-//                    val deviceIdToEntity: Map<String, List<HassEntityDto>> =
-//                        HassCommunicator.instance
-//                            .getEntities()
-//                            .groupBy { it.deviceId }
-//
-//                    // ======= SYNC DEVICES ========
-//                    val deviceIdToDevices =
-//                        Registries
-//                            .getUnitRegistry()
-//                            .getUnitConfigsByUnitType(UnitType.DEVICE)
-//                            .filter { it.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_DEVICE_ID } }
-//                            .associateBy { it.metaConfig[ALIAS_KEY_HASS_DEVICE_ID] }
-//
-//                    val entityIdToDeviceClass: Map<String, String?> =
-//                        HassCommunicator.instance.getStates().associate { it.entityId to it.deviceClass }
-//
-//                    val dalUnitConfigs =
-//                        HassCommunicator.instance
-//                            .getDevices()
-//                            .filter { device -> deviceClassMapping[device.id].isNotNull() }
-//                            .map { device ->
-//                                UnitConfig
-//                                    .newBuilder()
-//                                    .setUnitType(UnitType.DEVICE)
-//                                    .apply {
-//                                        deviceClassMapping[device.id]!!.let { (_, deviceClass) ->
-//                                            deviceConfigBuilder.deviceClassId = deviceClass.id
-//                                        }
-//                                    }.setLabel(LabelProcessor.generateLabelBuilder(device.name))
-//                                    .apply { metaConfigBuilder[ALIAS_KEY_HASS_DEVICE_ID] = device.id }
-//                                    .apply {
-//                                        tileAreaCache.getUnitConfigByDtoId(device.areaId)
-//                                            ?.let { unitLocation ->
-//                                                placementConfigBuilder.locationId = unitLocation.id
-//                                            }
-//                                    }.build()
-//                            }.map { deviceConfig ->
-//                                deviceIdToDevices[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]?.let { existingDeviceConfig ->
-//                                    existingDeviceConfig.toBuilder().mergeFromWithoutRepeatedFields(deviceConfig).build().let {
-//                                        Registries.getUnitRegistry().updateUnitConfig(it).await()
-//                                    }
-//                                } ?: Registries.getUnitRegistry().registerUnitConfig(deviceConfig).await()
-//                            }.flatMap { deviceConfig ->
-//                                deviceConfig.deviceConfig.unitIdList.map { dalUnitId ->
-//                                    val unit = Registries.getUnitRegistry().getUnitConfigById(dalUnitId)
-//                                    val metaConfig = unit.unitType
-//                                        .let { Registries.getTemplateRegistry().getUnitTemplateByType(it) }
-//                                        .metaConfig
-//                                    val entityType = metaConfig[HASS_ENTITY_TYPE]
-//                                    val entityDeviceClass = metaConfig[HASS_ENTITY_DEVICE_CLASS]
-//
-//                                    deviceIdToEntity[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]
-//                                        ?.filter { entityIdToDeviceClass[it.entityId] == entityDeviceClass }
-//                                        ?.find {  it.type == entityType }
-//                                        ?.let { entity ->
-//                                            unit
-//                                                .toBuilder()
-//                                                .apply {
-//                                                    // set hass id as alias and add to meta config
-//                                                    addAlias(entity.entityId)
-//                                                    metaConfigBuilder[ALIAS_KEY_HASS_ENTITY_ID] = entity.entityId
-//                                                    // add location to unit
-//                                                    tileAreaCache.getUnitConfigByDtoId(entity.areaId)
-//                                                        ?.let { unitLocation ->
-//                                                            placementConfigBuilder.locationId = unitLocation.id
-//                                                        }
-//                                                }.build()
-//                                        }?.let { Registries.getUnitRegistry().updateUnitConfig(it).await() }
-//                                }
-//                            }.filterNotNull()
-//
-//                    // TODO: Location and Device initial sync draft is ready, however we have issues with repeated field that are not merged correctly.
-//
-//                    // initial device synchronization
-//                    supportedEntities =
-//                        HassCommunicator.instance
-//                            .getEntities()
-//                            .filter { deviceIdToDevices.keys.contains(it.deviceId) }
-//
-//                    try {
-//                        HassCommunicator.instance.getStates().applyStateUpdates(systemSync = true)
-//                    } catch (ex: CouldNotPerformException) {
-//                        if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-//                            ExceptionPrinter.printHistory(
-//                                "Could not retrieve item states from hass!",
-//                                ex,
-//                                LOGGER,
-//                                LogLevel.WARN,
-//                            )
-//                        }
-//                    }
-//
-//                    notIdentifiedDevices
-//                        .takeIf { it.isNotEmpty() }
-//                        ?.also { println("The following devices are found but not yet compatible with bco:") }
-//                        ?.distinct()
-//                        ?.forEach { println("${it.name}: ${it.model}") }
+                    // wait for caches to be loaded
+                    tileAreaCache.waitUntilReady()
+                    zoneFloorCache.waitUntilReady()
+
+                    val notIdentifiedDevices = mutableListOf<HassDeviceDto>()
+                    val deviceClasses = Registries.getClassRegistry(true).deviceClasses
+                    val deviceClassMapping: Map<String, Pair<HassDeviceDto, DeviceClassType.DeviceClass>> =
+                        HassCommunicator.instance
+                            .getDevices()
+                            .filter { !it.model.isNullOrBlank() }
+                            .map { hassDevice ->
+                                hassDevice to
+                                    deviceClasses
+                                        .find { deviceClass ->
+                                            deviceClass.productNumber == hassDevice.model ||
+                                                deviceClass.metaConfig[(ALIAS_KEY_HASS_DEVICE_MODEL)] == hassDevice.model
+                                        }
+                            }.filter { (hassDevice, deviceClass) ->
+                                (deviceClass.isNotNull())
+                                    .also {
+                                        if (!it) {
+                                            notIdentifiedDevices.add(hassDevice)
+                                        }
+                                    }
+                            }.map { (hassDevice, deviceClass) -> hassDevice to deviceClass!! }
+                            .onEach { (hassDevice, deviceClass) ->
+                                LOGGER.debug(
+                                    "found compatible device: {} served by {}",
+                                    hassDevice,
+                                    LabelProcessor.getBestMatch(deviceClass.label)
+                                )
+                            }.associateBy { (hassDevice, _) -> hassDevice.id }
+
+                    val deviceIdToEntity: Map<String, List<HassEntityDto>> =
+                        HassCommunicator.instance
+                            .getEntities()
+                            .groupBy { it.deviceId }
+
+                    // ======= SYNC DEVICES ========
+                    val deviceIdToDevices =
+                        Registries
+                            .getUnitRegistry()
+                            .getUnitConfigsByUnitType(UnitType.DEVICE)
+                            .filter { it.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_DEVICE_ID } }
+                            .associateBy { it.metaConfig[ALIAS_KEY_HASS_DEVICE_ID] }
+
+                    val entityIdToDeviceClass: Map<String, String?> =
+                        HassCommunicator.instance.getStates().associate { it.entityId to it.deviceClass }
+
+                    val dalUnitConfigs =
+                        HassCommunicator.instance
+                            .getDevices()
+                            .filter { device -> deviceClassMapping[device.id].isNotNull() }
+                            .map { device ->
+                                UnitConfig
+                                    .newBuilder()
+                                    .setUnitType(UnitType.DEVICE)
+                                    .apply {
+                                        deviceClassMapping[device.id]!!.let { (_, deviceClass) ->
+                                            deviceConfigBuilder.deviceClassId = deviceClass.id
+                                        }
+                                    }.setLabel(LabelProcessor.generateLabelBuilder(device.name))
+                                    .apply { metaConfigBuilder[ALIAS_KEY_HASS_DEVICE_ID] = device.id }
+                                    .apply {
+                                        tileAreaCache.getUnitConfigByDtoId(device.areaId)
+                                            ?.let { unitLocation ->
+                                                placementConfigBuilder.locationId = unitLocation.id
+                                            }
+                                    }.build()
+                            }.map { deviceConfig ->
+                                deviceIdToDevices[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]?.let { existingDeviceConfig ->
+                                    existingDeviceConfig.toBuilder().mergeFromWithoutRepeatedFields(deviceConfig).build().let {
+                                        Registries.getUnitRegistry().updateUnitConfig(it).await()
+                                    }
+                                } ?: Registries.getUnitRegistry().registerUnitConfig(deviceConfig).await()
+                            }.flatMap { deviceConfig ->
+                                deviceConfig.deviceConfig.unitIdList.map { dalUnitId ->
+                                    val unit = Registries.getUnitRegistry().getUnitConfigById(dalUnitId)
+                                    val metaConfig = unit.unitType
+                                        .let { Registries.getTemplateRegistry().getUnitTemplateByType(it) }
+                                        .metaConfig
+                                    val entityType = metaConfig[HASS_ENTITY_TYPE]
+                                    val entityDeviceClass = metaConfig[HASS_ENTITY_DEVICE_CLASS]
+
+                                    deviceIdToEntity[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]
+                                        ?.filter { entityIdToDeviceClass[it.entityId] == entityDeviceClass }
+                                        ?.find {  it.type == entityType }
+                                        ?.let { entity ->
+                                            unit
+                                                .toBuilder()
+                                                .apply {
+                                                    // set hass id as alias and add to meta config
+                                                    addAlias(entity.entityId)
+                                                    metaConfigBuilder[ALIAS_KEY_HASS_ENTITY_ID] = entity.entityId
+                                                    // add location to unit
+                                                    tileAreaCache.getUnitConfigByDtoId(entity.areaId)
+                                                        ?.let { unitLocation ->
+                                                            placementConfigBuilder.locationId = unitLocation.id
+                                                        }
+                                                }.build()
+                                        }?.let { Registries.getUnitRegistry().updateUnitConfig(it).await() }
+                                }
+                            }.filterNotNull()
+
+                    // TODO: Location and Device initial sync draft is ready, however we have issues with repeated field that are not merged correctly.
+
+                    // initial device synchronization
+                    supportedEntities =
+                        HassCommunicator.instance
+                            .getEntities()
+                            .filter { deviceIdToDevices.keys.contains(it.deviceId) }
+
+                    try {
+                        HassCommunicator.instance.getStates().applyStateUpdates(systemSync = true)
+                    } catch (ex: CouldNotPerformException) {
+                        if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                            ExceptionPrinter.printHistory(
+                                "Could not retrieve item states from hass!",
+                                ex,
+                                LOGGER,
+                                LogLevel.WARN,
+                            )
+                        }
+                    }
+
+                    notIdentifiedDevices
+                        .takeIf { it.isNotEmpty() }
+                        ?.also { println("The following devices are found but not yet compatible with bco:") }
+                        ?.distinct()
+                        ?.forEach { println("${it.name}: ${it.model}") }
                 }
             }
         this.executor = ServiceActionExecutor(hassIdToUnitControllerCache)

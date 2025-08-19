@@ -1,6 +1,7 @@
 package org.openbase.bco.device.hass.sync
 
 import org.openbase.bco.device.hass.manager.dto.HassDto
+import org.openbase.bco.device.hass.util.Infinity
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -70,7 +71,7 @@ class DtoCache<HASS_DTO: HassDto> {
         }
     }
 
-    fun waitUntilReady(duration: Duration) =
+    fun waitUntilReady(duration: Duration = Infinity.duration) =
         lock.write {
             if (!initialized) {
                 writeCondition.await(duration.toMillis(), TimeUnit.MILLISECONDS)

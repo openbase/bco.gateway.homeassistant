@@ -34,6 +34,7 @@ import org.openbase.bco.device.hass.sync.strategy.ZoneSyncStrategy
 import org.openbase.bco.device.hass.util.await
 import org.openbase.bco.device.hass.util.get
 import org.openbase.bco.device.hass.util.isNotNull
+import org.openbase.bco.device.hass.util.mergeFromWithRepeatedFields
 import org.openbase.bco.device.hass.util.set
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
@@ -41,7 +42,6 @@ import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.ExceptionProcessor
 import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
-import org.openbase.jul.extension.protobuf.ProtoBufBuilderProcessor.mergeFromWithoutRepeatedFields
 import org.openbase.jul.extension.type.processing.LabelProcessor
 import org.openbase.jul.iface.Launchable
 import org.openbase.jul.iface.VoidInitializable
@@ -179,7 +179,7 @@ class HassDeviceManager :
                                     }.build()
                             }.map { deviceConfig ->
                                 deviceIdToDevices[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]?.let { existingDeviceConfig ->
-                                    existingDeviceConfig.toBuilder().mergeFromWithoutRepeatedFields(deviceConfig).build().let {
+                                    existingDeviceConfig.toBuilder().mergeFromWithRepeatedFields(deviceConfig).build().let {
                                         Registries.getUnitRegistry().updateUnitConfig(it).await()
                                     }
                                 } ?: Registries.getUnitRegistry().registerUnitConfig(deviceConfig).await()

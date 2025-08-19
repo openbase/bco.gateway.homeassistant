@@ -14,7 +14,6 @@ import org.openbase.bco.device.hass.util.*
 import org.openbase.bco.registry.unit.lib.UnitRegistry
 import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
-import org.openbase.jul.extension.protobuf.ProtoBufBuilderProcessor.mergeFromWithoutRepeatedFields
 import org.openbase.jul.iface.Activatable
 import org.openbase.type.domotic.state.ConnectionStateType
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
@@ -106,7 +105,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                             ?: unitConfigByDtoId[hassDto.id]
                     }
                         ?.toBuilder()
-                        ?.mergeFromWithoutRepeatedFields(unitConfig)
+                        ?.mergeFromWithRepeatedFields(unitConfig)
                         ?.build()
                         ?: unitConfig
                 }

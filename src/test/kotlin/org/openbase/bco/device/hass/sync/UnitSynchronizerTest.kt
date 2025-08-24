@@ -481,8 +481,6 @@ class UnitSynchronizerTest {
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
             verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
-            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
-            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
             verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
         }
     }

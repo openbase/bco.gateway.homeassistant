@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import org.openbase.jul.extension.type.processing.LabelProcessor
 import org.openbase.type.domotic.registry.UnitRegistryDataType
 import org.openbase.type.domotic.unit.UnitConfigType
-import java.util.Locale
+import java.util.*
 
 class MergeFromWithRepeatedFieldsTest {
     @Test
@@ -51,10 +51,50 @@ class MergeFromWithRepeatedFieldsTest {
 
         updated.id shouldBeEqualTo id
         updated.label.entryList.size shouldBeEqualTo 3
+        updated.label.entryList.find { it.key == Locale.ENGLISH.toString() }!!.valueList.size shouldBeEqualTo 1
+        updated.label.entryList.find { it.key == Locale.CHINESE.toString() }!!.valueList.size shouldBeEqualTo 1
+        updated.label.entryList.find { it.key == Locale.GERMAN.toString() }!!.valueList.size shouldBeEqualTo 1
         updated.label.entryList.find { it.key == Locale.ENGLISH.toString() }!!.valueList.first() shouldBeEqualTo "updated label"
         updated.label.entryList.find { it.key == Locale.CHINESE.toString() }!!.valueList.first() shouldBeEqualTo "chinese label"
         updated.label.entryList.find { it.key == Locale.GERMAN.toString() }!!.valueList.first() shouldBeEqualTo "german label"
         LabelProcessor.getBestMatch(locale = Locale.ENGLISH, label = updated.label) shouldBeEqualTo "updated label"
+        LabelProcessor.getBestMatch(locale = Locale.CHINESE, label = updated.label) shouldBeEqualTo "chinese label"
+        LabelProcessor.getBestMatch(locale = Locale.GERMAN, label = updated.label) shouldBeEqualTo "german label"
+    }
+
+    @Test
+    fun `should merge multi dim list`() {
+        val id = "unit"
+
+        val other = UnitConfigType.UnitConfig.newBuilder()
+            .setId(id)
+            .apply {
+                LabelProcessor.addLabel(labelBuilder, locale = Locale.ENGLISH, label = "updated label 1")
+                LabelProcessor.addLabel(labelBuilder, locale = Locale.ENGLISH, label = "updated label 2")
+                LabelProcessor.addLabel(labelBuilder, locale = Locale.GERMANY, label = "german label")
+            }
+            .build()
+
+        val original = UnitConfigType.UnitConfig.newBuilder()
+            .setId(id)
+            .apply {
+                LabelProcessor.addLabel(labelBuilder, locale = Locale.ENGLISH, label = "original label")
+                LabelProcessor.addLabel(labelBuilder, locale = Locale.ENGLISH, label = "updated label 2")
+                LabelProcessor.addLabel(labelBuilder, locale = Locale.CHINA, label = "chinese label")
+            }
+
+        val updated = original.mergeFromWithRepeatedFields(other).build()
+
+        updated.id shouldBeEqualTo id
+        updated.label.entryList.size shouldBeEqualTo 3
+        updated.label.entryList.find { it.key == Locale.ENGLISH.toString() }!!.valueList.size shouldBeEqualTo 2
+        updated.label.entryList.find { it.key == Locale.CHINESE.toString() }!!.valueList.size shouldBeEqualTo 1
+        updated.label.entryList.find { it.key == Locale.GERMAN.toString() }!!.valueList.size shouldBeEqualTo 1
+        updated.label.entryList.find { it.key == Locale.ENGLISH.toString() }!!.valueList.first() shouldBeEqualTo "updated label 1"
+        updated.label.entryList.find { it.key == Locale.ENGLISH.toString() }!!.valueList[1] shouldBeEqualTo "updated label 2"
+        updated.label.entryList.find { it.key == Locale.CHINESE.toString() }!!.valueList.first() shouldBeEqualTo "chinese label"
+        updated.label.entryList.find { it.key == Locale.GERMAN.toString() }!!.valueList.first() shouldBeEqualTo "german label"
+        LabelProcessor.getBestMatch(locale = Locale.ENGLISH, label = updated.label) shouldBeEqualTo "updated label 1"
         LabelProcessor.getBestMatch(locale = Locale.CHINESE, label = updated.label) shouldBeEqualTo "chinese label"
         LabelProcessor.getBestMatch(locale = Locale.GERMAN, label = updated.label) shouldBeEqualTo "german label"
     }
@@ -70,28 +110,29 @@ class MergeFromWithRepeatedFieldsTest {
                     .addAlias("alias 3")
             )
             .addAgentUnitConfig(
-            UnitConfigType.UnitConfig.newBuilder()
-                .setId("agent 2")
-                .addAlias("alias 4")
-                .addAlias("alias 5")
-                .addAlias("alias 6")
-        )
-
-        val updatedUnitRegistryData: UnitRegistryDataType.UnitRegistryData = UnitRegistryDataType.UnitRegistryData.newBuilder()
-            .addAgentUnitConfig(
                 UnitConfigType.UnitConfig.newBuilder()
-                    .setId("agent 1")
-                    .addAlias("alias 1")
-                    .addAlias("alias 2")
-                    .addAlias("alias 3")
+                    .setId("agent 2")
+                    .addAlias("alias 4")
+                    .addAlias("alias 5")
+                    .addAlias("alias 6")
             )
-            .addAgentUnitConfig(
-                UnitConfigType.UnitConfig.newBuilder()
-                    .setId("agent 3")
-                    .addAlias("alias 7")
-                    .addAlias("alias 8")
-                    .addAlias("alias 9")
-            ).build()
+
+        val updatedUnitRegistryData: UnitRegistryDataType.UnitRegistryData =
+            UnitRegistryDataType.UnitRegistryData.newBuilder()
+                .addAgentUnitConfig(
+                    UnitConfigType.UnitConfig.newBuilder()
+                        .setId("agent 1")
+                        .addAlias("alias 1")
+                        .addAlias("alias 2")
+                        .addAlias("alias 3")
+                )
+                .addAgentUnitConfig(
+                    UnitConfigType.UnitConfig.newBuilder()
+                        .setId("agent 3")
+                        .addAlias("alias 7")
+                        .addAlias("alias 8")
+                        .addAlias("alias 9")
+                ).build()
 
         val merged = unitRegistryData.mergeFromWithRepeatedFields(updatedUnitRegistryData).build()
 
@@ -110,6 +151,153 @@ class MergeFromWithRepeatedFieldsTest {
         val agent3 = merged.agentUnitConfigList.find { it.id == "agent 3" }!!
         agent3.aliasList.sorted() shouldBeEqualTo listOf("alias 7", "alias 8", "alias 9")
     }
-}
 
-// TODO: implement additional tests
+    @Test
+    fun `should merge multi list entry meta config`() {
+        val unitRegistryData = UnitRegistryDataType.UnitRegistryData.newBuilder()
+            .addAgentUnitConfig(
+                UnitConfigType.UnitConfig.newBuilder()
+                    .setId("agent 1")
+                    .apply {
+                        metaConfigBuilder["key1"] = "value1"
+                        metaConfigBuilder["key2"] = "value2"
+                        metaConfigBuilder["key3"] = "value3"
+                    }
+            )
+            .addAgentUnitConfig(
+                UnitConfigType.UnitConfig.newBuilder()
+                    .setId("agent 2")
+                    .apply {
+                        metaConfigBuilder["key1"] = "value1"
+                        metaConfigBuilder["key2"] = "value2"
+                        metaConfigBuilder["key3"] = "value3"
+                    }
+            )
+
+            .addAgentUnitConfig(
+                UnitConfigType.UnitConfig.newBuilder()
+                    .setId("agent 3")
+                    .apply {
+                        metaConfigBuilder["key1"] = "value1"
+                        metaConfigBuilder["key2"] = "value2"
+                        metaConfigBuilder["key3"] = "value3"
+                    }
+            )
+
+        val updatedUnitRegistryData: UnitRegistryDataType.UnitRegistryData =
+            UnitRegistryDataType.UnitRegistryData.newBuilder()
+                .addAgentUnitConfig(
+                    UnitConfigType.UnitConfig.newBuilder()
+                        .setId("agent 1")
+                        .apply { // add value
+                            metaConfigBuilder["key1"] = "value1"
+                            metaConfigBuilder["key2"] = "value2"
+                            metaConfigBuilder["key3"] = "value3"
+                            metaConfigBuilder["key4"] = "value4"
+                        }
+                )
+                .addAgentUnitConfig(
+                    UnitConfigType.UnitConfig.newBuilder()
+                        .setId("agent 2")
+                        .apply { // update value
+                            metaConfigBuilder["key1"] = "value1"
+                            metaConfigBuilder["key2"] = "value2new"
+                            metaConfigBuilder["key3"] = "value3"
+                        }
+                )
+                .addAgentUnitConfig(
+                    UnitConfigType.UnitConfig.newBuilder()
+                        .setId("agent 3") // remove value
+                        .apply {
+                            metaConfigBuilder["key1"] = "value1"
+                            metaConfigBuilder["key2"] = "value2"
+                        }
+                ).build()
+
+        val merged = unitRegistryData.mergeFromWithRepeatedFields(updatedUnitRegistryData).build()
+
+        // Verify agent configs count
+        merged.agentUnitConfigCount shouldBeEqualTo 3
+
+        // Verify agent 1 meta config
+        val agent1 = merged.agentUnitConfigList.find { it.id == "agent 1" }!!
+        agent1.metaConfig.entryCount shouldBeEqualTo 4
+        agent1.metaConfig["key1"] shouldBeEqualTo "value1"
+        agent1.metaConfig["key2"] shouldBeEqualTo "value2"
+        agent1.metaConfig["key3"] shouldBeEqualTo "value3"
+        agent1.metaConfig["key4"] shouldBeEqualTo "value4"
+
+        // Verify agent 2 meta config
+        val agent2 = merged.agentUnitConfigList.find { it.id == "agent 2" }!!
+        agent2.metaConfig.entryCount shouldBeEqualTo 3
+        agent2.metaConfig["key1"] shouldBeEqualTo "value1"
+        agent2.metaConfig["key2"] shouldBeEqualTo "value2new"
+        agent2.metaConfig["key3"] shouldBeEqualTo "value3"
+
+        // Verify agent 3 meta config
+        val agent3 = merged.agentUnitConfigList.find { it.id == "agent 3" }!!
+        agent3.metaConfig.entryCount shouldBeEqualTo 2
+        agent3.metaConfig["key1"] shouldBeEqualTo "value1"
+        agent3.metaConfig["key2"] shouldBeEqualTo "value2"
+    }
+
+    // Additional test cases for merging repeated fields
+    @Test
+    fun `test merging with empty update`() {
+        val unitRegistryData = UnitRegistryDataType.UnitRegistryData.newBuilder()
+            .addAgentUnitConfig(
+                UnitConfigType.UnitConfig.newBuilder()
+                    .setId("agent 1")
+                    .apply {
+                        metaConfigBuilder["key1"] = "value1"
+                    }
+            ).build()
+
+        val emptyUpdate = UnitRegistryDataType.UnitRegistryData.getDefaultInstance()
+
+        val merged = unitRegistryData.toBuilder().mergeFromWithRepeatedFields(emptyUpdate).build()
+
+        merged.agentUnitConfigCount shouldBeEqualTo 1
+        val agent = merged.getAgentUnitConfig(0)
+        agent.id shouldBeEqualTo "agent 1"
+        agent.metaConfig["key1"] shouldBeEqualTo "value1"
+    }
+
+    @Test
+    fun `should merge agent meta config directly`() {
+        // Create initial agent with meta config
+        val originalAgent = UnitConfigType.UnitConfig.newBuilder()
+            .setId("agent 1")
+            .apply {
+                metaConfigBuilder["key1"] = "value1"
+                metaConfigBuilder["key2"] = "value2"
+                metaConfigBuilder["key3"] = "value3"
+            }.build()
+
+        // Create updated agent with added, modified and same values
+        val updatedAgent = UnitConfigType.UnitConfig.newBuilder()
+            .setId("agent 1")
+            .apply {
+                metaConfigBuilder["key1"] = "value1"          // same value
+                metaConfigBuilder["key2"] = "value2-updated"  // modified value
+                metaConfigBuilder["key4"] = "value4"          // new value
+            }.build()
+
+        // Merge the configurations
+        val merged = originalAgent.toBuilder().mergeFromWithRepeatedFields(updatedAgent).build()
+
+        // Verify merged result
+        merged.id shouldBeEqualTo "agent 1"
+        merged.metaConfig.entryCount shouldBeEqualTo 4
+
+        // Verify unchanged values
+        merged.metaConfig["key1"] shouldBeEqualTo "value1"
+        merged.metaConfig["key3"] shouldBeEqualTo "value3"
+
+        // Verify updated value
+        merged.metaConfig["key2"] shouldBeEqualTo "value2-updated"
+
+        // Verify new value
+        merged.metaConfig["key4"] shouldBeEqualTo "value4"
+    }
+}

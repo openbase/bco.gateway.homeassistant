@@ -57,7 +57,7 @@ class ZoneSyncStrategy(
     override fun onDtoChanges(eventProcessor: (event: SubscriptionEvent.Event) -> Any): AutoCloseable =
         hassCommunicator.subscribe(
             commandType = EVENT_WS_SUBSCRIPTION,
-            eventType = HassCommunicator.HassEventType.AREA_UPDATE,
+            eventType = HassCommunicator.HassEventType.FLOOR_UPDATE,
             eventProcessor
         ).let { AutoCloseable { hassCommunicator.unsubscribe(it) } }
 

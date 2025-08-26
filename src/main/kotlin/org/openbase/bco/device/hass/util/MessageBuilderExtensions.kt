@@ -2,9 +2,7 @@ package org.openbase.bco.device.hass.util
 
 import com.google.protobuf.Descriptors.FieldDescriptor
 import com.google.protobuf.Message
-import org.openbase.jul.extension.protobuf.processing.MessageProcessor
 import org.openbase.jul.extension.protobuf.processing.ProtoBufFieldProcessor
-import org.openbase.jul.extension.protobuf.processing.SimpleMessageProcessor
 
 fun <MB : Message.Builder> MB.mergeFromWithRepeatedFields(message: Message): MB = run {
     clone().mergeFrom(message).eliminateAllDuplicates() as MB
@@ -12,15 +10,11 @@ fun <MB : Message.Builder> MB.mergeFromWithRepeatedFields(message: Message): MB 
 
 fun <MB : Message.Builder> MB.eliminateAllDuplicates(): MB = apply {
     allFields.keys.forEach { descriptor ->
-        descriptor
-            .takeIf { it.isKeyValueField }
-            ?.also { eliminateDuplicatesOfMapField(descriptor) ; return@forEach }
-        descriptor
-            .takeIf { it.isRepeated }
-            ?.also { eliminateDuplicatesOfRepeatedField(descriptor) ; return@forEach }
-        descriptor
-            .takeIf { it.isMessage }
-            ?.also { getFieldBuilder(descriptor).eliminateAllDuplicates() }
+        when {
+            descriptor.isKeyValueField -> eliminateDuplicatesOfMapField(descriptor)
+            descriptor.isRepeated -> eliminateDuplicatesOfRepeatedField(descriptor)
+            descriptor.isMessage -> getFieldBuilder(descriptor).eliminateAllDuplicates()
+        }
     }
 }
 
@@ -44,5 +38,4 @@ fun <MB : Message.Builder> MB.eliminateDuplicatesOfMapField(descriptor: FieldDes
         .mapNotNull { it.lastOrNull() }
         .also { clearField(descriptor) }
         .forEach { addRepeatedField(descriptor, it.build()) }
-//        .also { uniqueValues -> setField(descriptor, uniqueValues) }
 }

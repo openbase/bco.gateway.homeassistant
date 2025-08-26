@@ -7,6 +7,7 @@ import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.device.hass.manager.HassDeviceManager
 import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_ID
+import org.openbase.bco.device.hass.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_TYPE
 import org.openbase.bco.device.hass.manager.dto.HassDto
 import org.openbase.bco.device.hass.manager.dto.HassInputDto
 import org.openbase.bco.device.hass.sync.strategy.UnitSyncStrategy
@@ -86,7 +87,10 @@ class UnitSynchronizerTest {
         val saveHassDtoSlot  = slot<TestHassDtoInput>()
         every { tileSyncStrategy.saveHassDto(capture(saveHassDtoSlot)) } answers {
             saveHassDtoSlot.captured.toDto()
-                .also { hassDtoDB.add(it) }
+                .also { hassDto ->
+                    hassDtoDB.removeIf { it.id == hassDto.id }
+                    hassDtoDB.add(hassDto)
+                }
                 .also { saveHassDtoSlot.clear() }
         }
         val saveUnitConfigSlot = slot<UnitConfig>()
@@ -101,7 +105,10 @@ class UnitSynchronizerTest {
                         .toBuilder()
                         .setId(unitConfig.id.ifBlank { unitConfig.label.bestMatch() })
                         .build() }
-                .also { unitConfigDB.add(it) }
+                .also { unitConfig ->
+                    unitConfigDB.removeIf { it.id == unitConfig.id }
+                    unitConfigDB.add(unitConfig)
+                }
                 .also { saveUnitConfigSlot.clear() }
                 .let { CompletableFuture.completedFuture(it) }
         }
@@ -862,10 +869,7 @@ class UnitSynchronizerTest {
             // trigger change
             changeContext(
                 unitConfigs = listOf(
-                    kitchenUnitConfig.toBuilder().setLabel(LabelProcessor.generateLabelBuilder("New Kitchen")).build(),
-                ),
-                hassDtos = listOf(
-                    kitchenHassDto,
+                    kitchenUnitConfig.toBuilder().setLabel(LabelProcessor.generateLabelBuilder("Updated Kitchen")).build(),
                 ),
             )
 
@@ -874,7 +878,7 @@ class UnitSynchronizerTest {
             unitConfigDB.size shouldBe 1
             hassDtoDB.size shouldBe 1
 
-            verify(exactly = 1) { tileSyncStrategy.saveHassDto(match { it.name == "New Kitchen" }) }
+            verify(exactly = 1) { tileSyncStrategy.saveHassDto(match { it.name == "Updated Kitchen" }) }
             verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
             verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
             verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
@@ -938,7 +942,7 @@ class UnitSynchronizerTest {
                     kitchenUnitConfig,
                 ),
                 hassDtos = listOf(
-                    kitchenHassDto.copy(name = "New Kitchen"),
+                    kitchenHassDto.copy(name = "Updated Kitchen"),
                 ),
             )
 
@@ -949,7 +953,7 @@ class UnitSynchronizerTest {
 
             verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
             verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
-            verify(exactly = 1) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "New Kitchen" }) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "Updated Kitchen" }) }
             verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
         }
     }
@@ -1052,24 +1056,12 @@ class UnitSynchronizerTest {
             unitConfigDB.size shouldBe 2
             hassDtoDB.size shouldBe 2
 
-            verify(exactly = 0) { tileSyncStrategy.saveHassDto(match { it.name == "New Kitchen" }) }
-            verify(exactly = 1) { tileSyncStrategy.saveHassDto(match { it.name == "New Restroom" }) }
+            verify(exactly = 1) { tileSyncStrategy.saveHassDto(match { it.name == "New Kitchen" }) }
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(match { it.name == "New Restroom" }) }
             verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
-            verify(exactly = 1) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "New Kitchen" }) }
-            verify(exactly = 0) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "New Restroom" }) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "New Kitchen" }) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "New Restroom" }) }
             verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
         }
     }
 }
-
-/**
- * OK bco register -> hass
- * OK hass register -> bco
- * OK both register -> both
- * FAILED bco update -> hass
- * FAILED hass update -> bco
- * FAILED both update -> both
- * OK bco delete -> hass
- * OK hass delete -> bco
- * OK both delete -> both
- */

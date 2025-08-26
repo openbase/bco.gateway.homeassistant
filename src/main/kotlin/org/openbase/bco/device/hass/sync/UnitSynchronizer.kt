@@ -190,10 +190,15 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                             .also { hassDto -> sync.hassDto = hassDto }
                             .also { hassDto ->
                                 strategy.run {
-                                    sync.unitConfig =
-                                        unitRegistry
-                                            .saveUnitConfig(sync.unitConfig.link(hassDto).build())
-                                            .await()
+                                    sync.unitConfig
+                                        .link(hassDto)
+                                        .build()
+                                        .takeIf { it != sync.unitConfig }
+                                        ?.let { newUnitConfig ->
+                                            sync.unitConfig = unitRegistry
+                                                .saveUnitConfig(newUnitConfig)
+                                                .await()
+                                        }
                                 }
                             }
                             .also { hassDto -> cache.put(sync.unitConfig, hassDto) }

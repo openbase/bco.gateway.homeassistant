@@ -219,7 +219,7 @@ class UnitSynchronizerTest {
 
         changeContext(
             unitConfigs = listOf(),
-            hassDtos = listOf()
+            hassDtos = listOf(),
         )
 
         openSynchronizerSession { synchronizer, cache ->
@@ -240,7 +240,7 @@ class UnitSynchronizerTest {
                         id = "kitchen",
                         name = "Kitchen",
                     ),
-                )
+                ),
             )
 
             cache.dtos.size shouldBe 1
@@ -259,7 +259,7 @@ class UnitSynchronizerTest {
                         id = "kitchen",
                         name = "Kitchen",
                     ),
-                )
+                ),
             )
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
@@ -275,7 +275,7 @@ class UnitSynchronizerTest {
 
         changeContext(
             unitConfigs = listOf(),
-            hassDtos = listOf()
+            hassDtos = listOf(),
         )
 
         openSynchronizerSession { synchronizer, cache ->
@@ -298,7 +298,7 @@ class UnitSynchronizerTest {
                         .apply { locationConfigBuilder.locationType = LocationType.TILE }
                         .build(),
                 ),
-                hassDtos = listOf()
+                hassDtos = listOf(),
             )
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
@@ -317,7 +317,7 @@ class UnitSynchronizerTest {
                         .apply { locationConfigBuilder.locationType = LocationType.TILE }
                         .build(),
                 ),
-                hassDtos = listOf()
+                hassDtos = listOf(),
             )
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
@@ -333,7 +333,7 @@ class UnitSynchronizerTest {
 
         changeContext(
             unitConfigs = listOf(),
-            hassDtos = listOf()
+            hassDtos = listOf(),
         )
 
         openSynchronizerSession { synchronizer, cache ->
@@ -361,7 +361,7 @@ class UnitSynchronizerTest {
                         id = "kitchen",
                         name = "Kitchen",
                     ),
-                )
+                ),
             )
             cache.dtos.size shouldBe 2
             cache.units.size shouldBe 2
@@ -387,7 +387,7 @@ class UnitSynchronizerTest {
                         id = "kitchen",
                         name = "Kitchen",
                     ),
-                )
+                ),
             )
             cache.dtos.size shouldBe 2
             cache.units.size shouldBe 2
@@ -430,7 +430,7 @@ class UnitSynchronizerTest {
                     id = "kitchen",
                     name = "Kitchen",
                 ),
-            )
+            ),
         )
 
         openSynchronizerSession { synchronizer, cache ->
@@ -474,7 +474,7 @@ class UnitSynchronizerTest {
                         id = "kitchen",
                         name = "Kitchen",
                     ),
-                )
+                ),
             )
             cache.dtos.size shouldBe 1
             cache.units.size shouldBe 1
@@ -501,8 +501,8 @@ class UnitSynchronizerTest {
                 TestHassDto(
                     id = "dungeon",
                     name = "Dungeon",
-                )
-            )
+                ),
+            ),
         )
 
         openSynchronizerSession { synchronizer, cache ->
@@ -527,8 +527,8 @@ class UnitSynchronizerTest {
                     TestHassDto(
                         id = "dungeon",
                         name = "Dungeon",
-                    )
-                )
+                    ),
+                ),
             )
 
             cache.dtos.size shouldBe 2
@@ -551,8 +551,8 @@ class UnitSynchronizerTest {
                     TestHassDto(
                         id = "dungeon",
                         name = "Dungeon",
-                    )
-                )
+                    ),
+                ),
             )
 
             cache.dtos.size shouldBe 2
@@ -566,6 +566,500 @@ class UnitSynchronizerTest {
             verify(exactly = 1) { unitRegistry.removeUnitConfig(any()) }
         }
     }
+
+    @Test
+    fun `a removed bco location should be removed at hass`() {
+        val kitchenUnitConfig = UnitConfig.newBuilder()
+            .setId("kitchen")
+            .setUnitType(UnitType.LOCATION)
+            .setLabel(LabelProcessor.generateLabelBuilder("Kitchen"))
+            .apply { locationConfigBuilder.locationType = LocationType.TILE }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(ALIAS_KEY_HASS_ID)
+                        .setValue("kitchen")
+                        .build()
+                )
+            }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(HassDeviceManager.ALIAS_KEY_HASS_TYPE)
+                        .setValue("AREA")
+                        .build()
+                )
+            }
+            .build()
+
+        val kitchenHassDto = TestHassDto(
+            id = "kitchen",
+            name = "Kitchen",
+        )
+
+        val restroomUnitConfig = UnitConfig.newBuilder()
+            .setId("restroom")
+            .setUnitType(UnitType.LOCATION)
+            .setLabel(LabelProcessor.generateLabelBuilder("Restroom"))
+            .apply { locationConfigBuilder.locationType = LocationType.TILE }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(ALIAS_KEY_HASS_ID)
+                        .setValue("restroom")
+                        .build()
+                )
+            }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(HassDeviceManager.ALIAS_KEY_HASS_TYPE)
+                        .setValue("AREA")
+                        .build()
+                )
+            }
+            .build()
+
+        val restroomHassDto = TestHassDto(
+            id = "restroom",
+            name = "Restroom",
+        )
+
+        changeContext(
+            unitConfigs = listOf(
+                kitchenUnitConfig,
+                restroomUnitConfig,
+            ),
+            hassDtos = listOf(
+                kitchenHassDto,
+                restroomHassDto,
+            ),
+        )
+
+        openSynchronizerSession { synchronizer, cache ->
+            cache.dtos.size shouldBe 2
+            cache.units.size shouldBe 2
+            unitConfigDB.size shouldBe 2
+            hassDtoDB.size shouldBe 2
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+
+            // trigger change
+            changeContext(
+                unitConfigs = listOf(
+                    kitchenUnitConfig,
+                ),
+                hassDtos = listOf(
+                    kitchenHassDto,
+                    restroomHassDto,
+                ),
+            )
+
+            cache.dtos.size shouldBe 1
+            cache.units.size shouldBe 1
+            unitConfigDB.size shouldBe 1
+            hassDtoDB.size shouldBe 1
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 1) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+
+            // no further changes should be triggered
+            changeContext(
+                unitConfigs = listOf(
+                    kitchenUnitConfig,
+                ),
+                hassDtos = listOf(
+                    kitchenHassDto,
+                ),
+            )
+
+            cache.dtos.size shouldBe 1
+            cache.units.size shouldBe 1
+            unitConfigDB.size shouldBe 1
+            hassDtoDB.size shouldBe 1
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 1) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+        }
+    }
+
+    @Test
+    fun `a removed location should be synchronized in both directions`() {
+        val kitchenUnitConfig = UnitConfig.newBuilder()
+            .setId("kitchen")
+            .setUnitType(UnitType.LOCATION)
+            .setLabel(LabelProcessor.generateLabelBuilder("Kitchen"))
+            .apply { locationConfigBuilder.locationType = LocationType.TILE }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(ALIAS_KEY_HASS_ID)
+                        .setValue("kitchen")
+                        .build()
+                )
+            }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(HassDeviceManager.ALIAS_KEY_HASS_TYPE)
+                        .setValue("AREA")
+                        .build()
+                )
+            }
+            .build()
+
+        val kitchenHassDto = TestHassDto(
+            id = "kitchen",
+            name = "Kitchen",
+        )
+
+        val restroomUnitConfig = UnitConfig.newBuilder()
+            .setId("restroom")
+            .setUnitType(UnitType.LOCATION)
+            .setLabel(LabelProcessor.generateLabelBuilder("Restroom"))
+            .apply { locationConfigBuilder.locationType = LocationType.TILE }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(ALIAS_KEY_HASS_ID)
+                        .setValue("restroom")
+                        .build()
+                )
+            }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(HassDeviceManager.ALIAS_KEY_HASS_TYPE)
+                        .setValue("AREA")
+                        .build()
+                )
+            }
+            .build()
+
+        val restroomHassDto = TestHassDto(
+            id = "restroom",
+            name = "Restroom",
+        )
+
+        changeContext(
+            unitConfigs = listOf(
+                kitchenUnitConfig,
+                restroomUnitConfig,
+            ),
+            hassDtos = listOf(
+                kitchenHassDto,
+                restroomHassDto,
+            ),
+        )
+
+        openSynchronizerSession { synchronizer, cache ->
+            cache.dtos.size shouldBe 2
+            cache.units.size shouldBe 2
+            unitConfigDB.size shouldBe 2
+            hassDtoDB.size shouldBe 2
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+
+            // trigger change
+            changeContext(
+                unitConfigs = listOf(
+                    kitchenUnitConfig,
+                ),
+                hassDtos = listOf(
+                    restroomHassDto,
+                ),
+            )
+
+            cache.dtos.size shouldBe 0
+            cache.units.size shouldBe 0
+            unitConfigDB.size shouldBe 0
+            hassDtoDB.size shouldBe 0
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 1) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 1) { unitRegistry.removeUnitConfig(any()) }
+
+            // no further changes should be triggered
+            changeContext(
+                unitConfigs = emptyList(),
+                hassDtos = emptyList(),
+            )
+
+            cache.dtos.size shouldBe 0
+            cache.units.size shouldBe 0
+            unitConfigDB.size shouldBe 0
+            hassDtoDB.size shouldBe 0
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 1) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 1) { unitRegistry.removeUnitConfig(any()) }
+        }
+    }
+
+    @Test
+    fun `an update of a bco unit should update the linked hass dto`() {
+
+        val kitchenUnitConfig = UnitConfig.newBuilder()
+            .setId("kitchen")
+            .setUnitType(UnitType.LOCATION)
+            .setLabel(LabelProcessor.generateLabelBuilder("Kitchen"))
+            .apply { locationConfigBuilder.locationType = LocationType.TILE }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(ALIAS_KEY_HASS_ID)
+                        .setValue("kitchen")
+                        .build()
+                )
+            }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(HassDeviceManager.ALIAS_KEY_HASS_TYPE)
+                        .setValue("AREA")
+                        .build()
+                )
+            }
+            .build()
+
+        val kitchenHassDto = TestHassDto(
+            id = "kitchen",
+            name = "Kitchen",
+        )
+
+        changeContext(
+            unitConfigs = listOf(
+                kitchenUnitConfig,
+            ),
+            hassDtos = listOf(
+                kitchenHassDto,
+            ),
+        )
+
+        openSynchronizerSession { _, cache ->
+            cache.dtos.size shouldBe 1
+            cache.units.size shouldBe 1
+            unitConfigDB.size shouldBe 1
+            hassDtoDB.size shouldBe 1
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+
+            // trigger change
+            changeContext(
+                unitConfigs = listOf(
+                    kitchenUnitConfig.toBuilder().setLabel(LabelProcessor.generateLabelBuilder("New Kitchen")).build(),
+                ),
+                hassDtos = listOf(
+                    kitchenHassDto,
+                ),
+            )
+
+            cache.dtos.size shouldBe 1
+            cache.units.size shouldBe 1
+            unitConfigDB.size shouldBe 1
+            hassDtoDB.size shouldBe 1
+
+            verify(exactly = 1) { tileSyncStrategy.saveHassDto(match { it.name == "New Kitchen" }) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+        }
+    }
+
+    @Test
+    fun `an update of a hass unit should update the linked bco unit`() {
+
+        val kitchenUnitConfig = UnitConfig.newBuilder()
+            .setId("kitchen")
+            .setUnitType(UnitType.LOCATION)
+            .setLabel(LabelProcessor.generateLabelBuilder("Kitchen"))
+            .apply { locationConfigBuilder.locationType = LocationType.TILE }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(ALIAS_KEY_HASS_ID)
+                        .setValue("kitchen")
+                        .build()
+                )
+            }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(HassDeviceManager.ALIAS_KEY_HASS_TYPE)
+                        .setValue("AREA")
+                        .build()
+                )
+            }
+            .build()
+
+        val kitchenHassDto = TestHassDto(
+            id = "kitchen",
+            name = "Kitchen",
+        )
+
+        changeContext(
+            unitConfigs = listOf(
+                kitchenUnitConfig,
+            ),
+            hassDtos = listOf(
+                kitchenHassDto,
+            ),
+        )
+
+        openSynchronizerSession { _, cache ->
+            cache.dtos.size shouldBe 1
+            cache.units.size shouldBe 1
+            unitConfigDB.size shouldBe 1
+            hassDtoDB.size shouldBe 1
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+
+            // trigger change
+            changeContext(
+                unitConfigs = listOf(
+                    kitchenUnitConfig,
+                ),
+                hassDtos = listOf(
+                    kitchenHassDto.copy(name = "New Kitchen"),
+                ),
+            )
+
+            cache.dtos.size shouldBe 1
+            cache.units.size shouldBe 1
+            unitConfigDB.size shouldBe 1
+            hassDtoDB.size shouldBe 1
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "New Kitchen" }) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+        }
+    }
+
+    @Test
+    fun `updates should be triggered in both directions`() {
+
+        val kitchenUnitConfig = UnitConfig.newBuilder()
+            .setId("kitchen")
+            .setUnitType(UnitType.LOCATION)
+            .setLabel(LabelProcessor.generateLabelBuilder("Kitchen"))
+            .apply { locationConfigBuilder.locationType = LocationType.TILE }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(ALIAS_KEY_HASS_ID)
+                        .setValue("kitchen")
+                        .build()
+                )
+            }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(HassDeviceManager.ALIAS_KEY_HASS_TYPE)
+                        .setValue("AREA")
+                        .build()
+                )
+            }
+            .build()
+
+        val kitchenHassDto = TestHassDto(
+            id = "kitchen",
+            name = "Kitchen",
+        )
+
+        val restroomUnitConfig = UnitConfig.newBuilder()
+            .setId("restroom")
+            .setUnitType(UnitType.LOCATION)
+            .setLabel(LabelProcessor.generateLabelBuilder("Restroom"))
+            .apply { locationConfigBuilder.locationType = LocationType.TILE }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(ALIAS_KEY_HASS_ID)
+                        .setValue("restroom")
+                        .build()
+                )
+            }
+            .apply {
+                metaConfigBuilder.addEntry(
+                    EntryType.Entry.newBuilder()
+                        .setKey(HassDeviceManager.ALIAS_KEY_HASS_TYPE)
+                        .setValue("AREA")
+                        .build()
+                )
+            }
+            .build()
+
+        val restroomHassDto = TestHassDto(
+            id = "restroom",
+            name = "Restroom",
+        )
+
+        changeContext(
+            unitConfigs = listOf(
+                kitchenUnitConfig,
+                restroomUnitConfig,
+            ),
+            hassDtos = listOf(
+                kitchenHassDto,
+                restroomHassDto,
+            ),
+        )
+
+        openSynchronizerSession { _, cache ->
+            cache.dtos.size shouldBe 2
+            cache.units.size shouldBe 2
+            unitConfigDB.size shouldBe 2
+            hassDtoDB.size shouldBe 2
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(any()) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(any()) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+
+            // trigger change
+            changeContext(
+                unitConfigs = listOf(
+                    kitchenUnitConfig.toBuilder().setLabel(LabelProcessor.generateLabelBuilder("New Kitchen")).build(),
+                    restroomUnitConfig,
+                ),
+                hassDtos = listOf(
+                    kitchenHassDto,
+                    restroomHassDto.copy(name = "New Restroom"),
+                ),
+            )
+
+            cache.dtos.size shouldBe 2
+            cache.units.size shouldBe 2
+            unitConfigDB.size shouldBe 2
+            hassDtoDB.size shouldBe 2
+
+            verify(exactly = 0) { tileSyncStrategy.saveHassDto(match { it.name == "New Kitchen" }) }
+            verify(exactly = 1) { tileSyncStrategy.saveHassDto(match { it.name == "New Restroom" }) }
+            verify(exactly = 0) { tileSyncStrategy.deleteHassDto(any()) }
+            verify(exactly = 1) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "New Kitchen" }) }
+            verify(exactly = 0) { unitRegistry.saveUnitConfig(match { it.label.bestMatch() == "New Restroom" }) }
+            verify(exactly = 0) { unitRegistry.removeUnitConfig(any()) }
+        }
+    }
 }
 
 /**
@@ -574,8 +1068,8 @@ class UnitSynchronizerTest {
  * OK both register -> both
  * FAILED bco update -> hass
  * FAILED hass update -> bco
- * both update -> both
- * bco delete -> hass
+ * FAILED both update -> both
+ * OK bco delete -> hass
  * OK hass delete -> bco
- * both delete -> both
+ * OK both delete -> both
  */

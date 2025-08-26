@@ -95,6 +95,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
         val unitConfigs = getUnitConfigMap()
         val unitConfigByDtoId = unitConfigs.values.associateBy { it.metaConfig[HassDeviceManager.ALIAS_KEY_HASS_ID] }
 
+        // TODO: this fails on floor update from hass. But works correctly on startup.
         strategy.queryHassDtos().let { hassDtos ->
             // handle: add and update
             hassDtos

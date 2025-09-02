@@ -15,6 +15,7 @@ import org.openbase.bco.device.hass.type.InputDtoProvider
 import org.openbase.bco.device.hass.type.Mergeable
 import org.openbase.bco.device.hass.util.*
 import org.openbase.bco.registry.unit.lib.UnitRegistry
+import org.openbase.bco.registry.unit.remote.UnitRegistryRemote
 import org.openbase.jul.extension.type.processing.LabelProcessor
 import org.openbase.type.configuration.EntryType
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
@@ -27,7 +28,7 @@ import java.util.concurrent.CompletableFuture
 class UnitSynchronizerTest {
     private val hassCommunicator: HassCommunicator = mockk()
 
-    private val unitRegistry: UnitRegistry = mockk()
+    private val unitRegistry: UnitRegistryRemote = mockk()
 
     private val tileSyncStrategy: UnitSyncStrategy<TestHassDto, TestHassDtoInput> = mockk()
 

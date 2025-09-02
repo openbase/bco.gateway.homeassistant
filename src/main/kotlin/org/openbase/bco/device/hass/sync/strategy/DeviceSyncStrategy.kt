@@ -29,14 +29,14 @@ class DeviceSyncStrategy(
     private val hassCommunicator: HassCommunicator = HassCommunicator.instance,
     private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ): UnitSyncStrategy<HassDeviceDto, HassDeviceInputDto> {
-    override val unitType: UnitType = UnitType.LOCATION
+    override val unitType: UnitType = UnitType.DEVICE
     override val hassType: HassType = HassType.DEVICE
-    override val unitFilter: (UnitConfig) -> Boolean = { it.locationConfig?.locationType == LocationType.TILE }
+    override val unitFilter: (UnitConfig) -> Boolean = { true }
     override fun buildUnitConfig(hassDto: HassDeviceDto): UnitConfig =
         UnitConfig
             .newBuilder()
-            .setUnitType(UnitType.LOCATION)
-            .apply { locationConfigBuilder.locationType = LocationType.TILE }
+            .setUnitType(unitType)
+//            .apply { deviceConfigBuilder.deviceClassId = "???" }
             .setLabel(LabelProcessor.generateLabelBuilder(hassDto.name))
             .link(hassDto)
             .apply { metaConfigBuilder[ALIAS_KEY_HASS_TYPE] = hassType.name }

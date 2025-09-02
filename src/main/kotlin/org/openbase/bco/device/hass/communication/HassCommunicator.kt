@@ -1,17 +1,9 @@
 package org.openbase.bco.device.hass.communication
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonElement
-import com.google.gson.JsonParser
-import com.google.gson.JsonSyntaxException
-import org.openbase.bco.device.hass.manager.dto.HassEntityDto
+import com.google.gson.*
 import org.openbase.bco.device.hass.communication.websocket.WSSubscription
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
-import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
-import org.openbase.bco.device.hass.manager.dto.HassAreaDto
-import org.openbase.bco.device.hass.manager.dto.HassFloorDto
-import org.openbase.bco.device.hass.manager.dto.HassServiceDto
-import org.openbase.bco.device.hass.manager.dto.HassStateDto
+import org.openbase.bco.device.hass.manager.dto.*
 import org.openbase.bco.device.hass.util.await
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InitializationException
@@ -21,7 +13,6 @@ import org.openbase.jul.iface.Shutdownable
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
-import kotlin.collections.orEmpty
 
 class HassCommunicator private constructor() : HassConnection() {
 
@@ -108,6 +99,27 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.map { gson.fromJson(it, HassAreaDto::class.java) }
             .orEmpty()
 
+    fun saveArea(area: HassAreaInputDto): HassAreaDto =
+        (area.id?.let {
+            UPDATE_AREA_WS_REQUEST
+        } ?: CREATE_AREA_WS_REQUEST).let { wsCommand ->
+            sendWSCommand(wsCommand, gson.toJsonTree(area).asJsonObject).await()
+                ?.asJsonObject
+                ?.let { gson.fromJson(it, HassAreaDto::class.java) }
+                ?: throw CouldNotPerformException("Could not save area[$area]")
+        }
+
+    fun deleteArea(area: HassAreaDto): HassAreaDto =
+        area
+            .also {
+                sendWSCommand(
+                    DELETE_AREA_WS_REQUEST,
+                    JsonObject().apply {
+                        addProperty("area_id", area.id)
+                    }
+                ).await()
+            }
+
     // ==========================================================================================================================================
     // Floors
     // ==========================================================================================================================================
@@ -116,6 +128,27 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.asJsonArray
             ?.map { gson.fromJson(it, HassFloorDto::class.java) }
             .orEmpty()
+
+    fun saveFloor(floor: HassFloorInputDto): HassFloorDto =
+        (floor.id?.let {
+            UPDATE_FLOOR_WS_REQUEST
+        } ?: CREATE_FLOOR_WS_REQUEST).let { wsCommand ->
+            sendWSCommand(wsCommand, gson.toJsonTree(floor).asJsonObject).await()
+                ?.asJsonObject
+                ?.let { gson.fromJson(it, HassFloorDto::class.java) }
+                ?: throw CouldNotPerformException("Could not save floor[$floor]")
+        }
+
+    fun deleteFloor(floor: HassFloorDto): HassFloorDto =
+        floor
+            .also {
+                sendWSCommand(
+                    DELETE_FLOOR_WS_REQUEST,
+                    JsonObject().apply {
+                        addProperty("floor_id", floor.id)
+                    }
+                ).await()
+            }
 
     @Throws(CouldNotPerformException::class)
     override fun testConnection() {
@@ -185,14 +218,23 @@ class HassCommunicator private constructor() : HassConnection() {
         const val ENTITIES_WS_REQUEST: String = "config/entity_registry/list"
         const val CALL_SERVICE_WS_REQUEST = "call_service"
 
+        const val CREATE_AREA_WS_REQUEST = "config/area_registry/create"
+        const val UPDATE_AREA_WS_REQUEST = "config/area_registry/update"
+        const val DELETE_AREA_WS_REQUEST = "config/area_registry/delete"
+        const val CREATE_FLOOR_WS_REQUEST = "config/floor_registry/create"
+        const val UPDATE_FLOOR_WS_REQUEST = "config/floor_registry/update"
+        const val DELETE_FLOOR_WS_REQUEST = "config/floor_registry/delete"
+
         private val LOGGER: Logger = LoggerFactory.getLogger(HassCommunicator::class.java)
 
         @get:Synchronized
-        var instance: HassCommunicator = HassCommunicator().also {
-            try {
-                Shutdownable.registerShutdownHook(it)
-            } catch (ex: InitializationException) {
-                ExceptionPrinter.printHistory("Could not create HassCommunicator", ex, LOGGER)
+        val instance: HassCommunicator by lazy {
+            HassCommunicator().also {
+                try {
+                    Shutdownable.registerShutdownHook(it)
+                } catch (ex: InitializationException) {
+                    ExceptionPrinter.printHistory("Could not create HassCommunicator", ex, LOGGER)
+                }
             }
         }
     }

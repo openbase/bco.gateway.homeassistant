@@ -17,3 +17,11 @@ fun Map<String, Any>.toRequest(): String {
     }
     return jsonObject.toString()
 }
+
+fun <K, V> Map<K?, V>.filterNullKeys(): Map<K, V> = this
+    .filter { (k, _) -> k.isNotNull() }
+    .mapKeys { (k, _) -> k!! }
+
+fun <K, V> Map<K, V?>.filterNullValues(): Map<K, V> = this
+    .filter { (_, v) -> v.isNotNull() }
+    .mapValues { (_, v) -> v!! }

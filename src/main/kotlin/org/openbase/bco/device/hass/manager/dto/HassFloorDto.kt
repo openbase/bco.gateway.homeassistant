@@ -1,6 +1,8 @@
 package org.openbase.bco.device.hass.manager.dto
 
 import com.google.gson.annotations.SerializedName
+import org.openbase.bco.device.hass.type.InputDtoProvider
+import org.openbase.bco.device.hass.type.Mergeable
 
 /**
  * Original Type:
@@ -18,8 +20,26 @@ import com.google.gson.annotations.SerializedName
  */
 data class HassFloorDto(
     @SerializedName("floor_id")
-    val id: String,
-    val name: String,
-    val icon: String,
+    override val id: String,
+    override val name: String,
+    val icon: String? = null,
     val aliases: List<String>,
-)
+    val level: Int,
+): HassDto, Mergeable<HassFloorInputDto, HassFloorDto>, InputDtoProvider<HassFloorInputDto> {
+
+    override fun merge(input: HassFloorInputDto): HassFloorDto = copy(
+        id = input.id ?: id,
+        name = input.name ?: name,
+        icon = input.icon ?: icon,
+        aliases = input.aliases ?: aliases,
+        level = input.level ?: level,
+    )
+
+    override fun toInputDto(): HassFloorInputDto = HassFloorInputDto(
+        id = id,
+        name = name,
+        icon = icon,
+        aliases = aliases,
+        level = level,
+    )
+}

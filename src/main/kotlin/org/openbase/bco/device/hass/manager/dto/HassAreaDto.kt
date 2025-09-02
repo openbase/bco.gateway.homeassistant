@@ -1,6 +1,8 @@
 package org.openbase.bco.device.hass.manager.dto
 
 import com.google.gson.annotations.SerializedName
+import org.openbase.bco.device.hass.type.InputDtoProvider
+import org.openbase.bco.device.hass.type.Mergeable
 
 /**
  * The original area entity looks like:
@@ -16,19 +18,41 @@ import com.google.gson.annotations.SerializedName
  */
 data class HassAreaDto(
     @SerializedName("area_id")
-    val id: String,
-    val name: String,
+    override val id: String,
+    override val name: String,
     @SerializedName("floor_id")
-    val floorId: String,
+    val floorId: String?,
 
-    val icon: String,
+    val icon: String?,
+
+    val picture: String?,
 
     /**
      * Labels are mainly tags where one can cluster different areas together.
      */
     val labels: List<String>,
     /**
-     * Mainly other labels that are assosiated with the area.
+     * Mainly other labels that are associated with the area.
      */
     val aliases: List<String>,
-)
+): HassDto, Mergeable<HassAreaInputDto, HassAreaDto>, InputDtoProvider<HassAreaInputDto> {
+
+    override fun merge(input: HassAreaInputDto): HassAreaDto = copy(
+        id = input.id ?: id,
+        name = input.name ?: name,
+        floorId = input.floorId ?: floorId,
+        icon = input.icon ?: icon,
+        labels = input.labels ?: labels,
+        aliases = input.aliases ?: aliases,
+    )
+
+    override fun toInputDto(): HassAreaInputDto = HassAreaInputDto(
+        id = id,
+        name = name,
+        floorId = floorId,
+        icon = icon,
+        labels = labels,
+        aliases = aliases,
+        picture = picture
+    )
+}

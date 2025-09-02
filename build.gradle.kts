@@ -28,6 +28,12 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     testImplementation(kotlin("test"))
+    // https://mvnrepository.com/artifact/io.mockk/mockk
+    testImplementation("io.mockk:mockk:1.14.4")
+    // https://mvnrepository.com/artifact/org.amshove.kluent/kluent
+    testImplementation("org.amshove.kluent:kluent:1.73")
+    // https://mvnrepository.com/artifact/io.mockk/mockk
+    testImplementation("io.mockk:mockk:1.14.0")
 }
 
 repositories {

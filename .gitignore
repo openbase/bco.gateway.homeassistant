@@ -220,3 +220,6 @@ gen-external-apklibs
 node_modules
 www/.vuepress/dist
 jspm_packages
+
+### Kotlin
+.kotlin

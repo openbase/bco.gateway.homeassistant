@@ -3,23 +3,25 @@ package org.openbase.bco.device.hass.communication.websocket
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
-import org.openbase.bco.device.hass.jp.JPHassHost
-import org.openbase.bco.device.hass.jp.JpHassPort
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.HassCommunicator.HassEventType
 import org.openbase.bco.device.hass.communication.TokenProvider
 import org.openbase.bco.device.hass.communication.websocket.command.CommandResult
 import org.openbase.bco.device.hass.communication.websocket.command.SubscriptionEvent
-import org.openbase.bco.device.hass.type.HassDomainType
-import org.openbase.bco.device.hass.util.toRequest
+import org.openbase.bco.device.hass.jp.JPHassHost
+import org.openbase.bco.device.hass.jp.JpHassPort
 import org.openbase.bco.device.hass.util.JsonUtils
 import org.openbase.bco.device.hass.util.await
 import org.openbase.bco.device.hass.util.isNull
+import org.openbase.bco.device.hass.util.toRequest
 import org.openbase.jps.core.JPService
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.iface.Activatable
@@ -27,10 +29,10 @@ import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Flow
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
-import kotlin.concurrent.withLock
 import kotlin.concurrent.write
 
 data class WSSubscription (
@@ -57,7 +59,6 @@ class HassWebsocketConnection(
     private val connectionStateCondition: Condition = connectionStateLock.writeLock().newCondition()
     private val subscriptionsLock = ReentrantReadWriteLock()
     private val subscriptions: MutableList<WSSubscription> = emptyList<WSSubscription>().toMutableList()
-
 
     @Volatile
     var connectionState: ConnectionState.State = ConnectionState.State.UNKNOWN
@@ -114,6 +115,16 @@ class HassWebsocketConnection(
                         }
                     }
                 }
+        }
+    }
+
+    fun unsubscribe(
+        subscription: WSSubscription,
+    ) {
+        subscriptionsLock.write {
+            subscriptions
+                .find { it == subscription}
+                ?.let { subscriptions.remove(it) }
         }
     }
 
@@ -211,10 +222,12 @@ class HassWebsocketConnection(
                 }
                 "event" -> {
                     JsonUtils.gson.fromJson(jsonResult, SubscriptionEvent::class.java).also { result ->
-                        subscriptionsLock.read {
-                            subscriptions.find { it.eventType?.eventTypeName == result.event.eventType }?.eventProcessor?.invoke(
-                                result.event
-                            )
+                        CoroutineScope(Dispatchers.Default).launch {
+                            subscriptionsLock.read {
+                                subscriptions.find { it.eventType?.eventTypeName == result.event.eventType }?.eventProcessor?.invoke(
+                                    result.event
+                                )
+                            }
                         }
                     }
                     return
@@ -237,7 +250,9 @@ class HassWebsocketConnection(
                         LOGGER.info("Unknown Event: $jsonResult")
                     }
                 } else {
-                    requestMap.remove(result.id)?.completeExceptionally(CouldNotPerformException("Request[${jsonResult.asString}] canceled by home assistant possibly because of an invalid request!"))
+                    requestMap
+                        .remove(result.id)
+                        ?.completeExceptionally(CouldNotPerformException("Request[$jsonResult] canceled by home assistant possibly because of an invalid request!"))
                 }
             }
         }

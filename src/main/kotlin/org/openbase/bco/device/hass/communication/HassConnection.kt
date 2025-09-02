@@ -9,11 +9,11 @@ import jakarta.ws.rs.client.WebTarget
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
-import org.openbase.bco.device.hass.jp.JPHassHost
-import org.openbase.bco.device.hass.jp.JpHassPort
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport
 import org.openbase.bco.device.hass.communication.websocket.HassWebsocketConnection
 import org.openbase.bco.device.hass.communication.websocket.WSSubscription
+import org.openbase.bco.device.hass.jp.JPHassHost
+import org.openbase.bco.device.hass.jp.JpHassPort
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.jps.core.JPService
 import org.openbase.jps.exception.JPNotAvailableException
@@ -22,8 +22,6 @@ import org.openbase.jul.exception.ExceptionProcessor.setInitialCause
 import org.openbase.jul.extension.type.processing.LabelProcessor.contains
 import org.openbase.jul.extension.type.processing.MetaConfigProcessor
 import org.openbase.jul.iface.Shutdownable
-import org.openbase.jul.pattern.ObservableImpl
-import org.openbase.jul.pattern.Observer
 import org.openbase.jul.schedule.GlobalScheduledExecutorService
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
@@ -36,7 +34,6 @@ import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.Volatile
 import kotlin.concurrent.withLock
 
 abstract class HassConnection : Shutdownable, TokenProvider {
@@ -388,9 +385,9 @@ abstract class HassConnection : Shutdownable, TokenProvider {
         Registries.getClassRegistry().gatewayClasses.find { contains(it.label, HASS_GATEWAY_CLASS_LABEL) }
 
 
-    fun subscribe(
-        subscription: WSSubscription,
-    ) = webSocketConnection.subscribe(subscription)
+    fun subscribe(subscription: WSSubscription) = webSocketConnection.subscribe(subscription)
+
+    fun unsubscribe(subscription: WSSubscription) = webSocketConnection.unsubscribe(subscription)
 
     companion object {
 

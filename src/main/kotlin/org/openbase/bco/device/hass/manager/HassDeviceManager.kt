@@ -25,14 +25,16 @@ import org.openbase.bco.device.hass.action.ServiceActionExecutor
 import org.openbase.bco.device.hass.communication.HassCommunicator
 import org.openbase.bco.device.hass.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.device.hass.manager.cache.HassIdToUnitControllerCache
-import org.openbase.bco.device.hass.manager.dto.HassDeviceDto
-import org.openbase.bco.device.hass.manager.dto.HassEntityDto
-import org.openbase.bco.device.hass.manager.dto.HassStateDto
-import org.openbase.bco.device.hass.manager.service.location.LocationSynchronizer
+import org.openbase.bco.device.hass.manager.dto.*
 import org.openbase.bco.device.hass.manager.unit.HassGatewayControllerFactory
+import org.openbase.bco.device.hass.sync.DtoCache
+import org.openbase.bco.device.hass.sync.UnitSynchronizer
+import org.openbase.bco.device.hass.sync.strategy.TileSyncStrategy
+import org.openbase.bco.device.hass.sync.strategy.ZoneSyncStrategy
 import org.openbase.bco.device.hass.util.await
 import org.openbase.bco.device.hass.util.get
 import org.openbase.bco.device.hass.util.isNotNull
+import org.openbase.bco.device.hass.util.mergeFromWithRepeatedFields
 import org.openbase.bco.device.hass.util.set
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
@@ -40,7 +42,6 @@ import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.ExceptionProcessor
 import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
-import org.openbase.jul.extension.protobuf.ProtoBufBuilderProcessor.mergeFromWithoutRepeatedFields
 import org.openbase.jul.extension.type.processing.LabelProcessor
 import org.openbase.jul.iface.Launchable
 import org.openbase.jul.iface.VoidInitializable
@@ -49,10 +50,9 @@ import org.openbase.jul.pattern.provider.DataProvider
 import org.openbase.jul.schedule.RecurrenceEventFilter
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
-import org.openbase.type.domotic.unit.device.DeviceClassType.DeviceClass
+import org.openbase.type.domotic.unit.device.DeviceClassType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.collections.filter
 
 class HassDeviceManager :
     DeviceManagerImpl(HassGatewayControllerFactory(), false),
@@ -73,7 +73,23 @@ class HassDeviceManager :
 
     private var supportedEntities = listOf<HassEntityDto>()
 
-    private val locationSynchronizer = LocationSynchronizer()
+    private val tileAreaCache: DtoCache<HassAreaDto> = DtoCache()
+    private val zoneFloorCache: DtoCache<HassFloorDto> = DtoCache()
+
+    private val synchronizer = listOf (
+        UnitSynchronizer(
+            strategy = TileSyncStrategy(zoneFloorCache),
+            cache = tileAreaCache,
+            hassCommunicator = HassCommunicator.instance,
+            unitRegistry = Registries.getUnitRegistry(),
+        ),
+        UnitSynchronizer(
+            strategy = ZoneSyncStrategy(),
+            cache = zoneFloorCache,
+            hassCommunicator = HassCommunicator.instance,
+            unitRegistry = Registries.getUnitRegistry(),
+        ),
+    )
 
     init {
         // the sync observer triggers a lot when the device manager is initially activated and all unit controllers are created
@@ -91,10 +107,14 @@ class HassDeviceManager :
                         }
                         return
                     }
+//
+                    // wait for caches to be loaded
+                    tileAreaCache.waitUntilReady()
+                    zoneFloorCache.waitUntilReady()
 
                     val notIdentifiedDevices = mutableListOf<HassDeviceDto>()
                     val deviceClasses = Registries.getClassRegistry(true).deviceClasses
-                    val deviceClassMapping: Map<String, Pair<HassDeviceDto, DeviceClass>> =
+                    val deviceClassMapping: Map<String, Pair<HassDeviceDto, DeviceClassType.DeviceClass>> =
                         HassCommunicator.instance
                             .getDevices()
                             .filter { !it.model.isNullOrBlank() }
@@ -103,7 +123,7 @@ class HassDeviceManager :
                                     deviceClasses
                                         .find { deviceClass ->
                                             deviceClass.productNumber == hassDevice.model ||
-                                                deviceClass.metaConfig[ALIAS_KEY_HASS_DEVICE_MODEL] == hassDevice.model
+                                                deviceClass.metaConfig[(ALIAS_KEY_HASS_DEVICE_MODEL)] == hassDevice.model
                                         }
                             }.filter { (hassDevice, deviceClass) ->
                                 (deviceClass.isNotNull())
@@ -152,14 +172,14 @@ class HassDeviceManager :
                                     }.setLabel(LabelProcessor.generateLabelBuilder(device.name))
                                     .apply { metaConfigBuilder[ALIAS_KEY_HASS_DEVICE_ID] = device.id }
                                     .apply {
-                                        locationSynchronizer.findTileByAreaId(device.areaId)
+                                        tileAreaCache.getUnitConfigByDtoId(device.areaId)
                                             ?.let { unitLocation ->
                                                 placementConfigBuilder.locationId = unitLocation.id
                                             }
                                     }.build()
                             }.map { deviceConfig ->
                                 deviceIdToDevices[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]?.let { existingDeviceConfig ->
-                                    existingDeviceConfig.toBuilder().mergeFromWithoutRepeatedFields(deviceConfig).build().let {
+                                    existingDeviceConfig.toBuilder().mergeFromWithRepeatedFields(deviceConfig).build().let {
                                         Registries.getUnitRegistry().updateUnitConfig(it).await()
                                     }
                                 } ?: Registries.getUnitRegistry().registerUnitConfig(deviceConfig).await()
@@ -183,8 +203,7 @@ class HassDeviceManager :
                                                     addAlias(entity.entityId)
                                                     metaConfigBuilder[ALIAS_KEY_HASS_ENTITY_ID] = entity.entityId
                                                     // add location to unit
-//                                                    locationSynchronizer.find(areaId) -.
-                                                    locationSynchronizer.findTileByAreaId(entity.areaId)
+                                                    tileAreaCache.getUnitConfigByDtoId(entity.areaId)
                                                         ?.let { unitLocation ->
                                                             placementConfigBuilder.locationId = unitLocation.id
                                                         }
@@ -194,7 +213,6 @@ class HassDeviceManager :
                             }.filterNotNull()
 
                     // TODO: Location and Device initial sync draft is ready, however we have issues with repeated field that are not merged correctly.
-                    // TODO: Finish initial state mapping (there we have to map from the state type onto the service type by analysing the entire event)
 
                     // initial device synchronization
                     supportedEntities =
@@ -246,7 +264,7 @@ class HassDeviceManager :
         LOGGER.info("Login to bco...")
         BCOLogin.getSession().loginBCOUser()
 
-        locationSynchronizer.activate()
+        synchronizer.map { it.activate() }
 
         super.activate()
 
@@ -275,19 +293,21 @@ class HassDeviceManager :
     @Throws(CouldNotPerformException::class, InterruptedException::class)
     override fun deactivate() {
         unitControllerRegistry.removeObserver(synchronizationObserver)
-        locationSynchronizer.deactivate()
+        synchronizer.map { deactivate() }
         super.deactivate()
     }
 
     companion object {
         const val ALIAS_KEY_HASS_DEVICE_MODEL = "HASS_DEVICE_MODEL"
-        const val ALIAS_KEY_HASS_FLOOR_ID = "HASS_FLOOR_ID"
+        const val ALIAS_KEY_HASS_ID = "HASS_ID"
+        const val ALIAS_KEY_HASS_TYPE = "HASS_TYPE"
         const val ALIAS_KEY_HASS_DEVICE_ID = "HASS_DEVICE_ID"
         const val HASS_GATEWAY_CLASS_ID = "96dd4c43-92de-48b6-ba16-f9bafefc3c44"
         const val HASS_ENTITY_TYPE = "HASS_ENTITY_TYPE"
         const val HASS_ENTITY_DEVICE_CLASS = "HASS_ENTITY_DEVICE_CLASS"
         const val ALIAS_KEY_HASS_ENTITY_ID = "HASS_ENTITY_ID"
-        const val ALIAS_KEY_HASS_AREA_ID = "HASS_AREA_ID"
+
+        const val ALIAS_KEY_BCO_ICON = "ICON"
 
         private val LOGGER: Logger = LoggerFactory.getLogger(HassDeviceManager::class.java)
     }

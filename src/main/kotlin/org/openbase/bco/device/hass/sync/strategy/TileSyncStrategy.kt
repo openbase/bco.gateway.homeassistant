@@ -23,7 +23,7 @@ import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig.LocationType
 
 class TileSyncStrategy(
-    private val cache: DtoCache<HassFloorDto>,
+    private val floorCache: DtoCache<HassFloorDto>,
     private val hassCommunicator: HassCommunicator = HassCommunicator.instance,
     private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ): UnitSyncStrategy<HassAreaDto, HassAreaInputDto> {
@@ -43,7 +43,7 @@ class TileSyncStrategy(
     override fun buildHassInputDto(unitConfig: UnitConfig): HassAreaInputDto = HassAreaInputDto(
         id = unitConfig.toHassId(),
         name = LabelProcessor.getBestMatch(unitConfig.label),
-        floorId = cache.getDtoByUnitId(unitConfig.placementConfig.locationId)?.id,
+        floorId = floorCache.getDtoByUnitId(unitConfig.placementConfig.locationId)?.id,
         icon =  unitConfig.metaConfig[ALIAS_KEY_BCO_ICON],
         picture = null,
         labels = null,

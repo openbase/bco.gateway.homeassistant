@@ -45,8 +45,8 @@ class UnitSynchronizerTest {
         every { tileSyncStrategy.name } returns "TileSyncStrategy"
         every { tileSyncStrategy.unitType } returns UnitType.LOCATION
         every { tileSyncStrategy.unitFilter } returns { it.locationConfig?.locationType == LocationType.TILE }
-        every { tileSyncStrategy.onDtoChanges(capture(onDtoChangesCallbackSlot)) } answers { mockk<AutoCloseable>() }
-        every { tileSyncStrategy.onUnitChanges(capture(onUnitChangesCallbackSlot)) } answers { mockk<AutoCloseable>() }
+        every { tileSyncStrategy.onDtoChanges(capture(onDtoChangesCallbackSlot)) } answers { mockk<AutoCloseable>(relaxed = true) }
+        every { tileSyncStrategy.onUnitChanges(capture(onUnitChangesCallbackSlot)) } answers { mockk<AutoCloseable>(relaxed = true) }
         every { tileSyncStrategy.buildUnitConfig(capture(hassDtoSlot)) } answers {
             UnitConfig
                 .newBuilder()

@@ -218,7 +218,7 @@ class HassCommunicator private constructor() : HassConnection() {
         FLOOR_UPDATE("floor_registry_updated"),
         AREA_UPDATE("area_registry_updated"),
         STATE_UPDATE("state_changed"),
-        DEVICE_UPDATE(TODO())
+        DEVICE_UPDATE("device_registry_updated")
     }
 
     companion object {

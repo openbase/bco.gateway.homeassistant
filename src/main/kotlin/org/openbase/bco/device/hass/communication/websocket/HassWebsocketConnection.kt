@@ -3,6 +3,9 @@ package org.openbase.bco.device.hass.communication.websocket
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
@@ -26,6 +29,7 @@ import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Flow
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
@@ -218,10 +222,12 @@ class HassWebsocketConnection(
                 }
                 "event" -> {
                     JsonUtils.gson.fromJson(jsonResult, SubscriptionEvent::class.java).also { result ->
-                        subscriptionsLock.read {
-                            subscriptions.find { it.eventType?.eventTypeName == result.event.eventType }?.eventProcessor?.invoke(
-                                result.event
-                            )
+                        CoroutineScope(Dispatchers.Default).launch {
+                            subscriptionsLock.read {
+                                subscriptions.find { it.eventType?.eventTypeName == result.event.eventType }?.eventProcessor?.invoke(
+                                    result.event
+                                )
+                            }
                         }
                     }
                     return

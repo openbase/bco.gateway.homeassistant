@@ -54,8 +54,7 @@ class TileSyncStrategy(
         hassCommunicator.saveArea(dto)
 
     override fun queryHassDtos(): List<HassAreaDto> =
-        HassCommunicator.instance
-            .getAreas()
+        hassCommunicator.getAreas()
 
     override fun deleteHassDto(dto: HassAreaDto): HassAreaDto =
         hassCommunicator.deleteArea(dto)

@@ -1,6 +1,7 @@
 package org.openbase.bco.device.hass.sync
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.openbase.bco.device.hass.communication.HassCommunicator
@@ -95,7 +96,6 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
         val unitConfigs = getUnitConfigMap()
         val unitConfigByDtoId = unitConfigs.values.associateBy { it.metaConfig[HassDeviceManager.ALIAS_KEY_HASS_ID] }
 
-        // TODO: this fails on floor update from hass. But works correctly on startup.
         strategy.queryHassDtos().let { hassDtos ->
             // handle: add and update
             hassDtos

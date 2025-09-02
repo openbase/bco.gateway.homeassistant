@@ -173,7 +173,7 @@ class UnitSynchronizerTest {
 
         // wait until cache is initialized
         while (!cache.initialized) {
-            cache.waitUntilReady(duration = Duration.ofMillis(10))
+            cache.waitUntilReady(duration = Duration.ofSeconds(3))
             synchronizer.isActive shouldBe true
         }
 

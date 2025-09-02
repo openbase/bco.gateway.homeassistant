@@ -75,9 +75,17 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.map { gson.fromJson(it, HassDeviceDto::class.java) }
             .orEmpty()
 
-    fun saveDevice(device: HassDeviceInputDto): HassDeviceDto = TODO()
+    fun saveDevice(device: HassDeviceInputDto): HassDeviceDto =
+        (device.id?.let {
+            UPDATE_DEVICE_WS_REQUEST
+        } ?: throw NotImplementedError("Devices cannot be created via Websocket API.")).let { wsCommand ->
+            sendWSCommand(wsCommand, gson.toJsonTree(device).asJsonObject).await()
+                ?.asJsonObject
+                ?.let { gson.fromJson(it, HassDeviceDto::class.java) }
+                ?: throw CouldNotPerformException("Could not save floor[$device]")
+        }
 
-    fun deleteDevice(device: HassDeviceDto): HassDeviceDto = TODO()
+    fun deleteDevice(device: HassDeviceDto): HassDeviceDto = throw NotImplementedError("Devices cannot be deleted via Websocket API.")
 
     fun getEntities(): List<HassEntityDto> =
         sendWSCommand(ENTITIES_WS_REQUEST).await()
@@ -229,6 +237,7 @@ class HassCommunicator private constructor() : HassConnection() {
         const val CREATE_FLOOR_WS_REQUEST = "config/floor_registry/create"
         const val UPDATE_FLOOR_WS_REQUEST = "config/floor_registry/update"
         const val DELETE_FLOOR_WS_REQUEST = "config/floor_registry/delete"
+        const val UPDATE_DEVICE_WS_REQUEST = "config/device_registry/update"
 
         private val LOGGER: Logger = LoggerFactory.getLogger(HassCommunicator::class.java)
 

@@ -12,19 +12,23 @@ import org.openbase.bco.device.hass.sync.strategy.UnitSyncStrategy
 import org.openbase.bco.device.hass.type.InputDtoProvider
 import org.openbase.bco.device.hass.type.Mergeable
 import org.openbase.bco.device.hass.util.*
+import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.unit.lib.UnitRegistry
+import org.openbase.bco.registry.unit.remote.UnitRegistryRemote
 import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
 import org.openbase.jul.iface.Activatable
 import org.openbase.type.domotic.state.ConnectionStateType
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.slf4j.LoggerFactory
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 class UnitSynchronizer<HASS_DTO, HASS_INPUT_DTO : HassInputDto>(
     val strategy: UnitSyncStrategy<HASS_DTO, HASS_INPUT_DTO>,
     val cache: DtoCache<HASS_DTO> = DtoCache(),
     val hassCommunicator: HassCommunicator,
-    val unitRegistry: UnitRegistry,
+    val unitRegistry: UnitRegistryRemote,
 ) : Activatable where
 HASS_DTO : HassDto,
 HASS_DTO : Mergeable<HASS_INPUT_DTO, HASS_DTO>,
@@ -33,10 +37,12 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     private val activationMutex = Mutex()
     private var observer = listOf<AutoCloseable>()
 
-    private val bcoToHassSyncDebounceFilter = DebounceFilter<Unit> { syncBCOtoHass() }
-    private val hassToBCOSyncDebounceFilter = DebounceFilter<Unit> { syncHassToBCO() }
+    private val bcoToHassSyncDebounceFilter = DebounceFilter<Unit> { synchronizationLock.withLock { syncBCOtoHass() } }
+    private val hassToBCOSyncDebounceFilter = DebounceFilter<Unit> { synchronizationLock.withLock { syncHassToBCO() } }
 
     private var active = false
+
+    private var synchronizationLock = ReentrantLock()
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun activate() {
@@ -85,8 +91,10 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     override fun isActive(): Boolean = active
 
     private fun syncAll() {
-        syncHassToBCO() // order important for sync!
-        syncBCOtoHass() // order important for sync!
+        synchronizationLock.withLock {
+            syncHassToBCO() // order important for sync!
+            syncBCOtoHass() // order important for sync!
+        }
         cache.confirmInit()
     }
 

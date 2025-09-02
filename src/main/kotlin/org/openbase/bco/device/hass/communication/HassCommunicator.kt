@@ -75,6 +75,10 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.map { gson.fromJson(it, HassDeviceDto::class.java) }
             .orEmpty()
 
+    fun saveDevice(device: HassDeviceInputDto): HassDeviceDto = TODO()
+
+    fun deleteDevice(device: HassDeviceDto): HassDeviceDto = TODO()
+
     fun getEntities(): List<HassEntityDto> =
         sendWSCommand(ENTITIES_WS_REQUEST).await()
             ?.asJsonArray
@@ -205,7 +209,8 @@ class HassCommunicator private constructor() : HassConnection() {
         CONFIG_UPDATE("config_updated"),
         FLOOR_UPDATE("floor_registry_updated"),
         AREA_UPDATE("area_registry_updated"),
-        STATE_UPDATE("state_changed")
+        STATE_UPDATE("state_changed"),
+        DEVICE_UPDATE(TODO())
     }
 
     companion object {

@@ -41,9 +41,19 @@ data class HassStateDto(
         get() =
             (attributes["brightness"] as? Double)
 
+    val position: Double?
+        get() =
+            (attributes["current_position"] as? Double)
+
     companion object {
         const val STATE_ON: String = "on"
         const val STATE_OFF: String = "off"
+
+        const val STATE_OPEN = "open"
+        const val STATE_CLOSED = "closed"
+        const val STATE_OPENING = "opening"
+        const val STATE_CLOSING = "closing"
+        const val STATE_STOPPED = "stopped"
 
         const val STATE_BUTTON_INITIAL_PRESS = "initial_press"
         const val STATE_BUTTON_REPEAT = "repeat"

@@ -42,5 +42,7 @@ fun HassStateDto.toServiceType() : ServiceType = when (type) {
 
     HassDomainType.CLIMATE -> ServiceType.TARGET_TEMPERATURE_STATE_SERVICE
 
+    HassDomainType.COVER -> ServiceType.BLIND_STATE_SERVICE
+
     else -> ServiceType.UNKNOWN
 }

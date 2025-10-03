@@ -1,6 +1,7 @@
 plugins {
     application
     kotlin("jvm") version "2.0.0"
+    id("com.gradleup.shadow") version "8.3.0"
 }
 
 group = "org.openbase"

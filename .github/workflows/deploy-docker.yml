@@ -20,13 +20,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Docker bco-manager-hass meta
-        id: bco-manager-meta
+      - name: Docker bco-gateway-homeassistant meta
+        id: bco-gateway-meta
         uses: docker/metadata-action@v5
         with:
           # list of Docker images to use as base name for tags
           images: |
-            openbaseorg/bco-manager-hass
+            openbaseorg/bco-gateway-homeassistant
           # generate Docker tags based on the following events/attributes
           tags: |
             type=raw,value=review,enable=${{ contains(github.event.pull_request.labels.*.name, 'prebuild docker image') }}
@@ -49,15 +49,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       
-      - name: Build and push bco-manager-hass
+      - name: Build and push bco-gateway-homeassistant
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'prebuild docker image') }}
-          tags: ${{ steps.bco-manager-meta.outputs.tags }}
-          labels: ${{ steps.bco-manager-meta.outputs.labels }}
-        env:
-          TAG: 3.0-alpha ### TODO: WHY NEEDED?
-
+          tags: ${{ steps.bco-gateway-meta.outputs.tags }}
+          labels: ${{ steps.bco-gateway-meta.outputs.labels }}

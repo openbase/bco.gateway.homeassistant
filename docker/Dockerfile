@@ -36,6 +36,20 @@ COPY --from=build /workspace/app.jar /app/
 # Tune JVM for containers; adapt memory settings to your app.
 ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75"
 
+# Basic build-time metadata as defined at http://label-schema.org
+LABEL org.label-schema.build-date=$BUILD_DATE \
+    org.label-schema.docker.dockerfile="docker/Dockerfile" \
+    org.label-schema.license="GPL3" \
+    org.label-schema.name="bco-gateway-homeassistant" \
+    org.label-schema.vendor="openbase.org" \
+    org.label-schema.version=$VERSION \
+    org.label-schema.description="A gateway that enables seamless integration between BaseCubeOne and Assistant." \
+    org.label-schema.url="https://www.basecubeone.org" \
+    org.label-schema.vcs-ref=$VCS_REF \
+    org.label-schema.vcs-type="Git" \
+    org.label-schema.vcs-url="https://github.com/openbase/bco.gateway.homeassistant.git" \
+    maintainer="Divine Threepwood <divine@openbase.org>"
+
 # If your app serves HTTP on 8080, expose it (optional, docs only)
 # EXPOSE 8080
 

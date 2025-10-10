@@ -8,7 +8,7 @@ ORANGE='\033[0;33m'
 BLUE='\033[0;34m'
 WHITE='\033[0;37m'
 
-APP_NAME_RAW='bco-manager-homeassistant'
+APP_NAME_RAW='bco-gateway-homeassistant'
 APP_NAME=${BLUE}${APP_NAME_RAW}${NC}
 IMAGE_TAG=${1:-local}
 

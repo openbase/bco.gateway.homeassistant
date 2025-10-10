@@ -15,7 +15,7 @@ if [ ! -d ${BCO_DIST} ]; then
     exit 255
 fi
 
-APP_NAME='bco-device-hass'
+APP_NAME='bco-gateway-homeassistant'
 APP_NAME=${BLUE}${APP_NAME}${NC}
 echo -e "=== ${APP_NAME} project ${WHITE}cleanup${NC}" &&
 ./gradlew clean --quiet $@ &&

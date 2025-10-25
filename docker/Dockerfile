@@ -58,4 +58,4 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
 #   CMD ["/usr/bin/curl","-f","http://localhost:8080/actuator/health"] || exit 1
 
 # ENTRYPOINT ["/app/bco-device-hass/bin/bco-device-hass"]
-ENTRYPOINT ["/usr/bin/java","-jar","/app/app.jar"]
+ENTRYPOINT ["/usr/bin/java","-jar","/app/app.jar","--host", "${OPTION_BCO_MIDDLEWARE_HOST}","--port", "${OPTION_BCO_MIDDLEWARE_PORT}"]

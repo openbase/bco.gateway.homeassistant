@@ -1,0 +1,21 @@
+package org.openbase.bco.gateway.homeassistant.manager.service
+
+import org.openbase.bco.dal.lib.layer.service.provider.BatteryStateProviderService
+import org.openbase.bco.dal.lib.layer.unit.Unit
+import org.openbase.bco.gateway.homeassistant.manager.dto.HassDeviceClass
+import org.openbase.bco.gateway.homeassistant.manager.dto.HassStateDto
+import org.openbase.type.domotic.state.BatteryStateType.BatteryState
+
+class BatteryStateServiceImpl<ST>(unit: ST) : HassService<ST>(unit),
+    BatteryStateProviderService where ST : BatteryStateProviderService, ST : Unit<*> {
+    override fun getBatteryState(): BatteryState = unit.batteryState
+}
+
+fun HassStateDto.toBatteryState(): BatteryState.Builder {
+    return BatteryState.newBuilder().apply {
+        level = state.toDouble() / 100
+    }
+}
+
+fun HassStateDto.isBatterySensor(): Boolean =
+    deviceClass == HassDeviceClass.BATTERY.id

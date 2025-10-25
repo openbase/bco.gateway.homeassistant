@@ -1,11 +1,14 @@
+import java.net.URL
+
 plugins {
     application
     kotlin("jvm") version "2.0.0"
+    id("com.gradleup.shadow") version "8.3.0"
 }
 
 group = "org.openbase"
 version = "1.0-SNAPSHOT"
-description = "BaseCubeOne Home Assistant Device Manager"
+description = "A gateway that enables seamless integration between BaseCubeOne and Assistant."
 
 val bcoVersion: String by project
 val jerseyVersion: String by project
@@ -13,7 +16,11 @@ val ktorVersion: String by project
 val logbackVersion: String by project
 
 repositories {
-    mavenCentral()
+    mavenLocal()
+    maven {
+        url  = uri("https://repo1.maven.org/maven2")
+    }
+    google()
 }
 
 dependencies {
@@ -36,15 +43,6 @@ dependencies {
     testImplementation("io.mockk:mockk:1.14.0")
 }
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-    google()
-    maven {
-        url = uri("https://oss.sonatype.org/content/groups/public/")
-    }
-}
-
 tasks.test {
     useJUnitPlatform()
 }
@@ -54,13 +52,13 @@ kotlin {
 }
 
 application {
-    mainClass.set("org.openbase.bco.device.hass.HassDeviceManagerLauncher")
+    mainClass.set("org.openbase.bco.gateway.homeassistant.HassGatewayLauncher")
 }
 
-application.applicationName = "bco-device-hass"
+application.applicationName = "bco-gateway-homeassistant"
 
 distributions {
     main {
-        distributionBaseName.set("bco-device-hass")
+        distributionBaseName.set("bco-gateway-homeassistant")
     }
 }

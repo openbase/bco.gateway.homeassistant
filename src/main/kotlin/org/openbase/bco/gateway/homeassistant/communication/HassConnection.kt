@@ -13,6 +13,7 @@ import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport
 import org.openbase.bco.gateway.homeassistant.communication.websocket.HassWebsocketConnection
 import org.openbase.bco.gateway.homeassistant.communication.websocket.WSSubscription
 import org.openbase.bco.gateway.homeassistant.jp.JPHassHost
+import org.openbase.bco.gateway.homeassistant.jp.JPHassToken
 import org.openbase.bco.gateway.homeassistant.jp.JpHassPort
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.jps.core.JPService
@@ -56,12 +57,9 @@ abstract class HassConnection : Shutdownable, TokenProvider {
         ConnectionState.State.DISCONNECTED
 
     final override val token: String
-        get() = findHassGatewayClass()?.let { hassGatewayClass ->
-            Registries.getUnitRegistry()
-                .getUnitConfigsByUnitType(UnitType.GATEWAY)
-                .find { it.gatewayConfig.gatewayClassId == hassGatewayClass.id }
-                ?.let { MetaConfigProcessor.getValue(it.metaConfig, META_CONFIG_TOKEN_KEY) }
-        }?: error("Home Assistant token missing!")
+        get() = resolveTokenViaJPService()
+            ?: resolveTokenViaRegistry()
+            ?: error("Home Assistant token missing!")
 
     init {
         try {
@@ -252,6 +250,15 @@ abstract class HassConnection : Shutdownable, TokenProvider {
                 }
             }
         }
+
+    fun resolveTokenViaJPService(): String? = JPService.getValue(JPHassToken::class.java)
+
+    fun resolveTokenViaRegistry(): String? = findHassGatewayClass()?.let { hassGatewayClass ->
+        Registries.getUnitRegistry()
+            .getUnitConfigsByUnitType(UnitType.GATEWAY)
+            .find { it.gatewayConfig.gatewayClassId == hassGatewayClass.id }
+            ?.let { MetaConfigProcessor.getValue(it.metaConfig, META_CONFIG_TOKEN_KEY) }
+    }
 
     @Throws(CouldNotPerformException::class)
     protected fun get(target: String, skipValidation: Boolean = false): String {

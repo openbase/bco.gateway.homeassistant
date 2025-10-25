@@ -1,9 +1,10 @@
 package org.openbase.bco.gateway.homeassistant
 
-import org.openbase.bco.gateway.homeassistant.jp.JPHassHost
-import org.openbase.bco.gateway.homeassistant.jp.JpHassPort
 import org.openbase.bco.authentication.lib.BCO
 import org.openbase.bco.authentication.lib.jp.JPCredentialsDirectory
+import org.openbase.bco.gateway.homeassistant.jp.JPHassHost
+import org.openbase.bco.gateway.homeassistant.jp.JPHassToken
+import org.openbase.bco.gateway.homeassistant.jp.JpHassPort
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager
 import org.openbase.jps.core.JPService
 import org.openbase.jps.preset.JPDebugMode
@@ -41,6 +42,7 @@ class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
     override fun loadProperties() {
         JPService.registerProperty(JpHassPort::class.java)
         JPService.registerProperty(JPHassHost::class.java)
+        JPService.registerProperty(JPHassToken::class.java)
         JPService.registerProperty(JPDebugMode::class.java)
         JPService.registerProperty(JPLogLevel::class.java)
         JPService.registerProperty(JPCredentialsDirectory::class.java)

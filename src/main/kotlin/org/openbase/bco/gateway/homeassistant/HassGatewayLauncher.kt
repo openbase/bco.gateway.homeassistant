@@ -1,6 +1,7 @@
 package org.openbase.bco.gateway.homeassistant
 
 import org.openbase.bco.authentication.lib.BCO
+import org.openbase.bco.authentication.lib.jp.JPBCOHomeDirectory
 import org.openbase.bco.authentication.lib.jp.JPCredentialsDirectory
 import org.openbase.bco.gateway.homeassistant.jp.JPHassHost
 import org.openbase.bco.gateway.homeassistant.jp.JPHassToken
@@ -47,8 +48,9 @@ class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
         JPService.registerProperty(JPDebugMode::class.java)
         JPService.registerProperty(JPLogLevel::class.java)
         JPService.registerProperty(JPCredentialsDirectory::class.java)
-        JPService.registerProperty(JPComHost::class.java, System.getenv("OPTION_BCO_MIDDLEWARE_HOST")?: "localhost")
-        JPService.registerProperty(JPComPort::class.java, System.getenv("OPTION_BCO_MIDDLEWARE_PORT")?.toInt()?: 1883)
+        JPService.registerProperty(JPBCOHomeDirectory::class.java, File("/data"))
+        JPService.registerProperty(JPComHost::class.java, System.getenv("OPTION_BCO_MIDDLEWARE_HOST")?: "addon_f71ff8bf_bco-middleware")
+        JPService.registerProperty(JPComPort::class.java, System.getenv("OPTION_BCO_MIDDLEWARE_PORT")?.toInt()?: 13780)
     }
 
     companion object {

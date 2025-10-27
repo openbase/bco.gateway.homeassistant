@@ -12,13 +12,35 @@ import org.openbase.jps.preset.JPLogLevel
 import org.openbase.jul.communication.jp.JPComHost
 import org.openbase.jul.communication.jp.JPComPort
 import org.openbase.jul.pattern.launch.AbstractLauncher
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import java.io.File
 
 
 class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
     HassGatewayLauncher::class.java,
     HassDeviceManager::class.java
 ) {
+
+    private val LOG: Logger = LoggerFactory.getLogger(HassGatewayLauncher::class.java)
+
     override fun loadProperties() {
+        // Log all reachable environment variables for debugging
+        try {
+            val env = System.getenv()
+            if (env.isEmpty()) {
+                LOG.info("No environment variables found.")
+            } else {
+                // Sort keys for stable output
+                env.toSortedMap().forEach { (k, v) ->
+                    // Use parameterized logging to avoid string concatenation
+                    LOG.info("ENV {}={}", k, v)
+                }
+            }
+        } catch (t: Throwable) {
+            LOG.warn("Failed to read environment variables: {}", t.toString())
+        }
+
         JPService.registerProperty(JpHassPort::class.java)
         JPService.registerProperty(JPHassHost::class.java)
         JPService.registerProperty(JPHassToken::class.java)

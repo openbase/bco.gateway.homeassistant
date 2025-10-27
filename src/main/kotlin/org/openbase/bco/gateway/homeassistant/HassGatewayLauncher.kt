@@ -46,8 +46,8 @@ class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
         JPService.registerProperty(JPDebugMode::class.java)
         JPService.registerProperty(JPLogLevel::class.java)
         JPService.registerProperty(JPCredentialsDirectory::class.java)
-        JPService.registerProperty(JPComHost::class.java)
-        JPService.registerProperty(JPComPort::class.java)
+        JPService.registerProperty(JPComHost::class.java, System.getenv("OPTION_BCO_MIDDLEWARE_HOST")?: "localhost")
+        JPService.registerProperty(JPComPort::class.java, System.getenv("OPTION_BCO_MIDDLEWARE_PORT")?.toInt()?: 1883)
     }
 
     companion object {

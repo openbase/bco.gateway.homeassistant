@@ -50,7 +50,7 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
     org.label-schema.vcs-url="https://github.com/openbase/bco.gateway.homeassistant.git" \
     io.hass.version=$VERSION \
     io.hass.type="addon" \
-    io.hass.arch="aarch64|amd64"
+    io.hass.arch="aarch64|amd64" \
     maintainer="Divine Threepwood <divine@openbase.org>"
 
 # If your app serves HTTP on 8080, expose it (optional, docs only)

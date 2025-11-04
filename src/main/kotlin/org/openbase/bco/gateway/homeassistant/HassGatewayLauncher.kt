@@ -5,6 +5,8 @@ import org.openbase.bco.authentication.lib.jp.JPBCOHomeDirectory
 import org.openbase.bco.authentication.lib.jp.JPCredentialsDirectory
 import org.openbase.bco.gateway.homeassistant.jp.*
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager
+import org.openbase.bco.gateway.homeassistant.option.AddonOptions
+import org.openbase.bco.gateway.homeassistant.option.OptionsParser
 import org.openbase.jps.core.JPService
 import org.openbase.jps.preset.JPDebugMode
 import org.openbase.jps.preset.JPLogLevel
@@ -26,7 +28,7 @@ class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
     override fun loadProperties() {
 
         // Read Home Assistant options.json (if present) and optionally log its content when OPTION_DEBUG is set.
-        val options: OptionsParser.AddonOptions? = OptionsParser.parseOptionsJson()
+        val options: AddonOptions? = OptionsParser.parseOptionsJson()
 
         JPService.registerProperty(JpHassPort::class.java)
         JPService.registerProperty(JPHassHost::class.java)

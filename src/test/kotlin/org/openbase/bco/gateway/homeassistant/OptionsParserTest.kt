@@ -13,7 +13,7 @@ class OptionsParserTest {
             {
               "BCO_MIDDLEWARE_HOST": "host.example",
               "BCO_MIDDLEWARE_PORT": 4242,
-              "BCO_ADMIN": "adminUser",
+              "BCO_ADMIN": "adminUser",o
               "BCO_ADMIN_PASSWORD": "s3cr3t"
             }
         """.trimIndent()

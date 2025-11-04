@@ -54,7 +54,7 @@ object OptionsParser {
      */
     fun parseAdmin(context: ReadContext): String? = runCatching {
         context.read<String>("$.BCO_ADMIN")
-    }.getOrNull()
+    }.getOrNull()?.takeIf { it.isNotBlank() }
 
     /**
      * Extract BCO_ADMIN_PASSWORD from the parsed JsonPath context.
@@ -63,7 +63,7 @@ object OptionsParser {
      */
     fun parseAdminPassword(context: ReadContext): String? = runCatching {
         context.read<String>("$.BCO_ADMIN_PASSWORD")
-    }.getOrNull()
+    }.getOrNull()?.takeIf { it.isNotBlank() }
 
     /**
      * Convenience function that parses the content and extracts host, port, admin and adminPassword using

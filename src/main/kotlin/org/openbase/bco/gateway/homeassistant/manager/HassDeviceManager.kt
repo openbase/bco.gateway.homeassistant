@@ -24,6 +24,8 @@ import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.gateway.homeassistant.action.ServiceActionExecutor
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
+import org.openbase.bco.gateway.homeassistant.jp.JPBcoAdminPassword
+import org.openbase.bco.gateway.homeassistant.jp.JPBcoAdminUsername
 import org.openbase.bco.gateway.homeassistant.manager.cache.HassIdToUnitControllerCache
 import org.openbase.bco.gateway.homeassistant.manager.dto.*
 import org.openbase.bco.gateway.homeassistant.manager.unit.HassGatewayControllerFactory
@@ -31,13 +33,10 @@ import org.openbase.bco.gateway.homeassistant.sync.DtoCache
 import org.openbase.bco.gateway.homeassistant.sync.UnitSynchronizer
 import org.openbase.bco.gateway.homeassistant.sync.strategy.TileSyncStrategy
 import org.openbase.bco.gateway.homeassistant.sync.strategy.ZoneSyncStrategy
-import org.openbase.bco.gateway.homeassistant.util.await
-import org.openbase.bco.gateway.homeassistant.util.get
-import org.openbase.bco.gateway.homeassistant.util.isNotNull
-import org.openbase.bco.gateway.homeassistant.util.mergeFromWithRepeatedFields
-import org.openbase.bco.gateway.homeassistant.util.set
+import org.openbase.bco.gateway.homeassistant.util.*
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
+import org.openbase.jps.core.JPService
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.ExceptionProcessor
 import org.openbase.jul.exception.printer.ExceptionPrinter
@@ -262,13 +261,52 @@ class HassDeviceManager :
         Registries.waitUntilReady()
 
         LOGGER.info("Login to bco...")
-        BCOLogin.getSession().loginBCOUser()
+
+        loginToBCO()
 
         synchronizer.map { it.activate() }
 
         super.activate()
 
         unitFilter.trigger()
+    }
+
+    private fun loginToBCO() {
+        if(!BCOLogin.getSession().isLoggedIn) {
+            try {
+                // home assistant addon environment: try to auto login default user
+                BCOLogin.getSession().loginUserViaUsername(HASS_BCO_USER, true)
+            } catch (ex: CouldNotPerformException) {
+                // create or recover account
+                createAndLoginNewHassUser()
+            }
+        }
+    }
+
+    fun createAndLoginNewHassUser() {
+        // login via admin account
+        val adminUser = JPService.getValue(JPBcoAdminUsername::class.java)
+        val adminPassword = JPService.getValue(JPBcoAdminPassword::class.java)
+        BCOLogin.getSession().loginUserViaUsername(adminUser, adminPassword, false)
+
+        // register hass user
+        val hassUser = UnitConfig.newBuilder().apply {
+            unitType = UnitType.USER
+            label = LabelProcessor.generateLabelBuilder(HASS_BCO_USER).build()
+            userConfigBuilder.apply {
+                userName = HASS_BCO_USER
+                setSystemUser(true)
+            }
+        }.build().let { Registries.getUnitRegistry().registerUnitConfig(it).await() }
+        val hassUserPassword = "todo" //generate random but secure password
+
+        // setup password for hass user
+        BCOLogin.getSession().sessionManager.registerUser(hassUser.id, hassUserPassword, true)
+
+        // login new hass user and locally store credentials
+        BCOLogin.getSession().logout()
+        BCOLogin.getSession().loginUserViaUsername(HASS_BCO_USER, hassUserPassword, true)
+
     }
 
     fun List<HassStateDto>.applyStateUpdates(systemSync: Boolean) =
@@ -308,6 +346,8 @@ class HassDeviceManager :
         const val ALIAS_KEY_HASS_ENTITY_ID = "HASS_ENTITY_ID"
 
         const val ALIAS_KEY_BCO_ICON = "ICON"
+
+        const val HASS_BCO_USER: String = "homeassistant"
 
         private val LOGGER: Logger = LoggerFactory.getLogger(HassDeviceManager::class.java)
     }

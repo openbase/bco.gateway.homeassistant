@@ -13,7 +13,7 @@ class OptionsParserTest {
             {
               "BCO_MIDDLEWARE_HOST": "host.example",
               "BCO_MIDDLEWARE_PORT": 4242,
-              "BCO_ADMIN": "adminUser",o
+              "BCO_ADMIN": "adminUser",
               "BCO_ADMIN_PASSWORD": "s3cr3t"
             }
         """.trimIndent()
@@ -23,6 +23,24 @@ class OptionsParserTest {
         assertEquals(4242, options?.port)
         assertEquals("adminUser", options?.admin)
         assertEquals("s3cr3t", options?.adminPassword)
+    }
+
+    @Test
+    fun `ignore blank admin credentials`() {
+        val json = """
+            {
+              "BCO_MIDDLEWARE_HOST": "host.example",
+              "BCO_MIDDLEWARE_PORT": 4242,
+              "BCO_ADMIN": "",
+              "BCO_ADMIN_PASSWORD": ""
+            }
+        """.trimIndent()
+
+        val options = OptionsParser.parseOptionsJson(json)
+        assertEquals("host.example", options?.host)
+        assertEquals(4242, options?.port)
+        assertEquals(null, options?.admin)
+        assertEquals(null, options?.adminPassword)
     }
 
     @Test

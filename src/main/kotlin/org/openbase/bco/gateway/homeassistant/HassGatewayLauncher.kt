@@ -35,12 +35,30 @@ class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
         JPService.registerProperty(JPHassToken::class.java)
         JPService.registerProperty(JPDebugMode::class.java)
         JPService.registerProperty(JPLogLevel::class.java)
+
+        File("/data")
+            .takeIf { it.exists() && it.isDirectory }
+            ?.let { bcoHomeAtAddon ->
+                JPService.registerProperty(JPBCOHomeDirectory::class.java, bcoHomeAtAddon)
+            } ?: JPService.registerProperty(JPBCOHomeDirectory::class.java)
+
+        options?.admin?.let {
+            JPService.registerProperty(JPBcoAdminUsername::class.java, options.admin)
+        } ?: JPService.registerProperty(JPBcoAdminUsername::class.java)
+
+        options?.adminPassword?.let {
+            JPService.registerProperty(JPBcoAdminPassword::class.java, options.adminPassword)
+        } ?: JPService.registerProperty(JPBcoAdminPassword::class.java)
+
+        options?.host?.let {
+            JPService.registerProperty(JPComHost::class.java, options.host)
+        } ?: JPService.registerProperty(JPComHost::class.java)
+
+        options?.port?.let {
+            JPService.registerProperty(JPComPort::class.java, options.port)
+        } ?: JPService.registerProperty(JPComPort::class.java)
+
         JPService.registerProperty(JPCredentialsDirectory::class.java)
-        JPService.registerProperty(JPBcoAdminUsername::class.java, options?.admin)
-        JPService.registerProperty(JPBcoAdminPassword::class.java, options?.adminPassword)
-        JPService.registerProperty(JPBCOHomeDirectory::class.java, File("/data"))
-        JPService.registerProperty(JPComHost::class.java,  options?.host)
-        JPService.registerProperty(JPComPort::class.java,  options?.port)
     }
 
     companion object {

@@ -36,12 +36,14 @@ import org.openbase.bco.gateway.homeassistant.sync.strategy.ZoneSyncStrategy
 import org.openbase.bco.gateway.homeassistant.util.*
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
+import org.openbase.bco.registry.unit.lib.UnitRegistry
 import org.openbase.jps.core.JPService
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.ExceptionProcessor
 import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
 import org.openbase.jul.extension.type.processing.LabelProcessor
+import org.openbase.jul.extension.type.processing.MultiLanguageTextProcessor
 import org.openbase.jul.iface.Launchable
 import org.openbase.jul.iface.VoidInitializable
 import org.openbase.jul.pattern.Observer
@@ -52,6 +54,8 @@ import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.openbase.type.domotic.unit.device.DeviceClassType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.security.SecureRandom
+import java.util.*
 
 class HassDeviceManager :
     DeviceManagerImpl(HassGatewayControllerFactory(), false),
@@ -59,13 +63,14 @@ class HassDeviceManager :
     VoidInitializable {
     private val executor: ServiceActionExecutor
 
-    private val hassIdToUnitControllerCache: HassIdToUnitControllerCache = HassIdToUnitControllerCache(unitControllerRegistry)
+    private val hassIdToUnitControllerCache: HassIdToUnitControllerCache =
+        HassIdToUnitControllerCache(unitControllerRegistry)
 
     /**
      * Synchronization observer that triggers resynchronization of all units if their configuration changes.
      */
     private val synchronizationObserver:
-        Observer<DataProvider<MutableMap<String, UnitController<*, *>>>, MutableMap<String, UnitController<*, *>>>
+            Observer<DataProvider<MutableMap<String, UnitController<*, *>>>, MutableMap<String, UnitController<*, *>>>
     private lateinit var unitFilter: RecurrenceEventFilter<Any>
 
     private var entityIdToUnitId = mapOf<String, String>()
@@ -75,7 +80,7 @@ class HassDeviceManager :
     private val tileAreaCache: DtoCache<HassAreaDto> = DtoCache()
     private val zoneFloorCache: DtoCache<HassFloorDto> = DtoCache()
 
-    private val synchronizer = listOf (
+    private val synchronizer = listOf(
         UnitSynchronizer(
             strategy = TileSyncStrategy(zoneFloorCache),
             cache = tileAreaCache,
@@ -106,7 +111,7 @@ class HassDeviceManager :
                         }
                         return
                     }
-//
+
                     // wait for caches to be loaded
                     tileAreaCache.waitUntilReady()
                     zoneFloorCache.waitUntilReady()
@@ -119,11 +124,11 @@ class HassDeviceManager :
                             .filter { !it.model.isNullOrBlank() }
                             .map { hassDevice ->
                                 hassDevice to
-                                    deviceClasses
-                                        .find { deviceClass ->
-                                            deviceClass.productNumber == hassDevice.model ||
-                                                deviceClass.metaConfig[(ALIAS_KEY_HASS_DEVICE_MODEL)] == hassDevice.model
-                                        }
+                                        deviceClasses
+                                            .find { deviceClass ->
+                                                deviceClass.productNumber == hassDevice.model ||
+                                                        deviceClass.metaConfig[(ALIAS_KEY_HASS_DEVICE_MODEL)] == hassDevice.model
+                                            }
                             }.filter { (hassDevice, deviceClass) ->
                                 (deviceClass.isNotNull())
                                     .also {
@@ -178,9 +183,10 @@ class HassDeviceManager :
                                     }.build()
                             }.map { deviceConfig ->
                                 deviceIdToDevices[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]?.let { existingDeviceConfig ->
-                                    existingDeviceConfig.toBuilder().mergeFromWithRepeatedFields(deviceConfig).build().let {
-                                        Registries.getUnitRegistry().updateUnitConfig(it).await()
-                                    }
+                                    existingDeviceConfig.toBuilder().mergeFromWithRepeatedFields(deviceConfig).build()
+                                        .let {
+                                            Registries.getUnitRegistry().updateUnitConfig(it).await()
+                                        }
                                 } ?: Registries.getUnitRegistry().registerUnitConfig(deviceConfig).await()
                             }.flatMap { deviceConfig ->
                                 deviceConfig.deviceConfig.unitIdList.map { dalUnitId ->
@@ -193,7 +199,7 @@ class HassDeviceManager :
 
                                     deviceIdToEntity[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]
                                         ?.filter { entityIdToDeviceClass[it.entityId] == entityDeviceClass }
-                                        ?.find {  it.type == entityType }
+                                        ?.find { it.type == entityType }
                                         ?.let { entity ->
                                             unit
                                                 .toBuilder()
@@ -244,15 +250,20 @@ class HassDeviceManager :
             (Observer { observable: Any?, value: Any? -> unitFilter.trigger() })
     }
 
-    override fun isGatewaySupported(config: UnitConfig?): Boolean = config?.gatewayConfig?.gatewayClassId == HASS_GATEWAY_CLASS_ID
+    override fun isGatewaySupported(config: UnitConfig?): Boolean =
+        config?.gatewayConfig?.gatewayClassId == HASS_GATEWAY_CLASS_ID
 
-    override fun isUnitSupported(config: UnitConfig): Boolean = config.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_DEVICE_ID }
+    override fun isUnitSupported(config: UnitConfig): Boolean =
+        config.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_DEVICE_ID }
 
     @Throws(CouldNotPerformException::class, InterruptedException::class)
     override fun activate() {
         unitControllerRegistry.addObserver(synchronizationObserver)
 
-        HassCommunicator.instance.subscribe(EVENT_WS_SUBSCRIPTION, HassCommunicator.HassEventType.STATE_UPDATE) { event ->
+        HassCommunicator.instance.subscribe(
+            EVENT_WS_SUBSCRIPTION,
+            HassCommunicator.HassEventType.STATE_UPDATE
+        ) { event ->
             LOGGER.trace("new state event: {}", event)
             listOf(event.data.newState).applyStateUpdates(systemSync = false)
         }
@@ -272,7 +283,7 @@ class HassDeviceManager :
     }
 
     private fun loginToBCO() {
-        if(!BCOLogin.getSession().isLoggedIn) {
+        if (!BCOLogin.getSession().isLoggedIn) {
             try {
                 // home assistant addon environment: try to auto login default user
                 BCOLogin.getSession().loginUserViaUsername(HASS_BCO_USER, true)
@@ -292,21 +303,34 @@ class HassDeviceManager :
         // register hass user
         val hassUser = UnitConfig.newBuilder().apply {
             unitType = UnitType.USER
-            label = LabelProcessor.generateLabelBuilder(HASS_BCO_USER).build()
+            label = LabelProcessor.generateLabelBuilder("Home Assistant").build()
+            description = MultiLanguageTextProcessor.generateMultiLanguageTextBuilder(
+                "This user account is used to authorize Home Assistant to access BCO."
+            ).build()
             userConfigBuilder.apply {
                 userName = HASS_BCO_USER
+                firstName = "Home"
+                lastName = "Assistant"
                 setSystemUser(true)
             }
         }.build().let { Registries.getUnitRegistry().registerUnitConfig(it).await() }
-        val hassUserPassword = "todo" //generate random but secure password
 
-        // setup password for hass user
-        BCOLogin.getSession().sessionManager.registerUser(hassUser.id, hassUserPassword, true)
+        // register hass user as bco admin (needed to maintain the setup)
+        Registries.getUnitRegistry().getUnitConfigByAlias(UnitRegistry.ADMIN_GROUP_ALIAS).toBuilder().apply {
+            authorizationGroupConfigBuilder.apply {
+                addMemberId(hassUser.id)
+            }
+        }.build().also { Registries.getUnitRegistry().updateUnitConfig(it).await() }
+
+        val hassUserPassword = generateSecurePassword() // generate random but secure password
+
+        // setup password for hass user and save it in local credential store
+        val credentials = BCOLogin.getSession().sessionManager.registerUser(hassUser.id, hassUserPassword, true).await()
 
         // login new hass user and locally store credentials
         BCOLogin.getSession().logout()
         BCOLogin.getSession().loginUserViaUsername(HASS_BCO_USER, hassUserPassword, true)
-
+        BCOLogin.getSession().storeCredentials(hassUser.id, credentials)
     }
 
     fun List<HassStateDto>.applyStateUpdates(systemSync: Boolean) =
@@ -350,5 +374,13 @@ class HassDeviceManager :
         const val HASS_BCO_USER: String = "homeassistant"
 
         private val LOGGER: Logger = LoggerFactory.getLogger(HassDeviceManager::class.java)
+    }
+
+    // Generate a secure random password encoded as URL-safe Base64 without padding.
+    private fun generateSecurePassword(bytesLength: Int = 24): String {
+        val random = SecureRandom()
+        val bytes = ByteArray(bytesLength)
+        random.nextBytes(bytes)
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
     }
 }

@@ -24,6 +24,6 @@ class JPHassHost: AbstractJavaProperty<String>(COMMAND_IDENTIFIERS) {
         private val ARGUMENT_IDENTIFIERS = arrayOf("HOST")
         private val COMMAND_IDENTIFIERS = arrayOf("--homeassistant-host", "--hass-host")
 
-        private const val DEFAULT_HOST = "localhost"
+        private const val DEFAULT_HOST = "http://supervisor/"
     }
 }

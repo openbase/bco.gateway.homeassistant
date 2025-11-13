@@ -66,7 +66,48 @@ object OptionsParser {
     }.getOrNull()?.takeIf { it.isNotBlank() }
 
     /**
-     * Convenience function that parses the content and extracts host, port, admin and adminPassword using
+     * Extract LOG_LEVEL from the parsed JsonPath context.
+     * Returns null when the key is missing or not a string.
+     */
+    fun parseLogLevel(context: ReadContext): String? = runCatching {
+        context.read<String>("$.LOG_LEVEL")
+    }.getOrNull()?.takeIf { it.isNotBlank() }
+
+    /**
+     * Extract DEBUG_MODE from the parsed JsonPath context.
+     * Returns null when the key is missing or not a boolean.
+     */
+    fun parseDebugMode(context: ReadContext): Boolean? = runCatching {
+        when (val value: Any? = context.read<Any>("$.DEBUG_MODE")) {
+            is Boolean -> value
+            is String -> value.toBooleanStrictOrNull()
+            is Number -> value.toInt() != 0
+            else -> null
+        }
+    }.getOrNull()
+
+    /**
+     * Extract HOME_ASSISTANT_HOST from the parsed JsonPath context.
+     * Returns null when the key is missing or not a string.
+     */
+    fun parseHomeAssistantHost(context: ReadContext): String? = runCatching {
+        context.read<String>("$.HOME_ASSISTANT_HOST")
+    }.getOrNull()?.takeIf { it.isNotBlank() }
+
+    /**
+     * Extract HOME_ASSISTANT_PORT from the parsed JsonPath context.
+     * Accepts numeric values or string values that can be parsed as integers.
+     */
+    fun parseHomeAssistantPort(context: ReadContext): Int? = runCatching {
+        when (val portAny: Any? = context.read<Any>("$.HOME_ASSISTANT_PORT")) {
+            is Number -> portAny.toInt()
+            is String -> portAny.toIntOrNull()
+            else -> null
+        }
+    }.getOrNull()
+
+    /**
+     * Convenience function that parses the content and extracts all AddonOptions properties using
      * the dedicated helpers above.
      */
     fun parseOptionsJson(content: String? = readContent()): AddonOptions? =
@@ -77,6 +118,10 @@ object OptionsParser {
                     port = parsePort(context),
                     admin = parseAdmin(context),
                     adminPassword = parseAdminPassword(context),
+                    logLevel = parseLogLevel(context),
+                    debugMode = parseDebugMode(context),
+                    homeAssistantHost = parseHomeAssistantHost(context),
+                    homeAssistantPort = parseHomeAssistantPort(context),
                 )
             }
         }

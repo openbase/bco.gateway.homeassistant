@@ -14,7 +14,7 @@ import org.openbase.bco.gateway.homeassistant.communication.websocket.HassWebsoc
 import org.openbase.bco.gateway.homeassistant.communication.websocket.WSSubscription
 import org.openbase.bco.gateway.homeassistant.jp.JPHassHost
 import org.openbase.bco.gateway.homeassistant.jp.JPHassToken
-import org.openbase.bco.gateway.homeassistant.jp.JpHassPort
+import org.openbase.bco.gateway.homeassistant.jp.JPHassPort
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.jps.core.JPService
 import org.openbase.jps.exception.JPNotAvailableException
@@ -82,7 +82,7 @@ abstract class HassConnection : Shutdownable, TokenProvider {
             }
 
             val hassUri = UriBuilder.fromUri("http://${JPService.getValue(JPHassHost::class.java)}")
-                .port(JPService.getValue(JpHassPort::class.java))
+                .port(JPService.getValue(JPHassPort::class.java))
                 .path(REST_ENDPOINT)
             this.restTarget = restClient.target(hassUri)
             this.setConnectState(ConnectionState.State.CONNECTING)

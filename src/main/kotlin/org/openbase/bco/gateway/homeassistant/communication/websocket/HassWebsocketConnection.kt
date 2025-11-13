@@ -17,7 +17,7 @@ import org.openbase.bco.gateway.homeassistant.communication.TokenProvider
 import org.openbase.bco.gateway.homeassistant.communication.websocket.command.CommandResult
 import org.openbase.bco.gateway.homeassistant.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.gateway.homeassistant.jp.JPHassHost
-import org.openbase.bco.gateway.homeassistant.jp.JpHassPort
+import org.openbase.bco.gateway.homeassistant.jp.JPHassPort
 import org.openbase.bco.gateway.homeassistant.util.JsonUtils
 import org.openbase.bco.gateway.homeassistant.util.await
 import org.openbase.bco.gateway.homeassistant.util.isNull
@@ -134,7 +134,7 @@ class HassWebsocketConnection(
                 PROTOCOL_TYPE +
                         "://" +
                         "${JPService.getValue(JPHassHost::class.java)}:" +
-                        "${JPService.getValue(JpHassPort::class.java)}" +
+                        "${JPService.getValue(JPHassPort::class.java)}" +
                         ENDPOINT
             )
             .build()

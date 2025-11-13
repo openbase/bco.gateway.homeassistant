@@ -24,8 +24,7 @@ import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.gateway.homeassistant.action.ServiceActionExecutor
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
-import org.openbase.bco.gateway.homeassistant.jp.JPBcoAdminPassword
-import org.openbase.bco.gateway.homeassistant.jp.JPBcoAdminUsername
+import org.openbase.bco.gateway.homeassistant.jp.*
 import org.openbase.bco.gateway.homeassistant.manager.cache.HassIdToUnitControllerCache
 import org.openbase.bco.gateway.homeassistant.manager.dto.*
 import org.openbase.bco.gateway.homeassistant.manager.unit.HassGatewayControllerFactory
@@ -38,6 +37,8 @@ import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
 import org.openbase.bco.registry.unit.lib.UnitRegistry
 import org.openbase.jps.core.JPService
+import org.openbase.jul.communication.jp.JPComHost
+import org.openbase.jul.communication.jp.JPComPort
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.ExceptionProcessor
 import org.openbase.jul.exception.printer.ExceptionPrinter
@@ -258,6 +259,17 @@ class HassDeviceManager :
 
     @Throws(CouldNotPerformException::class, InterruptedException::class)
     override fun activate() {
+
+        LOGGER.info("#################################################")
+        LOGGER.info("### Homeassistant  Host:  ${JPService.getValue(JPHassHost::class.java)}")
+        LOGGER.info("### Homeassistant  Port:  ${JPService.getValue(JPHassPort::class.java)}")
+        LOGGER.info("### Homeassistant Token: ${JPService.getValue(JPHassToken::class.java)}")
+        LOGGER.info("###           BCO  Host: ${JPService.getValue(JPComHost::class.java)}")
+        LOGGER.info("###           BCO  Port: ${JPService.getValue(JPComPort::class.java)}")
+        LOGGER.info("###     BCO Admin  User: ${JPService.getValue(JPBcoAdminUsername::class.java)}")
+        LOGGER.info("#################################################J")
+
+
         unitControllerRegistry.addObserver(synchronizationObserver)
 
         HassCommunicator.instance.subscribe(

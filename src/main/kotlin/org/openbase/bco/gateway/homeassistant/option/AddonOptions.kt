@@ -4,5 +4,9 @@ data class AddonOptions(
     val host: String?,
     val port: Int?,
     val admin: String?,
-    val adminPassword: String?
+    val adminPassword: String?,
+    val logLevel: String?,
+    val debugMode: Boolean?,
+    val homeAssistantHost: String?,
+    val homeAssistantPort: Int?,
 )

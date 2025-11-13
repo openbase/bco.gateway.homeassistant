@@ -85,4 +85,75 @@ class OptionsParserTest {
         assertNull(options?.admin)
         assertNull(options?.adminPassword)
     }
+
+    @Test
+    fun `happy path parses all options`() {
+        val json = """
+            {
+              "BCO_MIDDLEWARE_HOST": "host.example",
+              "BCO_MIDDLEWARE_PORT": 4242,
+              "BCO_ADMIN": "adminUser",
+              "BCO_ADMIN_PASSWORD": "s3cr3t",
+              "LOG_LEVEL": "DEBUG",
+              "DEBUG_MODE": true,
+              "HOME_ASSISTANT_HOST": "hass.local",
+              "HOME_ASSISTANT_PORT": 8123
+            }
+        """.trimIndent()
+
+        val options = OptionsParser.parseOptionsJson(json)
+        assertEquals("host.example", options?.host)
+        assertEquals(4242, options?.port)
+        assertEquals("adminUser", options?.admin)
+        assertEquals("s3cr3t", options?.adminPassword)
+        assertEquals("DEBUG", options?.logLevel)
+        assertEquals(true, options?.debugMode)
+        assertEquals("hass.local", options?.homeAssistantHost)
+        assertEquals(8123, options?.homeAssistantPort)
+    }
+
+    @Test
+    fun `missing new keys return nulls`() {
+        val json = """
+            {
+              "BCO_MIDDLEWARE_HOST": "host.example",
+              "BCO_MIDDLEWARE_PORT": 4242
+            }
+        """.trimIndent()
+        val options = OptionsParser.parseOptionsJson(json)
+        assertNull(options?.logLevel)
+        assertNull(options?.debugMode)
+        assertNull(options?.homeAssistantHost)
+        assertNull(options?.homeAssistantPort)
+    }
+
+    @Test
+    fun `malformed values for new options are handled gracefully`() {
+        val json = """
+            {
+              "LOG_LEVEL": 123,
+              "DEBUG_MODE": "notabool",
+              "HOME_ASSISTANT_HOST": 456,
+              "HOME_ASSISTANT_PORT": "notanint"
+            }
+        """.trimIndent()
+        val options = OptionsParser.parseOptionsJson(json)
+        assertNull(options?.logLevel)
+        assertNull(options?.debugMode)
+        assertNull(options?.homeAssistantHost)
+        assertNull(options?.homeAssistantPort)
+    }
+
+    @Test
+    fun `string values for debugMode and homeAssistantPort are parsed if valid`() {
+        val json = """
+            {
+              "DEBUG_MODE": "true",
+              "HOME_ASSISTANT_PORT": "8123"
+            }
+        """.trimIndent()
+        val options = OptionsParser.parseOptionsJson(json)
+        assertEquals(true, options?.debugMode)
+        assertEquals(8123, options?.homeAssistantPort)
+    }
 }

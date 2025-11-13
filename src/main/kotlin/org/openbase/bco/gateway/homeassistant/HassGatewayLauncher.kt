@@ -30,11 +30,7 @@ class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
         // Read Home Assistant options.json (if present) and optionally log its content when OPTION_DEBUG is set.
         val options: AddonOptions? = OptionsParser.parseOptionsJson()
 
-        JPService.registerProperty(JpHassPort::class.java)
-        JPService.registerProperty(JPHassHost::class.java)
         JPService.registerProperty(JPHassToken::class.java)
-        JPService.registerProperty(JPDebugMode::class.java)
-        JPService.registerProperty(JPLogLevel::class.java)
 
         File("/data")
             .takeIf { it.exists() && it.isDirectory }
@@ -57,6 +53,22 @@ class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
         options?.port?.let {
             JPService.registerProperty(JPComPort::class.java, options.port)
         } ?: JPService.registerProperty(JPComPort::class.java)
+
+        options?.homeAssistantHost?.let {
+            JPService.registerProperty(JPHassHost::class.java, options.homeAssistantHost)
+        } ?: JPService.registerProperty(JPHassHost::class.java)
+
+        options?.homeAssistantPort?.let {
+            JPService.registerProperty(JPHassPort::class.java, options.homeAssistantPort)
+        } ?: JPService.registerProperty(JPHassPort::class.java)
+
+        options?.logLevel?.let {
+            JPService.registerProperty(JPLogLevel::class.java, JPLogLevel.LogLevel.valueOf(options.logLevel))
+        } ?: JPService.registerProperty(JPLogLevel::class.java)
+
+        options?.debugMode?.let {
+            JPService.registerProperty(JPDebugMode::class.java, options.debugMode)
+        } ?: JPService.registerProperty(JPDebugMode::class.java)
 
         JPService.registerProperty(JPCredentialsDirectory::class.java)
     }

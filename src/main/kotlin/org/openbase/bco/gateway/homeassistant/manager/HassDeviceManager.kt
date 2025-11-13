@@ -286,6 +286,7 @@ class HassDeviceManager :
         LOGGER.info("Login to bco...")
 
         loginToBCO()
+        registerGatewayIfMissing()
 
         synchronizer.map { it.activate() }
 
@@ -303,6 +304,33 @@ class HassDeviceManager :
                 // create or recover account
                 createAndLoginNewHassUser()
             }
+        }
+    }
+
+    private fun registerGatewayIfMissing() {
+        val existingGateway = Registries.getUnitRegistry().getUnitConfigsByUnitType(UnitType.GATEWAY)
+            .firstOrNull { it.gatewayConfig.gatewayClassId == HASS_GATEWAY_CLASS_ID }
+
+        if (existingGateway == null) {
+            LOGGER.info("No Home Assistant gateway found in BCO. Registering new gateway...")
+
+            val gatewayConfig =
+                UnitConfig.newBuilder().apply {
+                    unitType = UnitType.GATEWAY
+                    label = LabelProcessor.generateLabelBuilder("Home Assistant").build()
+                    description = MultiLanguageTextProcessor.generateMultiLanguageTextBuilder(
+                        "This is the connection to Home Assistant."
+                    ).build()
+                    gatewayConfigBuilder.apply {
+                        gatewayClassId = HASS_GATEWAY_CLASS_ID
+                    }
+                }.build()
+
+            Registries.getUnitRegistry().registerUnitConfig(gatewayConfig).await()
+
+            LOGGER.info("Home Assistant gateway registered.")
+        } else {
+            LOGGER.info("Home Assistant gateway already registered in BCO: {}", existingGateway.id)
         }
     }
 

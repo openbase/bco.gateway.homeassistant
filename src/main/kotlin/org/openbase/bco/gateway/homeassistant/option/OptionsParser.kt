@@ -107,6 +107,14 @@ object OptionsParser {
     }.getOrNull()
 
     /**
+     * Extract HOME_ASSISTANT_WEBSOCKET_ENDPOINT from the parsed JsonPath context.
+     * Accepts numeric values or string values that can be parsed as integers.
+     */
+    fun parseHomeAssistantWebsocketEndpoint(context: ReadContext): String? = runCatching {
+        context.read<String>("$.HOME_ASSISTANT_WEBSOCKET_ENDPOINT")
+    }.getOrNull()?.takeIf { it.isNotBlank() }
+
+    /**
      * Convenience function that parses the content and extracts all AddonOptions properties using
      * the dedicated helpers above.
      */
@@ -122,6 +130,7 @@ object OptionsParser {
                     debugMode = parseDebugMode(context),
                     homeAssistantHost = parseHomeAssistantHost(context),
                     homeAssistantPort = parseHomeAssistantPort(context),
+                    homeAssistantWebsocketEndpoint = parseHomeAssistantWebsocketEndpoint(context),
                 )
             }
         }

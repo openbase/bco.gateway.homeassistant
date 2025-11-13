@@ -18,6 +18,7 @@ import org.openbase.bco.gateway.homeassistant.communication.websocket.command.Co
 import org.openbase.bco.gateway.homeassistant.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.gateway.homeassistant.jp.JPHassHost
 import org.openbase.bco.gateway.homeassistant.jp.JPHassPort
+import org.openbase.bco.gateway.homeassistant.jp.JPHassWebsocketEndpoint
 import org.openbase.bco.gateway.homeassistant.util.JsonUtils
 import org.openbase.bco.gateway.homeassistant.util.await
 import org.openbase.bco.gateway.homeassistant.util.isNull
@@ -135,7 +136,7 @@ class HassWebsocketConnection(
                         "://" +
                         "${JPService.getValue(JPHassHost::class.java)}:" +
                         "${JPService.getValue(JPHassPort::class.java)}" +
-                        ENDPOINT
+                        "${JPService.getValue(JPHassWebsocketEndpoint::class.java)}"
             )
             .build()
         val listener = EventProcessor()
@@ -284,7 +285,6 @@ class HassWebsocketConnection(
 
     companion object {
         const val PROTOCOL_TYPE = "ws"
-        const val ENDPOINT = "/api/websocket"
         const val COMMAND_PING = "ping"
 
         private val LOGGER = LoggerFactory.getLogger(HassWebsocketConnection::class.java)

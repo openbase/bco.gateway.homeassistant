@@ -9,4 +9,5 @@ data class AddonOptions(
     val debugMode: Boolean?,
     val homeAssistantHost: String?,
     val homeAssistantPort: Int?,
+    val homeAssistantWebsocketEndpoint: String?,
 )

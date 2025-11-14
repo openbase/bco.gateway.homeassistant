@@ -13,8 +13,8 @@ import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport
 import org.openbase.bco.gateway.homeassistant.communication.websocket.HassWebsocketConnection
 import org.openbase.bco.gateway.homeassistant.communication.websocket.WSSubscription
 import org.openbase.bco.gateway.homeassistant.jp.JPHassHost
-import org.openbase.bco.gateway.homeassistant.jp.JPHassToken
 import org.openbase.bco.gateway.homeassistant.jp.JPHassPort
+import org.openbase.bco.gateway.homeassistant.jp.JPHassToken
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.jps.core.JPService
 import org.openbase.jps.exception.JPNotAvailableException
@@ -84,6 +84,7 @@ abstract class HassConnection : Shutdownable, TokenProvider {
             val hassUri = UriBuilder.fromUri("http://${JPService.getValue(JPHassHost::class.java)}")
                 .port(JPService.getValue(JPHassPort::class.java))
                 .path(REST_ENDPOINT)
+            LOGGER.debug("Try to connect to REST Endpoint:{}", hassUri.build())
             this.restTarget = restClient.target(hassUri)
             this.setConnectState(ConnectionState.State.CONNECTING)
         } catch (ex: JPNotAvailableException) {
@@ -402,7 +403,7 @@ abstract class HassConnection : Shutdownable, TokenProvider {
         private const val META_CONFIG_TOKEN_KEY = "TOKEN"
 
         const val SEPARATOR: String = "/"
-        const val REST_ENDPOINT: String = "api"
+        const val REST_ENDPOINT: String = "/core/api"
 
         const val APPROVE_TARGET: String = "approve"
         const val EVENTS_TARGET: String = "events"

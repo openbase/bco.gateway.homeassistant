@@ -139,6 +139,8 @@ class HassWebsocketConnection(
                         "${JPService.getValue(JPHassWebsocketEndpoint::class.java)}"
             )
             .build()
+
+        LOGGER.debug("Try to connect to Websocket Endpoint:{}", request.url)
         val listener = EventProcessor()
         ws = client.newWebSocket(request, listener)
     }

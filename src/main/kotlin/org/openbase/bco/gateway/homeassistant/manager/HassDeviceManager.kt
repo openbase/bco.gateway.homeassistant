@@ -340,6 +340,14 @@ class HassDeviceManager :
         val adminPassword = JPService.getValue(JPBcoAdminPassword::class.java)
         BCOLogin.getSession().loginUserViaUsername(adminUser, adminPassword, false)
 
+        // remove existing hass user if any
+        Registries.getUnitRegistry().getUnitConfigsByUnitType(UnitType.USER)
+            .firstOrNull { it.userConfig.userName == HASS_BCO_USER }
+            ?.let { userConfig ->
+                LOGGER.info("Removing existing Home Assistant user with id {}...", userConfig)
+                Registries.getUnitRegistry().removeUnitConfig(userConfig).await()
+            }
+
         // register hass user
         val hassUser = UnitConfig.newBuilder().apply {
             unitType = UnitType.USER

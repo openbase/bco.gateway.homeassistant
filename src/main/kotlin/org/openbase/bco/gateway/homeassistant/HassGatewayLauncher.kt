@@ -74,6 +74,10 @@ class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
             JPService.registerProperty(JPHassWebsocketEndpoint::class.java, options.homeAssistantWebsocketEndpoint)
         } ?: JPService.registerProperty(JPHassWebsocketEndpoint::class.java)
 
+        options?.homeAssistantRestEndpoint?.let {
+            JPService.registerProperty(JPHassRestEndpoint::class.java, options.homeAssistantRestEndpoint)
+        } ?: JPService.registerProperty(JPHassRestEndpoint::class.java)
+
         JPService.registerProperty(JPCredentialsDirectory::class.java)
     }
 

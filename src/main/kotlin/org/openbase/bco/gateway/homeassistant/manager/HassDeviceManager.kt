@@ -218,8 +218,6 @@ class HassDeviceManager :
                                 }
                             }.filterNotNull()
 
-                    // TODO: Location and Device initial sync draft is ready, however we have issues with repeated field that are not merged correctly.
-
                     // initial device synchronization
                     supportedEntities =
                         HassCommunicator.instance

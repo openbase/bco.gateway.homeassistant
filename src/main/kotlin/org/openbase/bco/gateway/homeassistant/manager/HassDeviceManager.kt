@@ -262,6 +262,7 @@ class HassDeviceManager :
         LOGGER.info("### Homeassistant  Host:  ${JPService.getValue(JPHassHost::class.java)}")
         LOGGER.info("### Homeassistant  Port:  ${JPService.getValue(JPHassPort::class.java)}")
         LOGGER.info("### Homeassistant Token: ${JPService.getValue(JPHassToken::class.java)}")
+        LOGGER.info("### Homeassistant  Websocket: ${JPService.getValue(JPHassWebsocketEndpoint::class.java)}")
         LOGGER.info("###           BCO  Host: ${JPService.getValue(JPComHost::class.java)}")
         LOGGER.info("###           BCO  Port: ${JPService.getValue(JPComPort::class.java)}")
         LOGGER.info("###     BCO Admin  User: ${JPService.getValue(JPBcoAdminUsername::class.java)}")

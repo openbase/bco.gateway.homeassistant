@@ -10,4 +10,5 @@ data class AddonOptions(
     val homeAssistantHost: String?,
     val homeAssistantPort: Int?,
     val homeAssistantWebsocketEndpoint: String?,
+    val homeAssistantRestEndpoint: String?,
 )

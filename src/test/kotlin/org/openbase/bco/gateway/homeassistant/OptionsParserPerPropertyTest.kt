@@ -2,14 +2,14 @@ package org.openbase.bco.gateway.homeassistant
 
 import org.openbase.bco.gateway.homeassistant.option.OptionsParser
 import kotlin.test.Test
-import kotlin.test.assertNull
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBe
 
 class OptionsParserPerPropertyTest {
 
     @Test
     fun `parseToContext returns null for blank or malformed`() {
-        assertNull(OptionsParser.parseToContext(""))
+        OptionsParser.parseToContext("") shouldBe null
     }
 
     @Test
@@ -34,14 +34,14 @@ class OptionsParserPerPropertyTest {
     fun `parsePort returns null for non-numeric string`() {
         val json = "{ \"BCO_MIDDLEWARE_PORT\": \"notanumber\" }"
         val ctx = OptionsParser.parseToContext(json)!!
-        assertNull(OptionsParser.parsePort(ctx))
+        OptionsParser.parsePort(ctx) shouldBe null
     }
 
     @Test
     fun `parseAdmin returns null when missing`() {
         val json = "{ \"OTHER\": \"x\" }"
         val ctx = OptionsParser.parseToContext(json)!!
-        assertNull(OptionsParser.parseAdmin(ctx))
-        assertNull(OptionsParser.parseAdminPassword(ctx))
+        OptionsParser.parseAdmin(ctx) shouldBe null
+        OptionsParser.parseAdminPassword(ctx) shouldBe null
     }
 }

@@ -1,8 +1,8 @@
 package org.openbase.bco.gateway.homeassistant
 
+import org.amshove.kluent.shouldBe
 import org.openbase.bco.gateway.homeassistant.option.OptionsParser
 import kotlin.test.Test
-import kotlin.test.assertNull
 import org.amshove.kluent.shouldBeEqualTo
 
 class OptionsParserTest {
@@ -70,20 +70,20 @@ class OptionsParserTest {
         """.trimIndent()
 
         val options = OptionsParser.parseOptionsJson(json)
-        assertNull(options?.host)
-        assertNull(options?.port)
-        assertNull(options?.admin)
-        assertNull(options?.adminPassword)
+        options?.host shouldBe null
+        options?.port shouldBe null
+        options?.admin shouldBe null
+        options?.adminPassword shouldBe null
     }
 
     @Test
     fun `malformed json returns nulls and does not throw`() {
         val json = "{ this is not valid json: }"
         val options = OptionsParser.parseOptionsJson(json)
-        assertNull(options?.host)
-        assertNull(options?.port)
-        assertNull(options?.admin)
-        assertNull(options?.adminPassword)
+        options?.host shouldBe null
+        options?.port shouldBe null
+        options?.admin shouldBe null
+        options?.adminPassword shouldBe null
     }
 
     @Test
@@ -121,10 +121,10 @@ class OptionsParserTest {
             }
         """.trimIndent()
         val options = OptionsParser.parseOptionsJson(json)
-        assertNull(options?.logLevel)
-        assertNull(options?.debugMode)
-        assertNull(options?.homeAssistantHost)
-        assertNull(options?.homeAssistantPort)
+        options?.logLevel shouldBe null
+        options?.debugMode shouldBe null
+        options?.homeAssistantHost shouldBe null
+        options?.homeAssistantPort shouldBe null
     }
 
     @Test
@@ -138,10 +138,10 @@ class OptionsParserTest {
             }
         """.trimIndent()
         val options = OptionsParser.parseOptionsJson(json)
-        assertNull(options?.logLevel)
-        assertNull(options?.debugMode)
-        assertNull(options?.homeAssistantHost)
-        assertNull(options?.homeAssistantPort)
+        options?.logLevel shouldBe null
+        options?.debugMode shouldBe null
+        options?.homeAssistantHost shouldBe null
+        options?.homeAssistantPort shouldBe null
     }
 
     @Test

@@ -1,6 +1,6 @@
 package org.openbase.bco.gateway.homeassistant.util
 
-import org.amshove.kluent.`should be equal to`
+import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContain
 import org.junit.jupiter.api.Test
 
@@ -32,16 +32,16 @@ class ListDiffTest {
             it.added shouldContain TestData(0)
             it.added shouldContain TestData(7)
             it.added shouldContain TestData(8)
-            it.added.size `should be equal to` 3
+            it.added.size shouldBeEqualTo 3
 
             it.updated shouldContain TestData(2)
             it.updated shouldContain TestData(3)
-            it.updated.size `should be equal to` 2
+            it.updated.size shouldBeEqualTo 2
 
             it.removed shouldContain TestData(1)
             it.removed shouldContain TestData(4)
             it.removed shouldContain TestData(5)
-            it.removed.size `should be equal to` 3
+            it.removed.size shouldBeEqualTo 3
         }
     }
 
@@ -63,16 +63,16 @@ class ListDiffTest {
 
         origin.diff(updatedList) {
             it.added shouldContain TestData(8,"TestData2")
-            it.added.size `should be equal to` 1
+            it.added.size shouldBeEqualTo 1
 
             it.updated shouldContain TestData(2)
             it.updated shouldContain TestData(3)
-            it.updated.size `should be equal to` 2
+            it.updated.size shouldBeEqualTo 2
 
             it.removed shouldContain TestData(1)
             it.removed shouldContain TestData(4)
             it.removed shouldContain TestData(5)
-            it.removed.size `should be equal to` 3
+            it.removed.size shouldBeEqualTo 3
         }
     }
 
@@ -90,11 +90,11 @@ class ListDiffTest {
             it.added shouldContain TestData(2)
             it.added shouldContain TestData(3)
             it.added shouldContain TestData(8)
-            it.added.size `should be equal to` 3
+            it.added.size shouldBeEqualTo 3
 
-            it.updated.size `should be equal to` 0
+            it.updated.size shouldBeEqualTo 0
 
-            it.removed.size `should be equal to` 0
+            it.removed.size shouldBeEqualTo 0
         }
     }
 
@@ -111,16 +111,16 @@ class ListDiffTest {
         val updatedList = emptyList<TestData>()
 
         origin.diff(updatedList) {
-            it.added.size `should be equal to` 0
+            it.added.size shouldBeEqualTo 0
 
-            it.updated.size `should be equal to` 0
+            it.updated.size shouldBeEqualTo 0
 
             it.removed shouldContain TestData(1)
             it.removed shouldContain TestData(2)
             it.removed shouldContain TestData(3)
             it.removed shouldContain TestData(4)
             it.removed shouldContain TestData(5)
-            it.removed.size `should be equal to` 5
+            it.removed.size shouldBeEqualTo 5
         }
     }
 
@@ -130,9 +130,9 @@ class ListDiffTest {
         val updatedList = emptyList<TestData>()
 
         origin.diff(updatedList) {
-            it.added.size `should be equal to` 0
-            it.updated.size `should be equal to` 0
-            it.removed.size `should be equal to` 0
+            it.added.size shouldBeEqualTo 0
+            it.updated.size shouldBeEqualTo 0
+            it.removed.size shouldBeEqualTo 0
         }
     }
 
@@ -155,16 +155,16 @@ class ListDiffTest {
         )
 
         origin.diff(updatedList) {
-            it.added.size `should be equal to` 0
+            it.added.size shouldBeEqualTo 0
 
             it.updated shouldContain TestData(1)
             it.updated shouldContain TestData(2)
             it.updated shouldContain TestData(3)
             it.updated shouldContain TestData(4)
             it.updated shouldContain TestData(5)
-            it.updated.size `should be equal to` 5
+            it.updated.size shouldBeEqualTo 5
 
-            it.removed.size `should be equal to` 0
+            it.removed.size shouldBeEqualTo 0
         }
     }
 
@@ -191,11 +191,11 @@ class ListDiffTest {
         origin.diff(updatedList) {
             it.added shouldContain TestData(0)
             it.added shouldContain TestData(6)
-            it.added.size `should be equal to` 2
+            it.added.size shouldBeEqualTo 2
 
-            it.updated.size `should be equal to` 0
+            it.updated.size shouldBeEqualTo 0
 
-            it.removed.size `should be equal to` 0
+            it.removed.size shouldBeEqualTo 0
         }
     }
 
@@ -216,16 +216,16 @@ class ListDiffTest {
         )
 
         origin.diff(updatedList) {
-            it.added.size `should be equal to` 0
+            it.added.size shouldBeEqualTo 0
 
             it.updated shouldContain TestData(2)
             it.updated shouldContain TestData(3)
             it.updated shouldContain TestData(4)
             it.updated shouldContain TestData(5)
-            it.updated.size `should be equal to` 4
+            it.updated.size shouldBeEqualTo 4
 
             it.removed shouldContain TestData(1)
-            it.removed.size `should be equal to` 1
+            it.removed.size shouldBeEqualTo 1
         }
     }
 
@@ -241,16 +241,16 @@ class ListDiffTest {
         val updatedList = listOf<TestData>()
 
         origin.diff(updatedList) {
-            it.added.size `should be equal to` 0
+            it.added.size shouldBeEqualTo 0
 
-            it.updated.size `should be equal to` 0
+            it.updated.size shouldBeEqualTo 0
 
             it.removed shouldContain TestData(1)
             it.removed shouldContain TestData(2)
             it.removed shouldContain TestData(3)
             it.removed shouldContain TestData(4)
             it.removed shouldContain TestData(5)
-            it.removed.size `should be equal to` 5
+            it.removed.size shouldBeEqualTo 5
         }
     }
 
@@ -273,9 +273,9 @@ class ListDiffTest {
         )
 
         origin.diff(updatedList) {
-            it.added.size `should be equal to` 0
-            it.updated.size `should be equal to` 0
-            it.removed.size `should be equal to` 0
+            it.added.size shouldBeEqualTo 0
+            it.updated.size shouldBeEqualTo 0
+            it.removed.size shouldBeEqualTo 0
         }
     }
 }

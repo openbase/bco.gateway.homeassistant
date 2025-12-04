@@ -27,6 +27,7 @@ class TileSyncStrategy(
     private val hassCommunicator: HassCommunicator = HassCommunicator.instance,
     private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ): UnitSyncStrategy<HassAreaDto, HassAreaInputDto> {
+    override val dependencies = listOf(floorCache)
     override val unitType: UnitType = UnitType.LOCATION
     override val hassType: HassType = HassType.AREA
     override val unitFilter: (UnitConfig) -> Boolean = { it.locationConfig?.locationType == LocationType.TILE }

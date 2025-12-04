@@ -34,6 +34,8 @@ dependencies {
     // Kotlin dependencies
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    // JSON query library (JsonPath) for expressive querying of options.json
+    implementation("com.jayway.jsonpath:json-path:2.8.0")
     testImplementation(kotlin("test"))
     // https://mvnrepository.com/artifact/io.mockk/mockk
     testImplementation("io.mockk:mockk:1.14.4")

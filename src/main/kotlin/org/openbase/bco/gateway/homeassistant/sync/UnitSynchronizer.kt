@@ -1,6 +1,8 @@
 package org.openbase.bco.gateway.homeassistant.sync
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator
@@ -44,6 +46,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     @OptIn(DelicateCoroutinesApi::class)
     override fun activate() {
         GlobalScope.launch {
+            strategy.dependencies.forEach { it.waitUntilReady() }
             try {
                 activationMutex.withLock {
                     if (this@UnitSynchronizer.isActive) return@withLock
@@ -65,8 +68,6 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
 
                     LOGGER.info("Activated ${strategy.name}")
                     syncAll()
-
-
                 }
             } catch (e: Exception) {
                 active = false

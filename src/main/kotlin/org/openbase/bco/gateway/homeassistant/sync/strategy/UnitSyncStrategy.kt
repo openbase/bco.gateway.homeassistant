@@ -5,6 +5,7 @@ import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companio
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_TYPE
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassDto
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassInputDto
+import org.openbase.bco.gateway.homeassistant.sync.DtoCache
 import org.openbase.bco.gateway.homeassistant.type.HassType
 import org.openbase.bco.gateway.homeassistant.util.get
 import org.openbase.bco.gateway.homeassistant.util.set
@@ -16,6 +17,8 @@ interface UnitSyncStrategy<HASS_DTO: HassDto, HASS_INPUT_DTO: HassInputDto> {
     val unitType: UnitTemplateType.UnitTemplate.UnitType
     val hassType: HassType
     val unitFilter: (UnitConfig) -> Boolean
+    val dependencies: List<DtoCache<*>>
+        get() = emptyList()
 
     fun buildUnitConfig(hassDto: HASS_DTO): UnitConfig
     fun buildHassInputDto(unitConfig: UnitConfig): HASS_INPUT_DTO

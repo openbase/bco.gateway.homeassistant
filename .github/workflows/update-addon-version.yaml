@@ -61,7 +61,7 @@ jobs:
             exit 1
           else
             echo "No track specified, skipping tag selection."
-            echo "SELECTED_TAG="" >> $GITHUB_OUTPUT
+            echo 'SELECTED_TAG=""' >> $GITHUB_OUTPUT
           fi
 
       - name: Update add-on versions

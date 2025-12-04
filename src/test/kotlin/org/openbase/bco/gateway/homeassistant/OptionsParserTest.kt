@@ -2,8 +2,8 @@ package org.openbase.bco.gateway.homeassistant
 
 import org.openbase.bco.gateway.homeassistant.option.OptionsParser
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import org.amshove.kluent.shouldBeEqualTo
 
 class OptionsParserTest {
 
@@ -19,10 +19,10 @@ class OptionsParserTest {
         """.trimIndent()
 
         val options = OptionsParser.parseOptionsJson(json)
-        assertEquals("host.example", options?.host)
-        assertEquals(4242, options?.port)
-        assertEquals("adminUser", options?.admin)
-        assertEquals("s3cr3t", options?.adminPassword)
+        options?.host shouldBeEqualTo "host.example"
+        options?.port shouldBeEqualTo 4242
+        options?.admin shouldBeEqualTo "adminUser"
+        options?.adminPassword shouldBeEqualTo "s3cr3t"
     }
 
     @Test
@@ -37,10 +37,10 @@ class OptionsParserTest {
         """.trimIndent()
 
         val options = OptionsParser.parseOptionsJson(json)
-        assertEquals("host.example", options?.host)
-        assertEquals(4242, options?.port)
-        assertEquals(null, options?.admin)
-        assertEquals(null, options?.adminPassword)
+        options?.host shouldBeEqualTo "host.example"
+        options?.port shouldBeEqualTo 4242
+        options?.admin shouldBeEqualTo null
+        options?.adminPassword shouldBeEqualTo null
     }
 
     @Test
@@ -55,10 +55,10 @@ class OptionsParserTest {
         """.trimIndent()
 
         val options = OptionsParser.parseOptionsJson(json)
-        assertEquals("host.example", options?.host)
-        assertEquals(4242, options?.port)
-        assertEquals("adminUser", options?.admin)
-        assertEquals("s3cr3t", options?.adminPassword)
+        options?.host shouldBeEqualTo "host.example"
+        options?.port shouldBeEqualTo 4242
+        options?.admin shouldBeEqualTo "adminUser"
+        options?.adminPassword shouldBeEqualTo "s3cr3t"
     }
 
     @Test
@@ -102,14 +102,14 @@ class OptionsParserTest {
         """.trimIndent()
 
         val options = OptionsParser.parseOptionsJson(json)
-        assertEquals("host.example", options?.host)
-        assertEquals(4242, options?.port)
-        assertEquals("adminUser", options?.admin)
-        assertEquals("s3cr3t", options?.adminPassword)
-        assertEquals("DEBUG", options?.logLevel)
-        assertEquals(true, options?.debugMode)
-        assertEquals("hass.local", options?.homeAssistantHost)
-        assertEquals(8123, options?.homeAssistantPort)
+        options?.host shouldBeEqualTo "host.example"
+        options?.port shouldBeEqualTo 4242
+        options?.admin shouldBeEqualTo "adminUser"
+        options?.adminPassword shouldBeEqualTo "s3cr3t"
+        options?.logLevel shouldBeEqualTo "DEBUG"
+        options?.debugMode shouldBeEqualTo true
+        options?.homeAssistantHost shouldBeEqualTo "hass.local"
+        options?.homeAssistantPort shouldBeEqualTo 8123
     }
 
     @Test
@@ -153,7 +153,7 @@ class OptionsParserTest {
             }
         """.trimIndent()
         val options = OptionsParser.parseOptionsJson(json)
-        assertEquals(true, options?.debugMode)
-        assertEquals(8123, options?.homeAssistantPort)
+        options?.debugMode shouldBeEqualTo true
+        options?.homeAssistantPort shouldBeEqualTo 8123
     }
 }

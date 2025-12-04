@@ -2,8 +2,8 @@ package org.openbase.bco.gateway.homeassistant
 
 import org.openbase.bco.gateway.homeassistant.option.OptionsParser
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import org.amshove.kluent.shouldBeEqualTo
 
 class OptionsParserPerPropertyTest {
 
@@ -24,10 +24,10 @@ class OptionsParserPerPropertyTest {
         """.trimIndent()
 
         val ctx = OptionsParser.parseToContext(json)!!
-        assertEquals("host.example", OptionsParser.parseHost(ctx))
-        assertEquals(4242, OptionsParser.parsePort(ctx))
-        assertEquals("adminUser", OptionsParser.parseAdmin(ctx))
-        assertEquals("pw", OptionsParser.parseAdminPassword(ctx))
+        OptionsParser.parseHost(ctx) shouldBeEqualTo "host.example"
+        OptionsParser.parsePort(ctx) shouldBeEqualTo 4242
+        OptionsParser.parseAdmin(ctx) shouldBeEqualTo "adminUser"
+        OptionsParser.parseAdminPassword(ctx) shouldBeEqualTo "pw"
     }
 
     @Test

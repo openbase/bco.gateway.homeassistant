@@ -2,7 +2,7 @@ package org.openbase.bco.gateway.homeassistant.jp
 
 import org.openbase.jps.core.AbstractJavaProperty
 
-class JpHassPort: AbstractJavaProperty<Int>(COMMAND_IDENTIFIERS) {
+class JPHassPort: AbstractJavaProperty<Int>(COMMAND_IDENTIFIERS) {
     override fun generateArgumentIdentifiers(): Array<String> {
         return ARGUMENT_IDENTIFIERS
     }

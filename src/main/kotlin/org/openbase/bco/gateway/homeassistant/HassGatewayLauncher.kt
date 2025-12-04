@@ -1,54 +1,90 @@
 package org.openbase.bco.gateway.homeassistant
 
-import org.openbase.bco.gateway.homeassistant.jp.JPHassHost
-import org.openbase.bco.gateway.homeassistant.jp.JpHassPort
 import org.openbase.bco.authentication.lib.BCO
+import org.openbase.bco.authentication.lib.jp.JPBCOHomeDirectory
 import org.openbase.bco.authentication.lib.jp.JPCredentialsDirectory
+import org.openbase.bco.gateway.homeassistant.jp.*
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager
+import org.openbase.bco.gateway.homeassistant.option.AddonOptions
+import org.openbase.bco.gateway.homeassistant.option.OptionsParser
 import org.openbase.jps.core.JPService
 import org.openbase.jps.preset.JPDebugMode
 import org.openbase.jps.preset.JPLogLevel
 import org.openbase.jul.communication.jp.JPComHost
 import org.openbase.jul.communication.jp.JPComPort
 import org.openbase.jul.pattern.launch.AbstractLauncher
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import java.io.File
 
-/*-
-* #%L
-* BCO Hass Device Manager
-* %%
-* Copyright (C) 2015 - 2021 openbase.org
-* %%
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public
-* License along with this program.  If not, see
-* <http://www.gnu.org/licenses/gpl-3.0.html>.
-* #L%
-*/
 
 class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
     HassGatewayLauncher::class.java,
     HassDeviceManager::class.java
 ) {
+
+    private val LOG: Logger = LoggerFactory.getLogger(HassGatewayLauncher::class.java)
+
     override fun loadProperties() {
-        JPService.registerProperty(JpHassPort::class.java)
-        JPService.registerProperty(JPHassHost::class.java)
-        JPService.registerProperty(JPDebugMode::class.java)
-        JPService.registerProperty(JPLogLevel::class.java)
+
+        // Read Home Assistant options.json (if present) and optionally log its content when OPTION_DEBUG is set.
+        val options: AddonOptions? = OptionsParser.parseOptionsJson()
+
+        JPService.registerProperty(JPHassToken::class.java)
+
+        HASS_ADDON_PERSISTENT_DATA_DIRECTORY
+            .takeIf { it.exists() && it.isDirectory }
+            ?.let { bcoHomeAtAddon ->
+                JPService.registerProperty(JPBCOHomeDirectory::class.java, bcoHomeAtAddon)
+            } ?: JPService.registerProperty(JPBCOHomeDirectory::class.java)
+
+        options?.admin?.let {
+            JPService.registerProperty(JPBcoAdminUsername::class.java, options.admin)
+        } ?: JPService.registerProperty(JPBcoAdminUsername::class.java)
+
+        options?.adminPassword?.let {
+            JPService.registerProperty(JPBcoAdminPassword::class.java, options.adminPassword)
+        } ?: JPService.registerProperty(JPBcoAdminPassword::class.java)
+
+        options?.host?.let {
+            JPService.registerProperty(JPComHost::class.java, options.host)
+        } ?: JPService.registerProperty(JPComHost::class.java)
+
+        options?.port?.let {
+            JPService.registerProperty(JPComPort::class.java, options.port)
+        } ?: JPService.registerProperty(JPComPort::class.java)
+
+        options?.homeAssistantHost?.let {
+            JPService.registerProperty(JPHassHost::class.java, options.homeAssistantHost)
+        } ?: JPService.registerProperty(JPHassHost::class.java)
+
+        options?.homeAssistantPort?.let {
+            JPService.registerProperty(JPHassPort::class.java, options.homeAssistantPort)
+        } ?: JPService.registerProperty(JPHassPort::class.java)
+
+        options?.logLevel?.let {
+            JPService.registerProperty(JPLogLevel::class.java, JPLogLevel.LogLevel.valueOf(options.logLevel))
+        } ?: JPService.registerProperty(JPLogLevel::class.java)
+
+        options?.debugMode?.let {
+            JPService.registerProperty(JPDebugMode::class.java, options.debugMode)
+        } ?: JPService.registerProperty(JPDebugMode::class.java)
+
+        options?.homeAssistantWebsocketEndpoint?.let {
+            JPService.registerProperty(JPHassWebsocketEndpoint::class.java, options.homeAssistantWebsocketEndpoint)
+        } ?: JPService.registerProperty(JPHassWebsocketEndpoint::class.java)
+
+        options?.homeAssistantRestEndpoint?.let {
+            JPService.registerProperty(JPHassRestEndpoint::class.java, options.homeAssistantRestEndpoint)
+        } ?: JPService.registerProperty(JPHassRestEndpoint::class.java)
+
         JPService.registerProperty(JPCredentialsDirectory::class.java)
-        JPService.registerProperty(JPComHost::class.java)
-        JPService.registerProperty(JPComPort::class.java)
     }
 
     companion object {
+
+        val HASS_ADDON_PERSISTENT_DATA_DIRECTORY: File = File("/data")
+
         /**
          * @param args the command line arguments
          */

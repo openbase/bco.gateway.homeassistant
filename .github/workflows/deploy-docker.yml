@@ -20,7 +20,7 @@ jobs:
       gateway-tags: ${{ steps.bco-gateway-meta.outputs.tags }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Docker bco-gateway-homeassistant meta
         id: bco-gateway-meta
@@ -71,7 +71,7 @@ jobs:
       version: ${{ github.ref_name }}
       addon: "bco-homeassistant"
     secrets:
-      CI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CI_GITHUB_TOKEN: ${{ secrets.CI_BOT_TOKEN }}
 
   update-addon-version-dev:
     name: Update Home Assistant Add-on Version
@@ -83,7 +83,7 @@ jobs:
       tags: ${{ needs.docker.outputs.gateway-tags }}
       track: dev
     secrets:
-      CI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CI_GITHUB_TOKEN: ${{ secrets.CI_BOT_TOKEN }}
 
   update-addon-version-preview:
     name: Update Home Assistant Add-on Version
@@ -95,4 +95,4 @@ jobs:
       tags: ${{ needs.docker.outputs.gateway-tags }}
       track: preview
     secrets:
-      CI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CI_GITHUB_TOKEN: ${{ secrets.CI_BOT_TOKEN }}

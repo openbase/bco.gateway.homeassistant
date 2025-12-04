@@ -157,6 +157,6 @@ object OptionsParser {
                     val bytes = Files.readAllBytes(Paths.get(optionFile))
                     val content = String(bytes, StandardCharsets.UTF_8)
                     content.takeIf { it.isNotBlank() }
-                } ?: null.also { LOG.warn("No options.json found") }
+                } ?: null.also { LOG.warn("options.json could not be found") }
         }.getOrNull()
 }

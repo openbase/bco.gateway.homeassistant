@@ -32,7 +32,7 @@ class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
 
         JPService.registerProperty(JPHassToken::class.java)
 
-        File("/data")
+        HASS_ADDON_PERSISTENT_DATA_DIRECTORY
             .takeIf { it.exists() && it.isDirectory }
             ?.let { bcoHomeAtAddon ->
                 JPService.registerProperty(JPBCOHomeDirectory::class.java, bcoHomeAtAddon)
@@ -82,6 +82,9 @@ class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
     }
 
     companion object {
+
+        val HASS_ADDON_PERSISTENT_DATA_DIRECTORY: File = File("/data")
+
         /**
          * @param args the command line arguments
          */

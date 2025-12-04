@@ -150,7 +150,9 @@ object OptionsParser {
                 "/data/options.json",
                 "/config/options.json",
                 "options.json"
-            ).firstOrNull { Files.exists(Paths.get(it)) }
+            )
+                .firstOrNull { Files.exists(Paths.get(it)) }
+                ?.also { LOG.debug("Found addon options at: $it") }
                 ?.let { optionFile ->
                     val bytes = Files.readAllBytes(Paths.get(optionFile))
                     val content = String(bytes, StandardCharsets.UTF_8)

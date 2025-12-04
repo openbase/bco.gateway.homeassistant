@@ -16,6 +16,8 @@ jobs:
   docker:
     if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'preview') }}
     runs-on: ubuntu-latest
+    outputs:
+      gateway-tags: ${{ steps.bco-gateway-meta.outputs.tags }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -78,7 +80,7 @@ jobs:
     uses: ./.github/workflows/update-addon-version.yaml
     with:
       addon: "bco-homeassistant"
-      tags: ${{ needs.docker.outputs.bco-tags }}
+      tags: ${{ needs.docker.outputs.gateway-tags }}
       track: dev
     secrets:
       CI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -90,7 +92,7 @@ jobs:
     uses: ./.github/workflows/update-addon-version.yaml
     with:
       addon: "bco-homeassistant"
-      tags: ${{ needs.docker.outputs.bco-tags }}
+      tags: ${{ needs.docker.outputs.gateway-tags }}
       track: preview
     secrets:
       CI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

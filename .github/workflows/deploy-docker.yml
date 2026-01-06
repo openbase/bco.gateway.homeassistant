@@ -58,7 +58,7 @@ jobs:
           context: .
           file: docker/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'prebuild docker image') }}
+          push: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'preview') }}
           tags: ${{ steps.bco-gateway-meta.outputs.tags }}
           labels: ${{ steps.bco-gateway-meta.outputs.labels }}
 

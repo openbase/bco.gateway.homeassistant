@@ -287,7 +287,7 @@ class HassDeviceManager :
         loginToBCO()
         registerGatewayIfMissing()
 
-        synchronizer.map { it.activate() }
+        synchronizer.forEach { it.activate() }
 
         super.activate()
 
@@ -402,7 +402,7 @@ class HassDeviceManager :
     @Throws(CouldNotPerformException::class, InterruptedException::class)
     override fun deactivate() {
         unitControllerRegistry.removeObserver(synchronizationObserver)
-        synchronizer.map { deactivate() }
+        synchronizer.forEach { it.deactivate() }
         super.deactivate()
     }
 

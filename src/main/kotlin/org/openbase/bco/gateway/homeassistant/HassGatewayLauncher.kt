@@ -83,7 +83,7 @@ class HassGatewayLauncher : AbstractLauncher<HassDeviceManager>(
 
     companion object {
 
-        val HASS_ADDON_PERSISTENT_DATA_DIRECTORY: File = File("/data")
+        val HASS_ADDON_PERSISTENT_DATA_DIRECTORY: File = File("/share/bco/data")
 
         /**
          * @param args the command line arguments

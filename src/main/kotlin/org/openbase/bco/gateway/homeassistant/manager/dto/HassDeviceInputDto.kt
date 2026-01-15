@@ -7,6 +7,8 @@ data class HassDeviceInputDto(
     override val name: String?,
     @SerializedName("area_id")
     val areaId: String? = null,
+    @SerializedName("model_id")
+    val modelId: String? = null,
     val model: String? = null,
     val icon: String? = null,
     val manufacturer: String? = null,

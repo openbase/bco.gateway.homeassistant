@@ -9,6 +9,8 @@ data class HassDeviceDto(
     override val name: String,
     @SerializedName("area_id")
     val areaId: String? = null,
+    @SerializedName("model_id")
+    val modelId: String? = null,
     val model: String? = null,
     val icon: String? = null,
     val manufacturer: String? = null,
@@ -20,6 +22,7 @@ data class HassDeviceDto(
         id = input.id ?: id,
         name = input.name ?: name,
         areaId = input.areaId ?: areaId,
+        modelId = input.modelId ?: modelId,
         model  = input.model ?: model,
         icon = input.icon ?: icon,
         manufacturer = input.manufacturer ?: manufacturer,
@@ -31,6 +34,7 @@ data class HassDeviceDto(
         id = id,
         name = name,
         areaId = areaId,
+        modelId = modelId,
         model = model,
         icon = icon,
         manufacturer = manufacturer,

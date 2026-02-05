@@ -1,6 +1,7 @@
 package org.openbase.bco.gateway.homeassistant.action
 
 import com.google.gson.JsonObject
+import org.openbase.bco.dal.control.layer.unit.AbstractUnitController
 import org.openbase.bco.dal.lib.action.ActionDescriptionProcessor
 import org.openbase.bco.gateway.homeassistant.manager.cache.HassIdToUnitControllerCache
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassStateDto
@@ -59,6 +60,10 @@ class ServiceActionExecutor(
                     // update the responsible action to show that it was triggered by hass and add other parameters
                     // note that the responsible action is overwritten if it matches a requested state in the unit controller and thus was triggered by a different user through BCO
                     val serviceStateBuilder = if (systemSync) {
+
+                        // apply initial termination
+                        (unitController as AbstractUnitController).reschedule()
+
                         ActionDescriptionProcessor.generateAndSetResponsibleAction(
                             serviceState,
                             serviceType,

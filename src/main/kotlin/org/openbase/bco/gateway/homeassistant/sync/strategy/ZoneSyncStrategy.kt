@@ -31,7 +31,17 @@ class ZoneSyncStrategy(
         UnitConfig
             .newBuilder()
             .setUnitType(unitType)
-            .apply { locationConfigBuilder.locationType = LocationType.ZONE }
+            .apply {
+                locationConfigBuilder.apply {
+                    locationType = LocationType.ZONE
+
+                    // map hass root location onto bco root location
+                    if (hassDto.id == DEFAULT_HASS_ROOT_LOCATION_ID) {
+                        root = true
+                        id = unitRegistry.rootLocationConfig.id
+                    }
+                }
+            }
             .setLabel(LabelProcessor.generateLabelBuilder(hassDto.name))
             .link(hassDto)
             .apply { hassDto.icon?.let { metaConfigBuilder[ALIAS_KEY_BCO_ICON] = it } }
@@ -65,4 +75,7 @@ class ZoneSyncStrategy(
         Observer<DataProvider<UnitRegistryData?>, UnitRegistryData> { _, _ -> eventProcessor.invoke() }
             .also { unitRegistry.addDataObserver(it) }
             .let { AutoCloseable { unitRegistry.removeDataObserver(it) } }
+    companion object {
+        const val DEFAULT_HASS_ROOT_LOCATION_ID = "home"
+    }
 }

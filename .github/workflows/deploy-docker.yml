@@ -5,11 +5,10 @@ on:
     tags:
       - 'v*'
     branches:
-      - beta
+      - dev
   pull_request:
     branches:
       - dev
-      - beta
     types: [opened, labeled, synchronize, reopened, ready_for_review]
 
 jobs:

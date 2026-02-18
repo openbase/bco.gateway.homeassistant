@@ -196,7 +196,12 @@ class HassDeviceManager :
                                 deviceIdToDevices[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]?.let { existingDeviceConfig ->
                                     existingDeviceConfig.toBuilder().mergeFromWithRepeatedFields(deviceConfig).build()
                                         .let {
-                                            Registries.getUnitRegistry().updateUnitConfig(it).await()
+                                            if(Registries.getUnitRegistry().getUnitConfigById(it.id) != it) {
+                                                LOGGER.debug("Updated device config for device with hass id {} and bco id {}", it.metaConfig[ALIAS_KEY_HASS_DEVICE_ID], it.id)
+                                                Registries.getUnitRegistry().updateUnitConfig(it).await()
+                                            } else {
+                                                it
+                                            }
                                         }
                                 } ?: Registries.getUnitRegistry().registerUnitConfig(deviceConfig).await()
                             }.flatMap { deviceConfig ->
@@ -216,7 +221,9 @@ class HassDeviceManager :
                                                 .toBuilder()
                                                 .apply {
                                                     // set hass id as alias and add to meta config
-                                                    addAlias(entity.entityId)
+                                                    if (entity.entityId !in aliasList) {
+                                                        addAlias(entity.entityId)
+                                                    }
                                                     metaConfigBuilder[ALIAS_KEY_HASS_ENTITY_ID] = entity.entityId
                                                     // add location to unit
                                                     tileAreaCache.getUnitConfigByDtoId(entity.areaId)
@@ -224,7 +231,11 @@ class HassDeviceManager :
                                                             placementConfigBuilder.locationId = unitLocation.id
                                                         }
                                                 }.build()
-                                        }?.let { Registries.getUnitRegistry().updateUnitConfig(it).await() }
+                                        }?.let { unitConfig ->
+                                            if (Registries.getUnitRegistry().getUnitConfigById(unitConfig.id) != unitConfig) {
+                                                Registries.getUnitRegistry().updateUnitConfig(unitConfig).await()
+                                            }
+                                        }
                                 }
                             }.filterNotNull()
 

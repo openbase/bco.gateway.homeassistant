@@ -75,6 +75,7 @@ class ZoneSyncStrategy(
         Observer<DataProvider<UnitRegistryData?>, UnitRegistryData> { _, _ -> eventProcessor.invoke() }
             .also { unitRegistry.addDataObserver(it) }
             .let { AutoCloseable { unitRegistry.removeDataObserver(it) } }
+
     companion object {
         const val DEFAULT_HASS_ROOT_LOCATION_ID = "home"
     }

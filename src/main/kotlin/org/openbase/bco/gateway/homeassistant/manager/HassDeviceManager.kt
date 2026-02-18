@@ -24,15 +24,28 @@ import org.openbase.bco.dal.lib.layer.unit.UnitController
 import org.openbase.bco.gateway.homeassistant.action.ServiceActionExecutor
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
-import org.openbase.bco.gateway.homeassistant.jp.*
+import org.openbase.bco.gateway.homeassistant.jp.JPBcoAdminPassword
+import org.openbase.bco.gateway.homeassistant.jp.JPBcoAdminUsername
+import org.openbase.bco.gateway.homeassistant.jp.JPHassHost
+import org.openbase.bco.gateway.homeassistant.jp.JPHassPort
+import org.openbase.bco.gateway.homeassistant.jp.JPHassToken
+import org.openbase.bco.gateway.homeassistant.jp.JPHassWebsocketEndpoint
 import org.openbase.bco.gateway.homeassistant.manager.cache.HassIdToUnitControllerCache
-import org.openbase.bco.gateway.homeassistant.manager.dto.*
+import org.openbase.bco.gateway.homeassistant.manager.dto.HassAreaDto
+import org.openbase.bco.gateway.homeassistant.manager.dto.HassDeviceDto
+import org.openbase.bco.gateway.homeassistant.manager.dto.HassEntityDto
+import org.openbase.bco.gateway.homeassistant.manager.dto.HassFloorDto
+import org.openbase.bco.gateway.homeassistant.manager.dto.HassStateDto
 import org.openbase.bco.gateway.homeassistant.manager.unit.HassGatewayControllerFactory
 import org.openbase.bco.gateway.homeassistant.sync.DtoCache
 import org.openbase.bco.gateway.homeassistant.sync.UnitSynchronizer
 import org.openbase.bco.gateway.homeassistant.sync.strategy.TileSyncStrategy
 import org.openbase.bco.gateway.homeassistant.sync.strategy.ZoneSyncStrategy
-import org.openbase.bco.gateway.homeassistant.util.*
+import org.openbase.bco.gateway.homeassistant.util.await
+import org.openbase.bco.gateway.homeassistant.util.get
+import org.openbase.bco.gateway.homeassistant.util.isNotNull
+import org.openbase.bco.gateway.homeassistant.util.mergeFromWithRepeatedFields
+import org.openbase.bco.gateway.homeassistant.util.set
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
 import org.openbase.bco.registry.unit.lib.UnitRegistry
@@ -126,10 +139,7 @@ class HassDeviceManager :
                             .map { hassDevice ->
                                 hassDevice to
                                         deviceClasses
-                                            .find { deviceClass ->
-                                                deviceClass.productNumber == hassDevice.model ||
-                                                        deviceClass.metaConfig[(ALIAS_KEY_HASS_DEVICE_MODEL)] == hassDevice.model
-                                            }
+                                            .find { deviceClass -> identifyDeviceClass(deviceClass, hassDevice) }
                             }.filter { (hassDevice, deviceClass) ->
                                 (deviceClass.isNotNull())
                                     .also {
@@ -186,7 +196,12 @@ class HassDeviceManager :
                                 deviceIdToDevices[deviceConfig.metaConfig[ALIAS_KEY_HASS_DEVICE_ID]]?.let { existingDeviceConfig ->
                                     existingDeviceConfig.toBuilder().mergeFromWithRepeatedFields(deviceConfig).build()
                                         .let {
-                                            Registries.getUnitRegistry().updateUnitConfig(it).await()
+                                            if(Registries.getUnitRegistry().getUnitConfigById(it.id) != it) {
+                                                LOGGER.debug("Updated device config for device with hass id {} and bco id {}", it.metaConfig[ALIAS_KEY_HASS_DEVICE_ID], it.id)
+                                                Registries.getUnitRegistry().updateUnitConfig(it).await()
+                                            } else {
+                                                it
+                                            }
                                         }
                                 } ?: Registries.getUnitRegistry().registerUnitConfig(deviceConfig).await()
                             }.flatMap { deviceConfig ->
@@ -206,7 +221,9 @@ class HassDeviceManager :
                                                 .toBuilder()
                                                 .apply {
                                                     // set hass id as alias and add to meta config
-                                                    addAlias(entity.entityId)
+                                                    if (entity.entityId !in aliasList) {
+                                                        addAlias(entity.entityId)
+                                                    }
                                                     metaConfigBuilder[ALIAS_KEY_HASS_ENTITY_ID] = entity.entityId
                                                     // add location to unit
                                                     tileAreaCache.getUnitConfigByDtoId(entity.areaId)
@@ -214,7 +231,11 @@ class HassDeviceManager :
                                                             placementConfigBuilder.locationId = unitLocation.id
                                                         }
                                                 }.build()
-                                        }?.let { Registries.getUnitRegistry().updateUnitConfig(it).await() }
+                                        }?.let { unitConfig ->
+                                            if (Registries.getUnitRegistry().getUnitConfigById(unitConfig.id) != unitConfig) {
+                                                Registries.getUnitRegistry().updateUnitConfig(unitConfig).await()
+                                            }
+                                        }
                                 }
                             }.filterNotNull()
 
@@ -247,6 +268,33 @@ class HassDeviceManager :
         this.executor = ServiceActionExecutor(hassIdToUnitControllerCache)
         this.synchronizationObserver =
             (Observer { observable: Any?, value: Any? -> unitFilter.trigger() })
+    }
+
+    private fun identifyDeviceClass(
+        deviceClass: DeviceClassType.DeviceClass,
+        hassDevice: HassDeviceDto,
+    ): Boolean {
+
+        deviceClass.metaConfig[(ALIAS_KEY_HASS_DEVICE_MODEL)]?.let { model ->
+            deviceClass.metaConfig[(ALIAS_KEY_HASS_DEVICE_MODEL_ID)]?.let { modelId ->
+                if (model == hassDevice.model && modelId == hassDevice.modelId) {
+                    return true
+                }
+            }
+        }
+
+        deviceClass.metaConfig[(ALIAS_KEY_HASS_DEVICE_MODEL_ID)]?.let { model ->
+            if (model == hassDevice.modelId) {
+                return true
+            }
+        }
+
+        deviceClass.metaConfig[(ALIAS_KEY_HASS_DEVICE_MODEL)]?.let { model ->
+            if (model == hassDevice.model) {
+                return true
+            }
+        }
+        return deviceClass.productNumber == hassDevice.modelId
     }
 
     override fun isGatewaySupported(config: UnitConfig?): Boolean =
@@ -287,7 +335,7 @@ class HassDeviceManager :
         loginToBCO()
         registerGatewayIfMissing()
 
-        synchronizer.map { it.activate() }
+        synchronizer.forEach { it.activate() }
 
         super.activate()
 
@@ -402,12 +450,13 @@ class HassDeviceManager :
     @Throws(CouldNotPerformException::class, InterruptedException::class)
     override fun deactivate() {
         unitControllerRegistry.removeObserver(synchronizationObserver)
-        synchronizer.map { deactivate() }
+        synchronizer.forEach { it.deactivate() }
         super.deactivate()
     }
 
     companion object {
         const val ALIAS_KEY_HASS_DEVICE_MODEL = "HASS_DEVICE_MODEL"
+        const val ALIAS_KEY_HASS_DEVICE_MODEL_ID = "HASS_DEVICE_MODEL_ID"
         const val ALIAS_KEY_HASS_ID = "HASS_ID"
         const val ALIAS_KEY_HASS_TYPE = "HASS_TYPE"
         const val ALIAS_KEY_HASS_DEVICE_ID = "HASS_DEVICE_ID"

@@ -34,7 +34,7 @@ class TileSyncStrategy(
     override fun buildUnitConfig(hassDto: HassAreaDto): UnitConfig =
         UnitConfig
             .newBuilder()
-            .setUnitType(UnitType.LOCATION)
+            .setUnitType(unitType)
             .apply { locationConfigBuilder.locationType = LocationType.TILE }
             .setLabel(LabelProcessor.generateLabelBuilder(hassDto.name))
             .link(hassDto)

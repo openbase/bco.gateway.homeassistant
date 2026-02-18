@@ -4,10 +4,9 @@ import com.google.gson.JsonObject
 import org.openbase.bco.dal.lib.action.ActionDescriptionProcessor
 import org.openbase.bco.gateway.homeassistant.manager.cache.HassIdToUnitControllerCache
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassStateDto
-import org.openbase.bco.gateway.homeassistant.manager.service.*
 import org.openbase.bco.gateway.homeassistant.manager.transformer.toServiceState
 import org.openbase.bco.gateway.homeassistant.manager.transformer.toServiceType
-import org.openbase.bco.gateway.homeassistant.util.*
+import org.openbase.bco.gateway.homeassistant.util.parse
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InvalidStateException
 import org.openbase.jul.pattern.Observer
@@ -16,7 +15,6 @@ import org.openbase.type.domotic.action.ActionInitiatorType.ActionInitiator
 import org.openbase.type.domotic.action.ActionInitiatorType.ActionInitiator.InitiatorType
 import org.openbase.type.domotic.action.ActionPriorityType.ActionPriority
 import org.openbase.type.domotic.service.ServiceTemplateType.ServiceTemplate.ServiceType
-import org.openbase.type.vision.ColorType.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -59,6 +57,7 @@ class ServiceActionExecutor(
                     // update the responsible action to show that it was triggered by hass and add other parameters
                     // note that the responsible action is overwritten if it matches a requested state in the unit controller and thus was triggered by a different user through BCO
                     val serviceStateBuilder = if (systemSync) {
+
                         ActionDescriptionProcessor.generateAndSetResponsibleAction(
                             serviceState,
                             serviceType,

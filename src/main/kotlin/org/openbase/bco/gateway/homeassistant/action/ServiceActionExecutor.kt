@@ -61,9 +61,6 @@ class ServiceActionExecutor(
                     // note that the responsible action is overwritten if it matches a requested state in the unit controller and thus was triggered by a different user through BCO
                     val serviceStateBuilder = if (systemSync) {
 
-                        // apply initial termination
-                        (unitController as AbstractUnitController).reschedule()
-
                         ActionDescriptionProcessor.generateAndSetResponsibleAction(
                             serviceState,
                             serviceType,

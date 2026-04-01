@@ -9,6 +9,7 @@ import org.openbase.bco.gateway.homeassistant.sync.DtoCache
 import org.openbase.bco.gateway.homeassistant.type.HassType
 import org.openbase.bco.gateway.homeassistant.util.get
 import org.openbase.bco.gateway.homeassistant.util.set
+import org.openbase.bco.registry.unit.lib.UnitRegistry
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.UnitTemplateType
 
@@ -20,14 +21,24 @@ interface UnitSyncStrategy<HASS_DTO: HassDto, HASS_INPUT_DTO: HassInputDto> {
     val dependencies: List<DtoCache<*>>
         get() = emptyList()
 
+    /**
+     * If true, this strategy only syncs from Hass to BCO.
+     * BCO→Hass sync methods ([buildHassInputDto], [saveHassDto], [deleteHassDto], [onUnitChanges])
+     * are not called and use default no-op/throwing implementations.
+     */
+    val unidirectional: Boolean get() = false
+
     fun buildUnitConfig(hassDto: HASS_DTO): UnitConfig
-    fun buildHassInputDto(unitConfig: UnitConfig): HASS_INPUT_DTO
+    fun buildHassInputDto(unitConfig: UnitConfig): HASS_INPUT_DTO =
+        throw NotImplementedError("buildHassInputDto is not supported for unidirectional strategy $name")
 
     fun UnitConfig.toHassId(): String? = metaConfig[ALIAS_KEY_HASS_ID]
 
-    fun saveHassDto(dto: HASS_INPUT_DTO): HASS_DTO
+    fun saveHassDto(dto: HASS_INPUT_DTO): HASS_DTO =
+        throw NotImplementedError("saveHassDto is not supported for unidirectional strategy $name")
     fun queryHassDtos(): List<HASS_DTO>
-    fun deleteHassDto(dto: HASS_DTO): HASS_DTO
+    fun deleteHassDto(dto: HASS_DTO): HASS_DTO =
+        throw NotImplementedError("deleteHassDto is not supported for unidirectional strategy $name")
 
     fun onDtoChanges(eventProcessor: (event: SubscriptionEvent.Event) -> Any): AutoCloseable
     fun UnitConfig.link(hassDto: HASS_DTO): UnitConfig.Builder = toBuilder().link(hassDto)
@@ -35,5 +46,13 @@ interface UnitSyncStrategy<HASS_DTO: HassDto, HASS_INPUT_DTO: HassInputDto> {
         metaConfigBuilder[ALIAS_KEY_HASS_ID] = hassDto.id
         metaConfigBuilder[ALIAS_KEY_HASS_TYPE] = hassType.name
     }
-    fun onUnitChanges(eventProcessor: () -> Any): AutoCloseable
+    fun onUnitChanges(eventProcessor: () -> Any): AutoCloseable =
+        AutoCloseable { /* no-op for unidirectional strategies */ }
+
+    /**
+     * Query unit configs that are relevant for this strategy.
+     * Override to provide custom querying logic (e.g. when units span multiple types).
+     */
+    fun queryUnitConfigs(unitRegistry: UnitRegistry): List<UnitConfig> =
+        unitRegistry.getUnitConfigsByUnitType(unitType).filter(unitFilter)
 }

@@ -62,9 +62,11 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                         hassToBCOSyncDebounceFilter.trigger()
                     }.also { observer += it }
 
-                    strategy.onUnitChanges() {
-                        bcoToHassSyncDebounceFilter.trigger()
-                    }.also { observer += it }
+                    if (!strategy.unidirectional) {
+                        strategy.onUnitChanges() {
+                            bcoToHassSyncDebounceFilter.trigger()
+                        }.also { observer += it }
+                    }
 
                     LOGGER.info("Activated ${strategy.name}")
                     syncAll()
@@ -91,7 +93,9 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     private fun syncAll() {
         synchronizationLock.withLock {
             syncHassToBCO() // order important for sync!
-            syncBCOtoHass() // order important for sync!
+            if (!strategy.unidirectional) {
+                syncBCOtoHass() // order important for sync!
+            }
         }
         cache.confirmInit()
     }
@@ -106,6 +110,8 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
             // handle: add and update
             hassDtos
                 .map { hassDto -> hassDto to hassDto.toUnitConfig() }
+                // skip DTOs for which buildUnitConfig could not produce a valid unit config
+                .filter { (_, unitConfig) -> unitConfig != UnitConfig.getDefaultInstance() }
                 .mapSecond { (hassDto, unitConfig) ->
                     run {
                         cache.getUnitConfigByDtoId(hassDto.id)
@@ -248,10 +254,9 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
         LOGGER.info("Sync ${strategy.unitType.name.lowercase()}s from bco to hass done.")
     }
 
-    private fun getUnitConfigMap(): Map<String, UnitConfig> = unitRegistry
-        .getUnitConfigsByUnitType(strategy.unitType)
-        .filter(strategy.unitFilter)
-        .associateBy { it.id }
+    private fun getUnitConfigMap(): Map<String, UnitConfig> =
+        strategy.queryUnitConfigs(unitRegistry)
+            .associateBy { it.id }
 
     private fun HASS_DTO.toUnitConfig(): UnitConfig = strategy.buildUnitConfig(this)
     private fun UnitConfig.toHassInputDto(): HASS_INPUT_DTO = strategy.buildHassInputDto(this)

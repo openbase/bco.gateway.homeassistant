@@ -62,11 +62,9 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                         hassToBCOSyncDebounceFilter.trigger()
                     }.also { observer += it }
 
-                    if (!strategy.unidirectional) {
-                        strategy.onUnitChanges() {
-                            bcoToHassSyncDebounceFilter.trigger()
-                        }.also { observer += it }
-                    }
+                    strategy.onUnitChanges() {
+                        bcoToHassSyncDebounceFilter.trigger()
+                    }.also { observer += it }
 
                     LOGGER.info("Activated ${strategy.name}")
                     syncAll()
@@ -93,9 +91,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     private fun syncAll() {
         synchronizationLock.withLock {
             syncHassToBCO() // order important for sync!
-            if (!strategy.unidirectional) {
-                syncBCOtoHass() // order important for sync!
-            }
+            syncBCOtoHass() // order important for sync!
         }
         cache.confirmInit()
     }

@@ -18,6 +18,9 @@ import org.openbase.bco.gateway.homeassistant.util.set
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.unit.lib.UnitRegistry
 import org.openbase.jul.extension.type.processing.LabelProcessor
+import org.openbase.jul.pattern.Observer
+import org.openbase.jul.pattern.provider.DataProvider
+import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.openbase.type.domotic.unit.device.DeviceClassType
@@ -26,11 +29,11 @@ import org.slf4j.LoggerFactory
 class DeviceSyncStrategy(
     private val areaCache: DtoCache<HassAreaDto>,
     private val hassCommunicator: HassCommunicator = HassCommunicator.instance,
+    private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ): UnitSyncStrategy<HassDeviceDto, HassDeviceInputDto> {
     override val dependencies = listOf(areaCache)
     override val unitType: UnitType = UnitType.DEVICE
     override val hassType: HassType = HassType.DEVICE
-    override val unidirectional: Boolean = true
     override val unitFilter: (UnitConfig) -> Boolean = {
         it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_DEVICE_ID }
     }
@@ -45,7 +48,7 @@ class DeviceSyncStrategy(
                     deviceConfigBuilder.deviceClassId = deviceClass.id
                 }
             }
-            .setLabel(LabelProcessor.generateLabelBuilder(hassDto.name))
+            .setLabel(LabelProcessor.generateLabelBuilder(hassDto.nameByUser ?: hassDto.name))
             .link(hassDto)
             .apply {
                 areaCache.getUnitConfigByDtoId(hassDto.areaId)
@@ -55,6 +58,18 @@ class DeviceSyncStrategy(
             }
             .build()
     }
+
+    override fun buildHassInputDto(unitConfig: UnitConfig): HassDeviceInputDto = HassDeviceInputDto(
+        id = unitConfig.toHassId(),
+        nameByUser = runCatching { LabelProcessor.getBestMatch(unitConfig.label) }.getOrNull(),
+        name = null,
+        labels = null,
+    )
+
+    override fun saveHassDto(dto: HassDeviceInputDto): HassDeviceDto =
+        hassCommunicator.saveDevice(dto)
+
+    override fun deleteHassDto(dto: HassDeviceDto): HassDeviceDto = dto // Devices cannot be deleted via API
 
     override fun UnitConfig.Builder.link(hassDto: HassDeviceDto): UnitConfig.Builder = apply {
         metaConfigBuilder[ALIAS_KEY_HASS_DEVICE_ID] = hassDto.id
@@ -78,6 +93,11 @@ class DeviceSyncStrategy(
             eventType = HassCommunicator.HassEventType.DEVICE_UPDATE,
             eventProcessor
         ).let { AutoCloseable { hassCommunicator.unsubscribe(it) } }
+
+    override fun onUnitChanges(eventProcessor: () -> Any): AutoCloseable =
+        Observer<DataProvider<UnitRegistryData?>, UnitRegistryData> { _, _ -> eventProcessor.invoke() }
+            .also { unitRegistry.addDataObserver(it) }
+            .let { AutoCloseable { unitRegistry.removeDataObserver(it) } }
 
     private fun findMatchingDeviceClass(
         hassDevice: HassDeviceDto,

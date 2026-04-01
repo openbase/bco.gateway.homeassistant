@@ -19,6 +19,9 @@ import org.openbase.bco.gateway.homeassistant.util.get
 import org.openbase.bco.gateway.homeassistant.util.set
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.unit.lib.UnitRegistry
+import org.openbase.jul.pattern.Observer
+import org.openbase.jul.pattern.provider.DataProvider
+import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 import org.slf4j.LoggerFactory
@@ -30,18 +33,19 @@ import org.slf4j.LoggerFactory
  * This strategy links those DAL units to the corresponding Hass entities by matching
  * entity type and device class from the unit template meta config.
  *
- * This is a unidirectional strategy (Hass → BCO only).
+ * Entities are managed by Home Assistant and cannot be created or deleted from BCO.
+ * The BCO→Hass sync only produces identity mappings so that no changes are pushed.
  */
 class EntitySyncStrategy(
     private val deviceCache: DtoCache<HassDeviceDto>,
     private val areaCache: DtoCache<HassAreaDto>,
     private val hassCommunicator: HassCommunicator = HassCommunicator.instance,
+    private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ) : UnitSyncStrategy<HassEntityDto, HassEntityInputDto> {
 
     override val dependencies = listOf(deviceCache, areaCache)
     override val unitType: UnitType = UnitType.UNKNOWN
     override val hassType: HassType = HassType.ENTITY
-    override val unidirectional: Boolean = true
     override val unitFilter: (UnitConfig) -> Boolean = {
         it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ENTITY_ID }
     }
@@ -119,6 +123,15 @@ class EntitySyncStrategy(
         return UnitConfig.getDefaultInstance()
     }
 
+    override fun buildHassInputDto(unitConfig: UnitConfig): HassEntityInputDto = HassEntityInputDto(
+        entityId = unitConfig.metaConfig[ALIAS_KEY_HASS_ENTITY_ID],
+    )
+
+    override fun saveHassDto(dto: HassEntityInputDto): HassEntityDto =
+        throw NotImplementedError("Entities are managed by Home Assistant and cannot be saved from BCO")
+
+    override fun deleteHassDto(dto: HassEntityDto): HassEntityDto = dto // Entities cannot be deleted via API
+
     override fun UnitConfig.toHassId(): String? =
         metaConfig[ALIAS_KEY_HASS_ID]
 
@@ -140,6 +153,11 @@ class EntitySyncStrategy(
             eventType = HassCommunicator.HassEventType.DEVICE_UPDATE,
             eventProcessor
         ).let { AutoCloseable { hassCommunicator.unsubscribe(it) } }
+
+    override fun onUnitChanges(eventProcessor: () -> Any): AutoCloseable =
+        Observer<DataProvider<UnitRegistryData?>, UnitRegistryData> { _, _ -> eventProcessor.invoke() }
+            .also { unitRegistry.addDataObserver(it) }
+            .let { AutoCloseable { unitRegistry.removeDataObserver(it) } }
 
     companion object {
         private val LOGGER = LoggerFactory.getLogger(EntitySyncStrategy::class.java)

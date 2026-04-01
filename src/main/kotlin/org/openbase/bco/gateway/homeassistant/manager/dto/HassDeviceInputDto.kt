@@ -5,6 +5,8 @@ import com.google.gson.annotations.SerializedName
 data class HassDeviceInputDto(
     val id: String?,
     override val name: String?,
+    @SerializedName("name_by_user")
+    val nameByUser: String? = null,
     @SerializedName("area_id")
     val areaId: String? = null,
     @SerializedName("model_id")

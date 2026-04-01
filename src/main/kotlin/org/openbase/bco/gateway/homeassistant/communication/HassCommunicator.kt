@@ -75,15 +75,21 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.map { gson.fromJson(it, HassDeviceDto::class.java) }
             .orEmpty()
 
-    fun saveDevice(device: HassDeviceInputDto): HassDeviceDto =
-        (device.id?.let {
-            UPDATE_DEVICE_WS_REQUEST
-        } ?: throw NotImplementedError("Devices cannot be created via Websocket API.")).let { wsCommand ->
-            sendWSCommand(wsCommand, gson.toJsonTree(device).asJsonObject).await()
-                ?.asJsonObject
-                ?.let { gson.fromJson(it, HassDeviceDto::class.java) }
-                ?: throw CouldNotPerformException("Could not save floor[$device]")
+    fun saveDevice(device: HassDeviceInputDto): HassDeviceDto {
+        val deviceId = device.id
+            ?: throw NotImplementedError("Devices cannot be created via Websocket API.")
+        // HA's device_registry/update only accepts specific fields and uses device_id (not id)
+        val payload = JsonObject().apply {
+            addProperty("device_id", deviceId)
+            device.nameByUser?.let { addProperty("name_by_user", it) }
+            device.areaId?.let { addProperty("area_id", it) }
+            device.labels?.let { add("labels", gson.toJsonTree(it)) }
         }
+        return sendWSCommand(UPDATE_DEVICE_WS_REQUEST, payload).await()
+            ?.asJsonObject
+            ?.let { gson.fromJson(it, HassDeviceDto::class.java) }
+            ?: throw CouldNotPerformException("Could not save device[$device]")
+    }
 
     fun deleteDevice(device: HassDeviceDto): HassDeviceDto = throw NotImplementedError("Devices cannot be deleted via Websocket API.")
 

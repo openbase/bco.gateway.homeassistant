@@ -45,7 +45,6 @@ class UnitSynchronizerTest {
         every { tileSyncStrategy.dependencies } returns emptyList()
         every { tileSyncStrategy.unitType } returns UnitType.LOCATION
         every { tileSyncStrategy.unitFilter } returns { it.locationConfig?.locationType == LocationType.TILE }
-        every { tileSyncStrategy.unidirectional } returns false
         every { tileSyncStrategy.queryUnitConfigs(any()) } answers {
             unitConfigDB.filter { it.locationConfig?.locationType == LocationType.TILE }
         }

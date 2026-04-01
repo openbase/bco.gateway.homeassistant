@@ -10,10 +10,10 @@ data class HassEntityDto(
     @SerializedName("entity_id")
     val entityId: String,
     @SerializedName("area_id")
-    val areaId: String,
-    val platform: String,
+    val areaId: String?,
+    val platform: String?,
     @SerializedName("device_id")
-    val deviceId: String,
+    val deviceId: String?,
 ): HassDto, Mergeable<HassEntityInputDto, HassEntityDto>, InputDtoProvider<HassEntityInputDto> {
     val type get() = entityId.split(".").first()
     override val name get() = entityId.split(".").last()

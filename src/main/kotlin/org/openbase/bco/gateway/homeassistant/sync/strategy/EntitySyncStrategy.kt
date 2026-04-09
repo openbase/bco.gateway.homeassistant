@@ -88,7 +88,7 @@ class EntitySyncStrategy(
         return deviceUnitConfig.deviceConfig.unitIdList
             .asSequence()
             .mapNotNull { dalUnitId ->
-                runCatching { Registries.getUnitRegistry().getUnitConfigById(dalUnitId) }.getOrNull()
+                runCatching { unitRegistry.getUnitConfigById(dalUnitId) }.getOrNull()
             }
             .mapNotNull { dalUnit ->
                 val templateMetaConfig = runCatching {

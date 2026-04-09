@@ -14,6 +14,7 @@ data class HassEntityDto(
     val platform: String?,
     @SerializedName("device_id")
     val deviceId: String?,
+    val icon: String? = null,
 ): HassDto, Mergeable<HassEntityInputDto, HassEntityDto>, InputDtoProvider<HassEntityInputDto> {
     val type get() = entityId.split(".").first()
     override val name get() = entityId.split(".").last()
@@ -23,6 +24,7 @@ data class HassEntityDto(
         entityId = input.entityId ?: entityId,
         areaId = input.areaId ?: areaId,
         deviceId = input.deviceId ?: deviceId,
+        icon = input.icon ?: icon,
     )
 
     override fun toInputDto(): HassEntityInputDto = HassEntityInputDto(
@@ -30,5 +32,6 @@ data class HassEntityDto(
         name = name,
         areaId = areaId,
         deviceId = deviceId,
+        icon = icon,
     )
 }

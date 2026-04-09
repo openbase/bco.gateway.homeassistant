@@ -10,5 +10,6 @@ data class HassEntityInputDto(
     val areaId: String? = null,
     @SerializedName("device_id")
     val deviceId: String? = null,
+    val icon: String? = null,
 ): HassInputDto
 

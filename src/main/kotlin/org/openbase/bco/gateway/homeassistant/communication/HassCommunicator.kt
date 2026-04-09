@@ -77,13 +77,14 @@ class HassCommunicator private constructor() : HassConnection() {
 
     fun saveDevice(device: HassDeviceInputDto): HassDeviceDto {
         val deviceId = device.id
-            ?: throw NotImplementedError("Devices cannot be created via Websocket API.")
+            ?: error("Device ID must be provided to save an entity")
         // HA's device_registry/update only accepts specific fields and uses device_id (not id)
         val payload = JsonObject().apply {
             addProperty("device_id", deviceId)
             device.nameByUser?.let { addProperty("name_by_user", it) }
             device.areaId?.let { addProperty("area_id", it) }
             device.labels?.let { add("labels", gson.toJsonTree(it)) }
+            device.icon?.let { addProperty("icon", it) }
         }
         return sendWSCommand(UPDATE_DEVICE_WS_REQUEST, payload).await()
             ?.asJsonObject
@@ -92,6 +93,20 @@ class HassCommunicator private constructor() : HassConnection() {
     }
 
     fun deleteDevice(device: HassDeviceDto): HassDeviceDto = throw NotImplementedError("Devices cannot be deleted via Websocket API.")
+
+    fun saveEntity(entity: HassEntityInputDto): HassEntityDto {
+        val entityId = entity.entityId
+            ?: error("Entity ID must be provided to save an entity")
+        val payload = JsonObject().apply {
+            addProperty("entity_id", entityId)
+            entity.areaId?.let { addProperty("area_id", it) }
+            entity.icon?.let { addProperty("icon", it) }
+        }
+        return sendWSCommand(UPDATE_ENTITY_WS_REQUEST, payload).await()
+            ?.asJsonObject
+            ?.let { gson.fromJson(it, HassEntityDto::class.java) }
+            ?: throw CouldNotPerformException("Could not save entity[$entity]")
+    }
 
     fun getEntities(): List<HassEntityDto> =
         sendWSCommand(ENTITIES_WS_REQUEST).await()
@@ -244,6 +259,7 @@ class HassCommunicator private constructor() : HassConnection() {
         const val UPDATE_FLOOR_WS_REQUEST = "config/floor_registry/update"
         const val DELETE_FLOOR_WS_REQUEST = "config/floor_registry/delete"
         const val UPDATE_DEVICE_WS_REQUEST = "config/device_registry/update"
+        const val UPDATE_ENTITY_WS_REQUEST = "config/entity_registry/update"
 
         private val LOGGER: Logger = LoggerFactory.getLogger(HassCommunicator::class.java)
 

@@ -3,6 +3,7 @@ package org.openbase.bco.gateway.homeassistant.sync.strategy
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.gateway.homeassistant.communication.websocket.command.SubscriptionEvent
+import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_BCO_ICON
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_DEVICE_ID
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_ENTITY_ID
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_ID
@@ -51,9 +52,9 @@ class EntitySyncStrategy(
     }
 
     /**
-     * Query unit configs for all DAL units that belong to devices managed by the device cache.
-     * This includes both already-linked units (with ALIAS_KEY_HASS_ENTITY_ID) and
-     * unlinked units (belonging to a device in the device cache).
+     * Query unit configs for all DAL units that are already linked to a HASS entity.
+     * Unlinked DAL units are matched during [buildUnitConfig] from the HASS side and are
+     * intentionally excluded here so that [syncBCOtoHass] does not try to save them.
      */
     override fun queryUnitConfigs(unitRegistry: UnitRegistry): List<UnitConfig> {
         val deviceConfigs = unitRegistry.getUnitConfigsByUnitType(UnitType.DEVICE)
@@ -67,6 +68,7 @@ class EntitySyncStrategy(
             .mapNotNull { unitId ->
                 runCatching { unitRegistry.getUnitConfigById(unitId) }.getOrNull()
             }
+            .filter { it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ENTITY_ID } }
     }
 
     override fun buildUnitConfig(hassDto: HassEntityDto): UnitConfig {
@@ -112,6 +114,7 @@ class EntitySyncStrategy(
                             ?.let { unitLocation ->
                                 placementConfigBuilder.locationId = unitLocation.id
                             }
+                        hassDto.icon?.let { metaConfigBuilder[ALIAS_KEY_BCO_ICON] = it }
                     }
                     .link(hassDto)
                     .build()
@@ -125,10 +128,12 @@ class EntitySyncStrategy(
 
     override fun buildHassInputDto(unitConfig: UnitConfig): HassEntityInputDto = HassEntityInputDto(
         entityId = unitConfig.metaConfig[ALIAS_KEY_HASS_ENTITY_ID],
+        areaId = areaCache.getDtoByUnitId(unitConfig.placementConfig.locationId)?.id,
+        icon = unitConfig.metaConfig[ALIAS_KEY_BCO_ICON],
     )
 
     override fun saveHassDto(dto: HassEntityInputDto): HassEntityDto =
-        throw NotImplementedError("Entities are managed by Home Assistant and cannot be saved from BCO")
+        hassCommunicator.saveEntity(dto)
 
     override fun deleteHassDto(dto: HassEntityDto): HassEntityDto = dto // Entities cannot be deleted via API
 

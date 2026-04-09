@@ -3,6 +3,7 @@ package org.openbase.bco.gateway.homeassistant.sync.strategy
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.gateway.homeassistant.communication.websocket.command.SubscriptionEvent
+import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_BCO_ICON
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_DEVICE_ID
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_DEVICE_MODEL
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_DEVICE_MODEL_ID
@@ -56,6 +57,7 @@ class DeviceSyncStrategy(
                         placementConfigBuilder.locationId = unitLocation.id
                     }
             }
+            .apply { hassDto.icon?.let { metaConfigBuilder[ALIAS_KEY_BCO_ICON] = it } }
             .build()
     }
 
@@ -64,6 +66,7 @@ class DeviceSyncStrategy(
         nameByUser = runCatching { LabelProcessor.getBestMatch(unitConfig.label) }.getOrNull(),
         name = null,
         labels = null,
+        areaId = areaCache.getDtoByUnitId(unitConfig.placementConfig.locationId)?.id,
     )
 
     override fun saveHassDto(dto: HassDeviceInputDto): HassDeviceDto =

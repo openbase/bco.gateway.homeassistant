@@ -85,45 +85,41 @@ class EntitySyncStrategy(
             .filter { it.deviceId == hassDto.deviceId }
 
         // Find the matching DAL unit from the device's unit list
-        for (dalUnitId in deviceUnitConfig.deviceConfig.unitIdList) {
-            val dalUnit = runCatching {
-                Registries.getUnitRegistry().getUnitConfigById(dalUnitId)
-            }.getOrNull() ?: continue
-
-            val templateMetaConfig = runCatching {
-                Registries.getTemplateRegistry().getUnitTemplateByType(dalUnit.unitType).metaConfig
-            }.getOrNull() ?: continue
-
-            val entityType = templateMetaConfig[HASS_ENTITY_TYPE] ?: continue
-            val entityDeviceClass = templateMetaConfig[HASS_ENTITY_DEVICE_CLASS]
-
-            // Match entity to this DAL unit
-            val matchingEntity = deviceEntities
-                .filter { entityIdToDeviceClass[it.entityId] == entityDeviceClass }
-                .find { it.type == entityType }
-
-            if (matchingEntity != null && matchingEntity.entityId == hassDto.entityId) {
-                return dalUnit
-                    .toBuilder()
-                    .apply {
-                        if (hassDto.entityId !in aliasList) {
-                            addAlias(hassDto.entityId)
-                        }
-                        metaConfigBuilder[ALIAS_KEY_HASS_ENTITY_ID] = hassDto.entityId
-                        areaCache.getUnitConfigByDtoId(hassDto.areaId)
-                            ?.let { unitLocation ->
-                                placementConfigBuilder.locationId = unitLocation.id
-                            }
-                        hassDto.icon?.let { metaConfigBuilder[ALIAS_KEY_BCO_ICON] = it }
-                    }
-                    .link(hassDto)
-                    .build()
+        return deviceUnitConfig.deviceConfig.unitIdList
+            .asSequence()
+            .mapNotNull { dalUnitId ->
+                runCatching { Registries.getUnitRegistry().getUnitConfigById(dalUnitId) }.getOrNull()
             }
-        }
+            .mapNotNull { dalUnit ->
+                val templateMetaConfig = runCatching {
+                    Registries.getTemplateRegistry().getUnitTemplateByType(dalUnit.unitType).metaConfig
+                }.getOrNull() ?: return@mapNotNull null
 
-        // No matching DAL unit found - return a minimal config
-        // This will be handled by the synchronizer (won't save since it has no ID)
-        return UnitConfig.getDefaultInstance()
+                val entityType = templateMetaConfig[HASS_ENTITY_TYPE] ?: return@mapNotNull null
+                val entityDeviceClass = templateMetaConfig[HASS_ENTITY_DEVICE_CLASS]
+
+                val matchingEntity = deviceEntities
+                    .filter { entityIdToDeviceClass[it.entityId] == entityDeviceClass }
+                    .find { it.type == entityType }
+
+                dalUnit.takeIf { matchingEntity?.entityId == hassDto.entityId }
+            }
+            .firstOrNull()
+            ?.toBuilder()
+            ?.apply {
+                if (hassDto.entityId !in aliasList) {
+                    addAlias(hassDto.entityId)
+                }
+                metaConfigBuilder[ALIAS_KEY_HASS_ENTITY_ID] = hassDto.entityId
+                areaCache.getUnitConfigByDtoId(hassDto.areaId)
+                    ?.let { unitLocation ->
+                        placementConfigBuilder.locationId = unitLocation.id
+                    }
+                hassDto.icon?.let { metaConfigBuilder[ALIAS_KEY_BCO_ICON] = it }
+            }
+            ?.link(hassDto)
+            ?.build()
+            ?: UnitConfig.getDefaultInstance()
     }
 
     override fun buildHassInputDto(unitConfig: UnitConfig): HassEntityInputDto = HassEntityInputDto(

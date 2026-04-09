@@ -43,6 +43,7 @@ class UnitSynchronizerTest {
         every { hassCommunicator.isConnected } returns true
         every { tileSyncStrategy.name } returns "TileSyncStrategy"
         every { tileSyncStrategy.dependencies } returns emptyList()
+        every { tileSyncStrategy.unitRegistry } returns unitRegistry
         every { tileSyncStrategy.unitType } returns UnitType.LOCATION
         every { tileSyncStrategy.unitFilter } returns { it.locationConfig?.locationType == LocationType.TILE }
         every { tileSyncStrategy.queryUnitConfigs() } answers {

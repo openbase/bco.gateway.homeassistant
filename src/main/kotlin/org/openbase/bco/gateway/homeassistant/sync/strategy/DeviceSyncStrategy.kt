@@ -7,7 +7,6 @@ import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companio
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_DEVICE_ID
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_DEVICE_MODEL
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_DEVICE_MODEL_ID
-import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_ID
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_TYPE
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassAreaDto
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassDeviceDto
@@ -74,12 +73,10 @@ class DeviceSyncStrategy(
 
     override fun UnitConfig.Builder.link(hassDto: HassDeviceDto): UnitConfig.Builder = apply {
         metaConfigBuilder[ALIAS_KEY_HASS_DEVICE_ID] = hassDto.id
-        metaConfigBuilder[ALIAS_KEY_HASS_ID] = hassDto.id
         metaConfigBuilder[ALIAS_KEY_HASS_TYPE] = hassType.name
     }
 
     override fun UnitConfig.toHassId(): String? = metaConfig[ALIAS_KEY_HASS_DEVICE_ID]
-        ?: metaConfig[ALIAS_KEY_HASS_ID]
 
     override fun queryHassDtos(): List<HassDeviceDto> {
         val deviceClasses = Registries.getClassRegistry(true).deviceClasses

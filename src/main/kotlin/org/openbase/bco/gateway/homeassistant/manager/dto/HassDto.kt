@@ -19,5 +19,7 @@ interface HassDto: IdProvider<String>, NameProvider<String> {
         const val NEW_STATE = "new_state"
         const val LAST_CHANGED = "last_changed"
         const val HS_COLOR = "hs_color"
+        const val LABELS = "labels"
+        const val ICON = "icon"
     }
 }

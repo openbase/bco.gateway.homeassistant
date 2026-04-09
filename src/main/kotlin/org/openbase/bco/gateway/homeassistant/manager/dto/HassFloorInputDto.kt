@@ -3,7 +3,7 @@ package org.openbase.bco.gateway.homeassistant.manager.dto
 import com.google.gson.annotations.SerializedName
 
 data class HassFloorInputDto(
-    @SerializedName("floor_id")
+    @SerializedName(HassDto.FLOOR_ID)
     val id: String? = null,
     override val name: String? = null,
     val icon: String? = null,

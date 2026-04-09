@@ -5,9 +5,9 @@ import org.openbase.bco.gateway.homeassistant.type.HassDomainType
 import org.openbase.bco.gateway.homeassistant.type.toHassDomainType
 
 data class HassStateDto(
-    @SerializedName("entity_id")
+    @SerializedName(HassDto.ENTITY_ID)
     val entityId: String,
-    @SerializedName("last_changed")
+    @SerializedName(HassDto.LAST_CHANGED)
     val lastChanged: String,
     val state: String,
     val attributes: Map<String, Any>,

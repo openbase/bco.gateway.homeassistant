@@ -17,10 +17,10 @@ import org.openbase.bco.gateway.homeassistant.type.Mergeable
  * "modified_at": 1723284728.415601
  */
 data class HassAreaDto(
-    @SerializedName("area_id")
+    @SerializedName(HassDto.AREA_ID)
     override val id: String,
     override val name: String,
-    @SerializedName("floor_id")
+    @SerializedName(HassDto.FLOOR_ID)
     val floorId: String?,
 
     val icon: String?,

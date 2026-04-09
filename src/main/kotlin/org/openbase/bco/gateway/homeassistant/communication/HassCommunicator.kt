@@ -80,9 +80,9 @@ class HassCommunicator private constructor() : HassConnection() {
             ?: error("Device ID must be provided to save an entity")
         // HA's device_registry/update only accepts specific fields and uses device_id (not id)
         val payload = JsonObject().apply {
-            addProperty("device_id", deviceId)
-            device.nameByUser?.let { addProperty("name_by_user", it) }
-            device.areaId?.let { addProperty("area_id", it) }
+            addProperty(HassDto.DEVICE_ID, deviceId)
+            device.nameByUser?.let { addProperty(HassDto.NAME_BY_USER, it) }
+            device.areaId?.let { addProperty(HassDto.AREA_ID, it) }
             device.labels?.let { add("labels", gson.toJsonTree(it)) }
             device.icon?.let { addProperty("icon", it) }
         }
@@ -98,8 +98,8 @@ class HassCommunicator private constructor() : HassConnection() {
         val entityId = entity.entityId
             ?: error("Entity ID must be provided to save an entity")
         val payload = JsonObject().apply {
-            addProperty("entity_id", entityId)
-            entity.areaId?.let { addProperty("area_id", it) }
+            addProperty(HassDto.ENTITY_ID, entityId)
+            entity.areaId?.let { addProperty(HassDto.AREA_ID, it) }
             entity.icon?.let { addProperty("icon", it) }
         }
         return sendWSCommand(UPDATE_ENTITY_WS_REQUEST, payload).await()
@@ -148,7 +148,7 @@ class HassCommunicator private constructor() : HassConnection() {
                 sendWSCommand(
                     DELETE_AREA_WS_REQUEST,
                     JsonObject().apply {
-                        addProperty("area_id", area.id)
+                        addProperty(HassDto.AREA_ID, area.id)
                     }
                 ).await()
             }
@@ -178,7 +178,7 @@ class HassCommunicator private constructor() : HassConnection() {
                 sendWSCommand(
                     DELETE_FLOOR_WS_REQUEST,
                     JsonObject().apply {
-                        addProperty("floor_id", floor.id)
+                        addProperty(HassDto.FLOOR_ID, floor.id)
                     }
                 ).await()
             }

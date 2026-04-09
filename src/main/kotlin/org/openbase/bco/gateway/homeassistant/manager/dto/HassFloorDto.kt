@@ -19,7 +19,7 @@ import org.openbase.bco.gateway.homeassistant.type.Mergeable
  * }
  */
 data class HassFloorDto(
-    @SerializedName("floor_id")
+    @SerializedName(HassDto.FLOOR_ID)
     override val id: String,
     override val name: String,
     val icon: String? = null,

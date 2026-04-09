@@ -23,10 +23,10 @@ import org.openbase.bco.gateway.homeassistant.type.toHassDomainType
 data class HassServiceDto(
     val domain: String,
     val service: String,
-    @SerializedName("service_data")
+    @SerializedName(HassDto.SERVICE_DATA)
     val serviceData: ServiceDto? = null,
     val target: Target? = null,
-    @SerializedName("return_response")
+    @SerializedName(HassDto.RETURN_RESPONSE)
     val returnResponse: Boolean = false,
 ){
     constructor(
@@ -44,7 +44,7 @@ data class HassServiceDto(
     )
 
     data class Target(
-        @SerializedName("entity_id")
+        @SerializedName(HassDto.ENTITY_ID)
         val entityId: String,
     )
 

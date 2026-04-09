@@ -1,6 +1,7 @@
 package org.openbase.bco.gateway.homeassistant.communication.websocket.command
 
 import com.google.gson.annotations.SerializedName
+import org.openbase.bco.gateway.homeassistant.manager.dto.HassDto
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassStateDto
 
 data class SubscriptionEvent(
@@ -8,17 +9,17 @@ data class SubscriptionEvent(
     val event: Event,
 ) {
     data class Event(
-        @SerializedName("event_type")
+        @SerializedName(HassDto.EVENT_TYPE)
         val eventType: String,
         val data: EventData,
-        @SerializedName("time_fired")
+        @SerializedName(HassDto.TIME_FIRED)
         val timestamp: String,
         val origin: String,
     ) {
         data class EventData(
-            @SerializedName("entity_id")
+            @SerializedName(HassDto.ENTITY_ID)
             val entityId: String,
-            @SerializedName("new_state")
+            @SerializedName(HassDto.NEW_STATE)
             val newState: HassStateDto,
         )
     }

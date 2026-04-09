@@ -5,14 +5,14 @@ import org.openbase.bco.gateway.homeassistant.type.InputDtoProvider
 import org.openbase.bco.gateway.homeassistant.type.Mergeable
 
 data class HassEntityDto(
-    @SerializedName("unique_id")
+    @SerializedName(HassDto.UNIQUE_ID)
     override val id: String,
-    @SerializedName("entity_id")
+    @SerializedName(HassDto.ENTITY_ID)
     val entityId: String,
-    @SerializedName("area_id")
+    @SerializedName(HassDto.AREA_ID)
     val areaId: String?,
     val platform: String?,
-    @SerializedName("device_id")
+    @SerializedName(HassDto.DEVICE_ID)
     val deviceId: String?,
     val icon: String? = null,
 ): HassDto, Mergeable<HassEntityInputDto, HassEntityDto>, InputDtoProvider<HassEntityInputDto> {

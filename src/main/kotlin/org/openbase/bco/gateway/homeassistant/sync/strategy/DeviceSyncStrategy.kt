@@ -72,8 +72,6 @@ class DeviceSyncStrategy(
     override fun saveHassDto(dto: HassDeviceInputDto): HassDeviceDto =
         hassCommunicator.saveDevice(dto)
 
-    override fun deleteHassDto(dto: HassDeviceDto): HassDeviceDto = dto // Devices cannot be deleted via API
-
     override fun UnitConfig.Builder.link(hassDto: HassDeviceDto): UnitConfig.Builder = apply {
         metaConfigBuilder[ALIAS_KEY_HASS_DEVICE_ID] = hassDto.id
         metaConfigBuilder[ALIAS_KEY_HASS_ID] = hassDto.id

@@ -135,8 +135,6 @@ class EntitySyncStrategy(
     override fun saveHassDto(dto: HassEntityInputDto): HassEntityDto =
         hassCommunicator.saveEntity(dto)
 
-    override fun deleteHassDto(dto: HassEntityDto): HassEntityDto = dto // Entities cannot be deleted via API
-
     override fun UnitConfig.toHassId(): String? =
         metaConfig[ALIAS_KEY_HASS_ID]
 

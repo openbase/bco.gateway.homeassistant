@@ -28,7 +28,7 @@ interface UnitSyncStrategy<HASS_DTO: HassDto, HASS_INPUT_DTO: HassInputDto> {
 
     fun saveHassDto(dto: HASS_INPUT_DTO): HASS_DTO
     fun queryHassDtos(): List<HASS_DTO>
-    fun deleteHassDto(dto: HASS_DTO): HASS_DTO
+    fun deleteHassDto(dto: HASS_DTO): HASS_DTO = dto
 
     fun onDtoChanges(eventProcessor: (event: SubscriptionEvent.Event) -> Any): AutoCloseable
     fun UnitConfig.link(hassDto: HASS_DTO): UnitConfig.Builder = toBuilder().link(hassDto)

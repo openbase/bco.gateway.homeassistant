@@ -21,7 +21,7 @@ import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig
 
 class ZoneSyncStrategy(
     private val hassCommunicator: HassCommunicator = HassCommunicator.instance,
-    private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
+    override val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ): UnitSyncStrategy<HassFloorDto, HassFloorInputDto>{
     override val unitType: UnitType = UnitType.LOCATION
     override val hassType: HassType = HassType.FLOOR

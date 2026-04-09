@@ -25,7 +25,7 @@ import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig
 class TileSyncStrategy(
     private val floorCache: DtoCache<HassFloorDto>,
     private val hassCommunicator: HassCommunicator = HassCommunicator.instance,
-    private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
+    override val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ): UnitSyncStrategy<HassAreaDto, HassAreaInputDto> {
     override val dependencies = listOf(floorCache)
     override val unitType: UnitType = UnitType.LOCATION

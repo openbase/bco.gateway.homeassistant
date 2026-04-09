@@ -58,11 +58,11 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                         hassCommunicator.waitForConnectionState(ConnectionStateType.ConnectionState.State.CONNECTED)
                     }
 
-                    strategy.onDtoChanges() {
+                    strategy.onDtoChanges {
                         hassToBCOSyncDebounceFilter.trigger()
                     }.also { observer += it }
 
-                    strategy.onUnitChanges() {
+                    strategy.onUnitChanges {
                         bcoToHassSyncDebounceFilter.trigger()
                     }.also { observer += it }
 
@@ -219,7 +219,6 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
                                 LOGGER,
                                 LogLevel.WARN,
                             )
-                            sync
                             sync.skipped = true
                         }
                 }
@@ -251,7 +250,7 @@ HASS_DTO : InputDtoProvider<HASS_INPUT_DTO> {
     }
 
     private fun getUnitConfigMap(): Map<String, UnitConfig> =
-        strategy.queryUnitConfigs(unitRegistry)
+        strategy.queryUnitConfigs()
             .associateBy { it.id }
 
     private fun HASS_DTO.toUnitConfig(): UnitConfig = strategy.buildUnitConfig(this)

@@ -41,7 +41,7 @@ class EntitySyncStrategy(
     private val deviceCache: DtoCache<HassDeviceDto>,
     private val areaCache: DtoCache<HassAreaDto>,
     private val hassCommunicator: HassCommunicator = HassCommunicator.instance,
-    private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
+    override val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ) : UnitSyncStrategy<HassEntityDto, HassEntityInputDto> {
 
     override val dependencies = listOf(deviceCache, areaCache)
@@ -56,7 +56,7 @@ class EntitySyncStrategy(
      * Unlinked DAL units are matched during [buildUnitConfig] from the HASS side and are
      * intentionally excluded here so that [syncBCOtoHass] does not try to save them.
      */
-    override fun queryUnitConfigs(unitRegistry: UnitRegistry): List<UnitConfig> {
+    override fun queryUnitConfigs(): List<UnitConfig> {
         val deviceConfigs = unitRegistry.getUnitConfigsByUnitType(UnitType.DEVICE)
             .filter { it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_DEVICE_ID } }
 

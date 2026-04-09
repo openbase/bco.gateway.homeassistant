@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory
 class DeviceSyncStrategy(
     private val areaCache: DtoCache<HassAreaDto>,
     private val hassCommunicator: HassCommunicator = HassCommunicator.instance,
-    private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
+    override val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ): UnitSyncStrategy<HassDeviceDto, HassDeviceInputDto> {
     override val dependencies = listOf(areaCache)
     override val unitType: UnitType = UnitType.DEVICE

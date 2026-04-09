@@ -14,6 +14,8 @@ import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.UnitTemplateType
 
 interface UnitSyncStrategy<HASS_DTO: HassDto, HASS_INPUT_DTO: HassInputDto> {
+    val unitRegistry: UnitRegistry
+
     val name: String get() = this::class.simpleName ?: "Unknown"
     val unitType: UnitTemplateType.UnitTemplate.UnitType
     val hassType: HassType
@@ -42,6 +44,6 @@ interface UnitSyncStrategy<HASS_DTO: HassDto, HASS_INPUT_DTO: HassInputDto> {
      * Query unit configs that are relevant for this strategy.
      * Override to provide custom querying logic (e.g. when units span multiple types).
      */
-    fun queryUnitConfigs(unitRegistry: UnitRegistry): List<UnitConfig> =
+    fun queryUnitConfigs(): List<UnitConfig> =
         unitRegistry.getUnitConfigsByUnitType(unitType).filter(unitFilter)
 }

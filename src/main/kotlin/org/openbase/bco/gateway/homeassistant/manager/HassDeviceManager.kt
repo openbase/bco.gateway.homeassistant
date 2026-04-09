@@ -44,7 +44,6 @@ import org.openbase.bco.gateway.homeassistant.sync.strategy.EntitySyncStrategy
 import org.openbase.bco.gateway.homeassistant.sync.strategy.TileSyncStrategy
 import org.openbase.bco.gateway.homeassistant.sync.strategy.ZoneSyncStrategy
 import org.openbase.bco.gateway.homeassistant.util.await
-import org.openbase.bco.gateway.homeassistant.util.set
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.remote.login.BCOLogin
 import org.openbase.bco.registry.unit.lib.UnitRegistry
@@ -88,7 +87,7 @@ class HassDeviceManager :
     private val tileAreaCache: DtoCache<HassAreaDto> = DtoCache()
     private val zoneFloorCache: DtoCache<HassFloorDto> = DtoCache()
     private val deviceCache: DtoCache<HassDeviceDto> = DtoCache()
-    private val entityCache: DtoCache<HassEntityDto> = DtoCache()
+    private val dalUnitEntityCache: DtoCache<HassEntityDto> = DtoCache()
 
     private val synchronizer = listOf(
         UnitSynchronizer(
@@ -114,7 +113,7 @@ class HassDeviceManager :
                 deviceCache = deviceCache,
                 areaCache = tileAreaCache,
             ),
-            cache = entityCache,
+            cache = dalUnitEntityCache,
             hassCommunicator = HassCommunicator.instance,
             unitRegistry = Registries.getUnitRegistry(),
         ),
@@ -136,8 +135,10 @@ class HassDeviceManager :
                     }
 
                     // wait for caches to be loaded
+                    tileAreaCache.waitUntilReady()
+                    zoneFloorCache.waitUntilReady()
                     deviceCache.waitUntilReady()
-                    entityCache.waitUntilReady()
+                    dalUnitEntityCache.waitUntilReady()
 
                     try {
                         HassCommunicator.instance.getStates().applyStateUpdates(systemSync = true)
@@ -292,7 +293,7 @@ class HassDeviceManager :
 
     fun List<HassStateDto>.applyStateUpdates(systemSync: Boolean) =
         this
-            .filter { state -> entityCache.dtos.any { it.entityId == state.entityId } }
+            .filter { state -> dalUnitEntityCache.dtos.any { it.entityId == state.entityId } }
             .forEach { state ->
                 try {
                     executor.applyStateUpdate(

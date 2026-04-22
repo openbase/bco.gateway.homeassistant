@@ -40,7 +40,7 @@ import org.openbase.bco.gateway.homeassistant.manager.unit.HassGatewayController
 import org.openbase.bco.gateway.homeassistant.sync.DtoCache
 import org.openbase.bco.gateway.homeassistant.sync.UnitSynchronizer
 import org.openbase.bco.gateway.homeassistant.sync.strategy.DeviceSyncStrategy
-import org.openbase.bco.gateway.homeassistant.sync.strategy.EntitySyncStrategy
+import org.openbase.bco.gateway.homeassistant.sync.strategy.DalUnitSyncStrategy
 import org.openbase.bco.gateway.homeassistant.sync.strategy.TileSyncStrategy
 import org.openbase.bco.gateway.homeassistant.sync.strategy.ZoneSyncStrategy
 import org.openbase.bco.gateway.homeassistant.util.await
@@ -109,7 +109,7 @@ class HassDeviceManager :
             unitRegistry = Registries.getUnitRegistry(),
         ),
         UnitSynchronizer(
-            strategy = EntitySyncStrategy(
+            strategy = DalUnitSyncStrategy(
                 deviceCache = deviceCache,
                 areaCache = tileAreaCache,
             ),
@@ -164,7 +164,7 @@ class HassDeviceManager :
         config?.gatewayConfig?.gatewayClassId == HASS_GATEWAY_CLASS_ID
 
     override fun isUnitSupported(config: UnitConfig): Boolean =
-        config.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_DEVICE_ID }
+        config.metaConfig.entryList.any { it.key == ALIAS_KEY_HASS_ID }
 
     @Throws(CouldNotPerformException::class, InterruptedException::class)
     override fun activate() {
@@ -322,7 +322,6 @@ class HassDeviceManager :
         const val ALIAS_KEY_HASS_DEVICE_MODEL_ID = "HASS_DEVICE_MODEL_ID"
         const val ALIAS_KEY_HASS_ID = "HASS_ID"
         const val ALIAS_KEY_HASS_TYPE = "HASS_TYPE"
-        const val ALIAS_KEY_HASS_DEVICE_ID = "HASS_DEVICE_ID"
         const val HASS_GATEWAY_CLASS_ID = "96dd4c43-92de-48b6-ba16-f9bafefc3c44"
         const val HASS_ENTITY_TYPE = "HASS_ENTITY_TYPE"
         const val HASS_ENTITY_DEVICE_CLASS = "HASS_ENTITY_DEVICE_CLASS"

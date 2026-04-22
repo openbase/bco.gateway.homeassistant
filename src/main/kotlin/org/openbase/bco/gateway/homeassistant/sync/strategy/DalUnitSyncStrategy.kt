@@ -4,7 +4,6 @@ import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.gateway.homeassistant.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_BCO_ICON
-import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_DEVICE_ID
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_ENTITY_ID
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_ID
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_TYPE
@@ -18,6 +17,7 @@ import org.openbase.bco.gateway.homeassistant.sync.DtoCache
 import org.openbase.bco.gateway.homeassistant.type.HassType
 import org.openbase.bco.gateway.homeassistant.util.get
 import org.openbase.bco.gateway.homeassistant.util.set
+import org.openbase.bco.registry.lib.util.UnitConfigProcessor
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.unit.lib.UnitRegistry
 import org.openbase.jul.pattern.Observer
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory
  * Entities are managed by Home Assistant and cannot be created or deleted from BCO.
  * The BCO→Hass sync only produces identity mappings so that no changes are pushed.
  */
-class EntitySyncStrategy(
+class DalUnitSyncStrategy(
     private val deviceCache: DtoCache<HassDeviceDto>,
     private val areaCache: DtoCache<HassAreaDto>,
     private val hassCommunicator: HassCommunicator = HassCommunicator.instance,
@@ -48,7 +48,10 @@ class EntitySyncStrategy(
     override val unitType: UnitType = UnitType.UNKNOWN
     override val hassType: HassType = HassType.ENTITY
     override val unitFilter: (UnitConfig) -> Boolean = {
-        it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ENTITY_ID }
+        UnitConfigProcessor.isDalUnit(it)
+                && it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ENTITY_ID }
+                && it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ID }
+                && it.metaConfig[ALIAS_KEY_HASS_TYPE] == hassType.name
     }
 
     /**
@@ -56,20 +59,20 @@ class EntitySyncStrategy(
      * Unlinked DAL units are matched during [buildUnitConfig] from the HASS side and are
      * intentionally excluded here so that [syncBCOtoHass] does not try to save them.
      */
-    override fun queryUnitConfigs(): List<UnitConfig> {
-        val deviceConfigs = unitRegistry.getUnitConfigsByUnitType(UnitType.DEVICE)
-            .filter { it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_DEVICE_ID } }
-
-        val dalUnitIds = deviceConfigs
-            .flatMap { it.deviceConfig.unitIdList }
-            .toSet()
-
-        return dalUnitIds
-            .mapNotNull { unitId ->
-                runCatching { unitRegistry.getUnitConfigById(unitId) }.getOrNull()
-            }
-            .filter { it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ENTITY_ID } }
-    }
+//    override fun queryUnitConfigs(): List<UnitConfig> {
+//        val deviceConfigs = unitRegistry.getUnitConfigsByUnitType(UnitType.DEVICE)
+//            .filter { it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ID } }
+//
+//        val dalUnitIds = deviceConfigs
+//            .flatMap { it.deviceConfig.unitIdList }
+//            .toSet()
+//
+//        return dalUnitIds
+//            .mapNotNull { unitId ->
+//                runCatching { unitRegistry.getUnitConfigById(unitId) }.getOrNull()
+//            }
+//            .filter { it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ENTITY_ID } }
+//    }
 
     override fun buildUnitConfig(hassDto: HassEntityDto): UnitConfig {
         // Find the BCO device config that corresponds to this entity's device
@@ -159,7 +162,6 @@ class EntitySyncStrategy(
             .let { AutoCloseable { unitRegistry.removeDataObserver(it) } }
 
     companion object {
-        private val LOGGER = LoggerFactory.getLogger(EntitySyncStrategy::class.java)
+        private val LOGGER = LoggerFactory.getLogger(DalUnitSyncStrategy::class.java)
     }
 }
-

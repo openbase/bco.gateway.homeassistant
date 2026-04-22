@@ -4,9 +4,9 @@ import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.gateway.homeassistant.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_BCO_ICON
-import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_DEVICE_ID
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_DEVICE_MODEL
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_DEVICE_MODEL_ID
+import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_ID
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_TYPE
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassAreaDto
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassDeviceDto
@@ -35,7 +35,8 @@ class DeviceSyncStrategy(
     override val unitType: UnitType = UnitType.DEVICE
     override val hassType: HassType = HassType.DEVICE
     override val unitFilter: (UnitConfig) -> Boolean = {
-        it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_DEVICE_ID }
+        it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ID }
+                && it.metaConfig[ALIAS_KEY_HASS_TYPE] == hassType.name
     }
 
     override fun buildUnitConfig(hassDto: HassDeviceDto): UnitConfig {
@@ -72,11 +73,11 @@ class DeviceSyncStrategy(
         hassCommunicator.saveDevice(dto)
 
     override fun UnitConfig.Builder.link(hassDto: HassDeviceDto): UnitConfig.Builder = apply {
-        metaConfigBuilder[ALIAS_KEY_HASS_DEVICE_ID] = hassDto.id
+        metaConfigBuilder[ALIAS_KEY_HASS_ID] = hassDto.id
         metaConfigBuilder[ALIAS_KEY_HASS_TYPE] = hassType.name
     }
 
-    override fun UnitConfig.toHassId(): String? = metaConfig[ALIAS_KEY_HASS_DEVICE_ID]
+    override fun UnitConfig.toHassId(): String? = metaConfig[ALIAS_KEY_HASS_ID]
 
     override fun queryHassDtos(): List<HassDeviceDto> {
         val deviceClasses = Registries.getClassRegistry(true).deviceClasses

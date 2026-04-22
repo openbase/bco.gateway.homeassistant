@@ -11,13 +11,14 @@ import org.openbase.bco.gateway.homeassistant.util.get
 import org.openbase.bco.gateway.homeassistant.util.set
 import org.openbase.bco.registry.unit.lib.UnitRegistry
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
-import org.openbase.type.domotic.unit.UnitTemplateType
+import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 
 interface UnitSyncStrategy<HASS_DTO: HassDto, HASS_INPUT_DTO: HassInputDto> {
     val unitRegistry: UnitRegistry
 
     val name: String get() = this::class.simpleName ?: "Unknown"
-    val unitType: UnitTemplateType.UnitTemplate.UnitType
+    val unitName: String get() = unitType.takeUnless { it == UnitType.UNKNOWN }?.name?.lowercase()?: "dal unit"
+    val unitType: UnitType
     val hassType: HassType
     val unitFilter: (UnitConfig) -> Boolean
     val dependencies: List<DtoCache<*>>

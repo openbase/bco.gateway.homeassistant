@@ -6,7 +6,7 @@ import org.openbase.bco.dal.lib.layer.service.ServiceProvider
 import org.openbase.bco.dal.lib.layer.service.ServiceStateProcessor
 import org.openbase.bco.dal.lib.layer.unit.Unit
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator
-import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager
+import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_ENTITY_ID
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassServiceDto
 import org.openbase.bco.gateway.homeassistant.manager.dto.service.ServiceDto
 import org.openbase.bco.gateway.homeassistant.type.HassServiceType
@@ -33,7 +33,7 @@ abstract class HassService<ST>(
     init {
         try {
             this.unit = unit
-            this.entityId = unit.config.metaConfig[HassDeviceManager.ALIAS_KEY_HASS_ENTITY_ID]
+            this.entityId = unit.config.metaConfig[ALIAS_KEY_HASS_ENTITY_ID]
                 ?: error("Could not solve entity Id! For unit $unit")
             loadServiceConfig()
         } catch (ex: CouldNotPerformException) {

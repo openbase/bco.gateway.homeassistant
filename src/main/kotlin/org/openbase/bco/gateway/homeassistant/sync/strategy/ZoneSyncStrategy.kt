@@ -4,6 +4,8 @@ import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.gateway.homeassistant.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_BCO_ICON
+import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_ID
+import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_TYPE
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassFloorDto
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassFloorInputDto
 import org.openbase.bco.gateway.homeassistant.type.HassType
@@ -25,7 +27,11 @@ class ZoneSyncStrategy(
 ): UnitSyncStrategy<HassFloorDto, HassFloorInputDto>{
     override val unitType: UnitType = UnitType.LOCATION
     override val hassType: HassType = HassType.FLOOR
-    override val unitFilter: (UnitConfig) -> Boolean = { it.locationConfig?.locationType == LocationType.ZONE }
+    override val unitFilter: (UnitConfig) -> Boolean = {
+        it.locationConfig?.locationType == LocationType.ZONE
+        && it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ID }
+                && it.metaConfig[ALIAS_KEY_HASS_TYPE] == hassType.name
+    }
 
     override fun buildUnitConfig(hassDto: HassFloorDto): UnitConfig =
         UnitConfig

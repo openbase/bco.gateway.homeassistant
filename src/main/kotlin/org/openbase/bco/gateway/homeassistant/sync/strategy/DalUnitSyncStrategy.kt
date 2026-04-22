@@ -14,17 +14,20 @@ import org.openbase.bco.gateway.homeassistant.manager.dto.HassDeviceDto
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassEntityDto
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassEntityInputDto
 import org.openbase.bco.gateway.homeassistant.sync.DtoCache
+import org.openbase.bco.gateway.homeassistant.sync.strategy.ZoneSyncStrategy.Companion.DEFAULT_HASS_ROOT_LOCATION_ID
 import org.openbase.bco.gateway.homeassistant.type.HassType
 import org.openbase.bco.gateway.homeassistant.util.get
 import org.openbase.bco.gateway.homeassistant.util.set
 import org.openbase.bco.registry.lib.util.UnitConfigProcessor
 import org.openbase.bco.registry.remote.Registries
 import org.openbase.bco.registry.unit.lib.UnitRegistry
+import org.openbase.jul.extension.type.processing.LabelProcessor
 import org.openbase.jul.pattern.Observer
 import org.openbase.jul.pattern.provider.DataProvider
 import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
 import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
+import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig.LocationType
 import org.slf4j.LoggerFactory
 
 /**
@@ -54,27 +57,7 @@ class DalUnitSyncStrategy(
                 && it.metaConfig[ALIAS_KEY_HASS_TYPE] == hassType.name
     }
 
-    /**
-     * Query unit configs for all DAL units that are already linked to a HASS entity.
-     * Unlinked DAL units are matched during [buildUnitConfig] from the HASS side and are
-     * intentionally excluded here so that [syncBCOtoHass] does not try to save them.
-     */
-//    override fun queryUnitConfigs(): List<UnitConfig> {
-//        val deviceConfigs = unitRegistry.getUnitConfigsByUnitType(UnitType.DEVICE)
-//            .filter { it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ID } }
-//
-//        val dalUnitIds = deviceConfigs
-//            .flatMap { it.deviceConfig.unitIdList }
-//            .toSet()
-//
-//        return dalUnitIds
-//            .mapNotNull { unitId ->
-//                runCatching { unitRegistry.getUnitConfigById(unitId) }.getOrNull()
-//            }
-//            .filter { it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ENTITY_ID } }
-//    }
-
-    override fun buildUnitConfig(hassDto: HassEntityDto): UnitConfig {
+    fun lookupDalUnitConfigOfDevice(hassDto: HassEntityDto): UnitConfig? {
         // Find the BCO device config that corresponds to this entity's device
         val deviceUnitConfig = deviceCache.getUnitConfigByDtoId(hassDto.deviceId)
             ?: return UnitConfig.getDefaultInstance() // shouldn't happen if dependencies are resolved
@@ -93,22 +76,27 @@ class DalUnitSyncStrategy(
             .mapNotNull { dalUnitId ->
                 runCatching { unitRegistry.getUnitConfigById(dalUnitId) }.getOrNull()
             }
-            .mapNotNull { dalUnit ->
+            .firstOrNull { dalUnit ->
                 val templateMetaConfig = runCatching {
                     Registries.getTemplateRegistry().getUnitTemplateByType(dalUnit.unitType).metaConfig
-                }.getOrNull() ?: return@mapNotNull null
+                }.getOrNull() ?: return@firstOrNull false
 
-                val entityType = templateMetaConfig[HASS_ENTITY_TYPE] ?: return@mapNotNull null
+                val entityType = templateMetaConfig[HASS_ENTITY_TYPE] ?: return@firstOrNull false
                 val entityDeviceClass = templateMetaConfig[HASS_ENTITY_DEVICE_CLASS]
 
                 val matchingEntity = deviceEntities
                     .filter { entityIdToDeviceClass[it.entityId] == entityDeviceClass }
                     .find { it.type == entityType }
 
-                dalUnit.takeIf { matchingEntity?.entityId == hassDto.entityId }
+                matchingEntity?.entityId == hassDto.entityId
             }
-            .firstOrNull()
+    }
+
+    override fun buildUnitConfig(hassDto: HassEntityDto): UnitConfig {
+        val dalUnitConfigBuilder: UnitConfig.Builder? = lookupDalUnitConfigOfDevice(hassDto)
             ?.toBuilder()
+
+        return dalUnitConfigBuilder
             ?.apply {
                 if (hassDto.entityId !in aliasList) {
                     addAlias(hassDto.entityId)
@@ -120,6 +108,8 @@ class DalUnitSyncStrategy(
                     }
                 hassDto.icon?.let { metaConfigBuilder[ALIAS_KEY_BCO_ICON] = it }
             }
+            // TODO: What do we set here when name is null?
+            ?.apply { hassDto.name?.let { setLabel(LabelProcessor.generateLabelBuilder(it)) } }
             ?.link(hassDto)
             ?.build()
             ?: UnitConfig.getDefaultInstance()
@@ -129,6 +119,7 @@ class DalUnitSyncStrategy(
         entityId = unitConfig.metaConfig[ALIAS_KEY_HASS_ENTITY_ID],
         areaId = areaCache.getDtoByUnitId(unitConfig.placementConfig.locationId)?.id,
         icon = unitConfig.metaConfig[ALIAS_KEY_BCO_ICON],
+        name = runCatching { LabelProcessor.getBestMatch(unitConfig.label) }.getOrNull(),
     )
 
     override fun saveHassDto(dto: HassEntityInputDto): HassEntityDto =

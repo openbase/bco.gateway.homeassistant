@@ -101,6 +101,7 @@ class HassCommunicator private constructor() : HassConnection() {
             HassDto.ENTITY_ID to entityId,
             HassDto.AREA_ID to entity.areaId,
             HassDto.ICON to entity.icon,
+            HassDto.NAME to entity.name,
         )
         return sendWSCommand(UPDATE_ENTITY_WS_REQUEST, payload).await()
             ?.asJsonObject

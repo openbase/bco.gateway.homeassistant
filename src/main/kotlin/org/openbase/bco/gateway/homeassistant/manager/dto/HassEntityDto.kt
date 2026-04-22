@@ -7,6 +7,7 @@ import org.openbase.bco.gateway.homeassistant.type.Mergeable
 data class HassEntityDto(
     @SerializedName(HassDto.UNIQUE_ID)
     override val id: String,
+    override val name: String? = null,
     @SerializedName(HassDto.ENTITY_ID)
     val entityId: String,
     @SerializedName(HassDto.AREA_ID)
@@ -17,7 +18,6 @@ data class HassEntityDto(
     val icon: String? = null,
 ): HassDto, Mergeable<HassEntityInputDto, HassEntityDto>, InputDtoProvider<HassEntityInputDto> {
     val type get() = entityId.split(".").first()
-    override val name get() = entityId.split(".").last()
 
     override fun merge(input: HassEntityInputDto): HassEntityDto = copy(
         id = id,

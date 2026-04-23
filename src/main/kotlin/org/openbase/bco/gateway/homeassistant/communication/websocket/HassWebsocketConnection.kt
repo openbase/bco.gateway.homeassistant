@@ -16,6 +16,7 @@ import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator.Has
 import org.openbase.bco.gateway.homeassistant.communication.TokenProvider
 import org.openbase.bco.gateway.homeassistant.communication.websocket.command.CommandResult
 import org.openbase.bco.gateway.homeassistant.communication.websocket.command.SubscriptionEvent
+import org.openbase.bco.gateway.homeassistant.manager.dto.HassDto
 import org.openbase.bco.gateway.homeassistant.jp.JPHassHost
 import org.openbase.bco.gateway.homeassistant.jp.JPHassPort
 import org.openbase.bco.gateway.homeassistant.jp.JPHassWebsocketEndpoint
@@ -41,7 +42,7 @@ data class WSSubscription (
     val eventProcessor: (event: SubscriptionEvent.Event) -> Any,
 ) {
     val payload = JsonObject().also { jsonObject ->
-        eventType?.also { jsonObject.addProperty("event_type", eventType.eventTypeName) }
+        eventType?.also { jsonObject.addProperty(HassDto.EVENT_TYPE, eventType.eventTypeName) }
     }
 }
 

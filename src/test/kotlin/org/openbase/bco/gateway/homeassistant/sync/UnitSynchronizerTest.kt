@@ -43,8 +43,12 @@ class UnitSynchronizerTest {
         every { hassCommunicator.isConnected } returns true
         every { tileSyncStrategy.name } returns "TileSyncStrategy"
         every { tileSyncStrategy.dependencies } returns emptyList()
+        every { tileSyncStrategy.unitRegistry } returns unitRegistry
         every { tileSyncStrategy.unitType } returns UnitType.LOCATION
         every { tileSyncStrategy.unitFilter } returns { it.locationConfig?.locationType == LocationType.TILE }
+        every { tileSyncStrategy.queryUnitConfigs() } answers {
+            unitConfigDB.filter { it.locationConfig?.locationType == LocationType.TILE }
+        }
         every { tileSyncStrategy.onDtoChanges(capture(onDtoChangesCallbackSlot)) } answers { mockk<AutoCloseable>(relaxed = true) }
         every { tileSyncStrategy.onUnitChanges(capture(onUnitChangesCallbackSlot)) } answers { mockk<AutoCloseable>(relaxed = true) }
         every { tileSyncStrategy.buildUnitConfig(capture(hassDtoSlot)) } answers {

@@ -15,10 +15,10 @@ import com.google.gson.annotations.SerializedName
  * "modified_at": 1723284728.415601
  */
 data class HassAreaInputDto(
-    @SerializedName("area_id")
+    @SerializedName(HassDto.AREA_ID)
     val id: String?,
     override val name: String?,
-    @SerializedName("floor_id")
+    @SerializedName(HassDto.FLOOR_ID)
     val floorId: String?,
     val icon: String?,
     val picture: String?,

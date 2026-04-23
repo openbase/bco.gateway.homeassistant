@@ -4,6 +4,7 @@ import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator
 import org.openbase.bco.gateway.homeassistant.communication.HassCommunicator.Companion.EVENT_WS_SUBSCRIPTION
 import org.openbase.bco.gateway.homeassistant.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_BCO_ICON
+import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_ID
 import org.openbase.bco.gateway.homeassistant.manager.HassDeviceManager.Companion.ALIAS_KEY_HASS_TYPE
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassAreaDto
 import org.openbase.bco.gateway.homeassistant.manager.dto.HassAreaInputDto
@@ -25,12 +26,16 @@ import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig
 class TileSyncStrategy(
     private val floorCache: DtoCache<HassFloorDto>,
     private val hassCommunicator: HassCommunicator = HassCommunicator.instance,
-    private val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
+    override val unitRegistry: UnitRegistry = Registries.getUnitRegistry(),
 ): UnitSyncStrategy<HassAreaDto, HassAreaInputDto> {
     override val dependencies = listOf(floorCache)
     override val unitType: UnitType = UnitType.LOCATION
     override val hassType: HassType = HassType.AREA
-    override val unitFilter: (UnitConfig) -> Boolean = { it.locationConfig?.locationType == LocationType.TILE }
+    override val unitFilter: (UnitConfig) -> Boolean = {
+        it.locationConfig?.locationType == LocationType.TILE
+                && it.metaConfig.entryList.any { entry -> entry.key == ALIAS_KEY_HASS_ID }
+                && it.metaConfig[ALIAS_KEY_HASS_TYPE] == hassType.name
+    }
     override fun buildUnitConfig(hassDto: HassAreaDto): UnitConfig =
         UnitConfig
             .newBuilder()

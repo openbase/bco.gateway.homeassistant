@@ -9,12 +9,16 @@ import org.openbase.bco.gateway.homeassistant.sync.DtoCache
 import org.openbase.bco.gateway.homeassistant.type.HassType
 import org.openbase.bco.gateway.homeassistant.util.get
 import org.openbase.bco.gateway.homeassistant.util.set
+import org.openbase.bco.registry.unit.lib.UnitRegistry
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig
-import org.openbase.type.domotic.unit.UnitTemplateType
+import org.openbase.type.domotic.unit.UnitTemplateType.UnitTemplate.UnitType
 
 interface UnitSyncStrategy<HASS_DTO: HassDto, HASS_INPUT_DTO: HassInputDto> {
+    val unitRegistry: UnitRegistry
+
     val name: String get() = this::class.simpleName ?: "Unknown"
-    val unitType: UnitTemplateType.UnitTemplate.UnitType
+    val unitName: String get() = unitType.takeUnless { it == UnitType.UNKNOWN }?.name?.lowercase()?: "dal unit"
+    val unitType: UnitType
     val hassType: HassType
     val unitFilter: (UnitConfig) -> Boolean
     val dependencies: List<DtoCache<*>>
@@ -27,7 +31,7 @@ interface UnitSyncStrategy<HASS_DTO: HassDto, HASS_INPUT_DTO: HassInputDto> {
 
     fun saveHassDto(dto: HASS_INPUT_DTO): HASS_DTO
     fun queryHassDtos(): List<HASS_DTO>
-    fun deleteHassDto(dto: HASS_DTO): HASS_DTO
+    fun deleteHassDto(dto: HASS_DTO): HASS_DTO = dto
 
     fun onDtoChanges(eventProcessor: (event: SubscriptionEvent.Event) -> Any): AutoCloseable
     fun UnitConfig.link(hassDto: HASS_DTO): UnitConfig.Builder = toBuilder().link(hassDto)
@@ -36,4 +40,11 @@ interface UnitSyncStrategy<HASS_DTO: HassDto, HASS_INPUT_DTO: HassInputDto> {
         metaConfigBuilder[ALIAS_KEY_HASS_TYPE] = hassType.name
     }
     fun onUnitChanges(eventProcessor: () -> Any): AutoCloseable
+
+    /**
+     * Query unit configs that are relevant for this strategy.
+     * Override to provide custom querying logic (e.g. when units span multiple types).
+     */
+    fun queryUnitConfigs(): List<UnitConfig> =
+        unitRegistry.getUnitConfigsByUnitType(unitType).filter(unitFilter)
 }

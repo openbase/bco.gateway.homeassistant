@@ -7,9 +7,11 @@ import org.openbase.bco.gateway.homeassistant.type.Mergeable
 data class HassDeviceDto(
     override val id: String,
     override val name: String,
-    @SerializedName("area_id")
+    @SerializedName(HassDto.NAME_BY_USER)
+    val nameByUser: String? = null,
+    @SerializedName(HassDto.AREA_ID)
     val areaId: String? = null,
-    @SerializedName("model_id")
+    @SerializedName(HassDto.MODEL_ID)
     val modelId: String? = null,
     val model: String? = null,
     val icon: String? = null,
@@ -21,6 +23,7 @@ data class HassDeviceDto(
     override fun merge(input: HassDeviceInputDto): HassDeviceDto = copy(
         id = input.id ?: id,
         name = input.name ?: name,
+        nameByUser = input.nameByUser ?: nameByUser,
         areaId = input.areaId ?: areaId,
         modelId = input.modelId ?: modelId,
         model  = input.model ?: model,
@@ -33,6 +36,7 @@ data class HassDeviceDto(
     override fun toInputDto(): HassDeviceInputDto = HassDeviceInputDto(
         id = id,
         name = name,
+        nameByUser = nameByUser,
         areaId = areaId,
         modelId = modelId,
         model = model,

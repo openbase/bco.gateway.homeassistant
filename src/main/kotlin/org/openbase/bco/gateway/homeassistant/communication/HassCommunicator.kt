@@ -5,6 +5,7 @@ import org.openbase.bco.gateway.homeassistant.communication.websocket.WSSubscrip
 import org.openbase.bco.gateway.homeassistant.communication.websocket.command.SubscriptionEvent
 import org.openbase.bco.gateway.homeassistant.manager.dto.*
 import org.openbase.bco.gateway.homeassistant.util.await
+import org.openbase.bco.gateway.homeassistant.util.jsonObjectOf
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InitializationException
 import org.openbase.jul.exception.NotAvailableException
@@ -75,17 +76,38 @@ class HassCommunicator private constructor() : HassConnection() {
             ?.map { gson.fromJson(it, HassDeviceDto::class.java) }
             .orEmpty()
 
-    fun saveDevice(device: HassDeviceInputDto): HassDeviceDto =
-        (device.id?.let {
-            UPDATE_DEVICE_WS_REQUEST
-        } ?: throw NotImplementedError("Devices cannot be created via Websocket API.")).let { wsCommand ->
-            sendWSCommand(wsCommand, gson.toJsonTree(device).asJsonObject).await()
-                ?.asJsonObject
-                ?.let { gson.fromJson(it, HassDeviceDto::class.java) }
-                ?: throw CouldNotPerformException("Could not save floor[$device]")
-        }
+    fun saveDevice(device: HassDeviceInputDto): HassDeviceDto {
+        val deviceId = device.id
+            ?: error("Device ID must be provided to save a device")
+        val payload = jsonObjectOf(
+            HassDto.DEVICE_ID to deviceId,
+            HassDto.NAME_BY_USER to device.nameByUser,
+            HassDto.AREA_ID to device.areaId,
+            HassDto.LABELS to device.labels,
+            HassDto.ICON to device.icon,
+        )
+        return sendWSCommand(UPDATE_DEVICE_WS_REQUEST, payload).await()
+            ?.asJsonObject
+            ?.let { gson.fromJson(it, HassDeviceDto::class.java) }
+            ?: throw CouldNotPerformException("Could not save device[$device]")
+    }
 
     fun deleteDevice(device: HassDeviceDto): HassDeviceDto = throw NotImplementedError("Devices cannot be deleted via Websocket API.")
+
+    fun saveEntity(entity: HassEntityInputDto): HassEntityDto {
+        val entityId = entity.entityId
+            ?: error("Entity ID must be provided to save an entity")
+        val payload = jsonObjectOf(
+            HassDto.ENTITY_ID to entityId,
+            HassDto.AREA_ID to entity.areaId,
+            HassDto.ICON to entity.icon,
+            HassDto.NAME to entity.name,
+        )
+        return sendWSCommand(UPDATE_ENTITY_WS_REQUEST, payload).await()
+            ?.asJsonObject
+            ?.let { gson.fromJson(it, HassEntityDto::class.java) }
+            ?: throw CouldNotPerformException("Could not save entity[$entity]")
+    }
 
     fun getEntities(): List<HassEntityDto> =
         sendWSCommand(ENTITIES_WS_REQUEST).await()
@@ -122,15 +144,9 @@ class HassCommunicator private constructor() : HassConnection() {
         }
 
     fun deleteArea(area: HassAreaDto): HassAreaDto =
-        area
-            .also {
-                sendWSCommand(
-                    DELETE_AREA_WS_REQUEST,
-                    JsonObject().apply {
-                        addProperty("area_id", area.id)
-                    }
-                ).await()
-            }
+        area.also {
+            sendWSCommand(DELETE_AREA_WS_REQUEST, jsonObjectOf(HassDto.AREA_ID to area.id)).await()
+        }
 
     // ==========================================================================================================================================
     // Floors
@@ -152,15 +168,9 @@ class HassCommunicator private constructor() : HassConnection() {
         }
 
     fun deleteFloor(floor: HassFloorDto): HassFloorDto =
-        floor
-            .also {
-                sendWSCommand(
-                    DELETE_FLOOR_WS_REQUEST,
-                    JsonObject().apply {
-                        addProperty("floor_id", floor.id)
-                    }
-                ).await()
-            }
+        floor.also {
+            sendWSCommand(DELETE_FLOOR_WS_REQUEST, jsonObjectOf(HassDto.FLOOR_ID to floor.id)).await()
+        }
 
     @Throws(CouldNotPerformException::class)
     override fun testConnection() {
@@ -238,6 +248,7 @@ class HassCommunicator private constructor() : HassConnection() {
         const val UPDATE_FLOOR_WS_REQUEST = "config/floor_registry/update"
         const val DELETE_FLOOR_WS_REQUEST = "config/floor_registry/delete"
         const val UPDATE_DEVICE_WS_REQUEST = "config/device_registry/update"
+        const val UPDATE_ENTITY_WS_REQUEST = "config/entity_registry/update"
 
         private val LOGGER: Logger = LoggerFactory.getLogger(HassCommunicator::class.java)
 
